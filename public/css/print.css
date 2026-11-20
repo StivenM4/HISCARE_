@@ -355,3 +355,67 @@ body {
     content: none !important;
   }
 }
+
+/* ==========================================================================
+   03. ADAPTACIÓN DE VISTA DE IMPRESIÓN EN PANTALLA MÓVIL (@media screen)
+   Permite consultar órdenes de emergencia desde celular sin romper @media print
+   ========================================================================== */
+@media screen and (max-width: 767.98px) {
+  .print-toolbar {
+    padding: 0.65rem 0.85rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .print-toolbar > div {
+    flex-wrap: wrap;
+    gap: 0.5rem !important;
+  }
+
+  .print-toolbar .btn {
+    min-height: 44px;
+  }
+
+  .print-sheet {
+    width: 100%;
+    max-width: 100%;
+    margin: 0.5rem auto;
+    padding: 1rem !important;
+    border-radius: 0;
+  }
+
+  .ips-brand {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 0.75rem;
+  }
+
+  .ips-brand .text-end {
+    text-align: left !important;
+  }
+
+  .print-sheet .col-6,
+  .print-sheet .col-4,
+  .print-sheet .col-3 {
+    width: 100% !important;
+    flex: 0 0 100% !important;
+  }
+
+  .table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .signature-section {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+  }
+
+  .signature-wrapper {
+    min-width: 0;
+    width: 100%;
+  }
+}
+

@@ -216,12 +216,12 @@
               <tbody>
                 <% listaPacientes.forEach(p => { %>
                   <tr>
-                    <td class="font-monospace fw-semibold"><%= p.tipo_documento %> <%= p.numero_documento %></td>
-                    <td class="fw-semibold text-dark"><%= p.nombres %> <%= p.apellidos %></td>
-                    <td><%= p.edad != null ? p.edad + ' años' : '—' %></td>
-                    <td><% if (p.eps) { %><%= p.eps %><% } else { %><span class="text-muted fst-italic">Sin EPS</span><% } %></td>
-                    <td class="font-monospace"><%= p.telefono || '—' %></td>
-                    <td class="text-end">
+                    <td data-label="Documento" class="font-monospace fw-semibold"><%= p.tipo_documento %> <%= p.numero_documento %></td>
+                    <td data-label="Nombres y Apellidos" class="fw-semibold text-dark"><%= p.nombres %> <%= p.apellidos %></td>
+                    <td data-label="Edad"><%= p.edad != null ? p.edad + ' años' : '—' %></td>
+                    <td data-label="EPS"><% if (p.eps) { %><%= p.eps %><% } else { %><span class="text-muted fst-italic">Sin EPS</span><% } %></td>
+                    <td data-label="Teléfono" class="font-monospace"><%= p.telefono || '—' %></td>
+                    <td data-label="Acciones" class="text-end">
                       <a href="/pacientes/<%= p.id %>" class="btn btn-sm btn-outline-primary" data-trace="C15-ver-ficha">
                         Ver ficha
                       </a>

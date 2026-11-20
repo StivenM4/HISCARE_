@@ -226,17 +226,17 @@
                     const numIntentos = (typeof item.intentos !== 'undefined') ? item.intentos : 0;
                   %>
                   <tr data-id="<%= item.id %>" data-orden-id="<%= item.orden_id || '' %>" data-estado="<%= st %>" class="fila-despacho">
-                    <td class="ps-3 fw-bold text-dark font-monospace small"><%= codOrden %></td>
-                    <td>
+                    <td data-label="Orden" class="ps-3 fw-bold text-dark font-monospace small"><%= codOrden %></td>
+                    <td data-label="Paciente">
                       <div class="fw-medium text-dark text-truncate" style="max-width: 140px;" title="<%= nomPaciente %>"><%= nomPaciente %></div>
                     </td>
-                    <td>
+                    <td data-label="Sistema destino">
                       <span class="badge bg-secondary-subtle text-dark border"><%= nomSistema %></span>
                     </td>
-                    <td>
+                    <td data-label="Id de despacho">
                       <code class="small text-muted" data-trace="C23-29" title="<%= uuidDespacho %>"><%= dspAbrev %></code>
                     </td>
-                    <td>
+                    <td data-label="Estado de envío">
                       <span class="badge <%= badgeClass %>" data-trace="C23-32">
                         <%= labelEstado %>
                       </span>
@@ -244,8 +244,8 @@
                         <div class="small text-muted" style="font-size: 0.72rem;"><%= aclaracion %></div>
                       <% } %>
                     </td>
-                    <td class="text-center font-monospace small"><%= numIntentos %></td>
-                    <td class="pe-3 text-end text-nowrap">
+                    <td data-label="Intentos" class="text-center font-monospace small"><%= numIntentos %></td>
+                    <td data-label="Acciones" class="pe-3 text-end text-nowrap">
                       <button type="button"
                               class="btn btn-sm btn-outline-primary btn-accion-detalle py-0 px-2"
                               data-trace="C23-33"

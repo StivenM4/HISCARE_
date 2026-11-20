@@ -483,13 +483,13 @@
                   <% if (contactos && contactos.length > 0) { %>
                     <% contactos.forEach((c) => { %>
                       <tr data-contacto-id="<%= c.id || '' %>">
-                        <td class="fw-semibold text-dark"><%= c.nombre %></td>
-                        <td>
+                        <td data-label="Nombre" class="fw-semibold text-dark"><%= c.nombre %></td>
+                        <td data-label="Parentesco">
                           <span class="badge bg-secondary-subtle text-secondary-emphasis">
                             <%= c.parentesco || 'Familiar' %>
                           </span>
                         </td>
-                        <td>
+                        <td data-label="Teléfono">
                           <a href="tel:<%= c.telefono %>" class="text-decoration-none text-primary fw-medium font-monospace">
                             <%= c.telefono %>
                           </a>
@@ -541,9 +541,9 @@
                   <% if (movimientos && movimientos.length > 0) { %>
                     <% movimientos.forEach((m) => { %>
                       <tr>
-                        <td class="small text-muted font-monospace text-nowrap"><%= m.fecha ? formatearFecha(m.fecha) : '—' %></td>
-                        <td class="fw-semibold small text-dark"><%= m.descripcion || m.tipo || m.evento %></td>
-                        <td class="font-monospace small text-end">
+                        <td data-label="Fecha" class="small text-muted font-monospace text-nowrap"><%= m.fecha ? formatearFecha(m.fecha) : '—' %></td>
+                        <td data-label="Evento" class="fw-semibold small text-dark"><%= m.descripcion || m.tipo || m.evento %></td>
+                        <td data-label="Código / Estado" class="font-monospace small text-end">
                           <span class="badge bg-light text-secondary border"><%= m.codigo || m.id || m.estado || '—' %></span>
                         </td>
                       </tr>

@@ -79,22 +79,22 @@
             <% if (atenciones && atenciones.length > 0) { %>
               <% atenciones.forEach(a => { %>
                 <tr>
-                  <td class="ps-4 py-3 text-nowrap">
+                  <td data-label="Fecha / Hora" class="ps-4 py-3 text-nowrap">
                     <div class="fw-semibold text-dark"><%= a.fecha_formateada || a.hora %></div>
                   </td>
-                  <td class="py-3">
+                  <td data-label="Paciente" class="py-3">
                     <div class="fw-bold text-dark"><%= a.paciente_nombre %></div>
                     <div class="small text-muted">
                       <%= a.documento %><% if (a.edad != null) { %> · <%= a.edad %> años<% } %><% if (a.sexo) { %> · <%= a.sexo %><% } %>
                     </div>
                   </td>
-                  <td class="py-3 text-nowrap">
+                  <td data-label="EPS" class="py-3 text-nowrap">
                     <span class="badge bg-light text-dark border"><%= a.eps || 'Sin EPS' %></span>
                   </td>
-                  <td class="py-3 text-nowrap">
+                  <td data-label="Médico" class="py-3 text-nowrap">
                     <div class="small fw-semibold text-secondary"><%= a.medico_nombre %></div>
                   </td>
-                  <td class="py-3" style="max-width: 250px;">
+                  <td data-label="Motivo de consulta" class="py-3" style="max-width: 250px;">
                     <div class="text-truncate small text-secondary" title="<%= a.motivo_consulta || '' %>">
                       <% if (a.motivo_consulta) { %>
                         <%= a.motivo_consulta %>
@@ -103,14 +103,14 @@
                       <% } %>
                     </div>
                   </td>
-                  <td class="py-3 text-nowrap">
+                  <td data-label="Estado" class="py-3 text-nowrap">
                     <% if (a.estado === 'ABIERTA') { %>
                       <span class="badge rounded-pill badge-estado-en-sala">ABIERTA</span>
                     <% } else { %>
                       <span class="badge rounded-pill badge-estado-atendida">CERRADA</span>
                     <% } %>
                   </td>
-                  <td class="pe-4 py-3 text-end text-nowrap">
+                  <td data-label="Acción" class="pe-4 py-3 text-end text-nowrap">
                     <% if (a.estado === 'ABIERTA') { %>
                       <a href="/atenciones/<%= a.id %>/consulta" class="btn btn-sm btn-primary fw-semibold px-3">
                         Atender

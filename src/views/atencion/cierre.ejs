@@ -414,9 +414,9 @@
               <% if (listaAdendas.length > 0) { %>
                 <% listaAdendas.forEach((adenda) => { %>
                   <tr>
-                    <td class="small font-monospace text-nowrap"><%= adenda.fecha_formateada || adenda.fecha %></td>
-                    <td class="small fw-semibold text-nowrap"><%= adenda.autor_nombre || 'Médico tratante' %></td>
-                    <td class="small text-break"><%= adenda.texto %></td>
+                    <td data-label="Fecha y hora" class="small font-monospace text-nowrap"><%= adenda.fecha_formateada || adenda.fecha %></td>
+                    <td data-label="Autor" class="small fw-semibold text-nowrap"><%= adenda.autor_nombre || 'Médico tratante' %></td>
+                    <td data-label="Texto" class="small text-break"><%= adenda.texto %></td>
                   </tr>
                 <% }); %>
               <% } else { %>

@@ -99,15 +99,15 @@
               <% if (listaDiagnosticos.length > 0) { %>
                 <% listaDiagnosticos.forEach((diag, index) => { %>
                   <tr class="fila-diagnostico align-middle" data-cie10-id="<%= diag.cie10_id || diag.id %>">
-                    <td class="font-monospace fw-bold text-nowrap">
+                    <td data-label="Código CIE-10" class="font-monospace fw-bold text-nowrap">
                       <span class="badge bg-light text-dark border px-2 py-1 font-monospace">
                         <%= diag.codigo %>
                       </span>
                     </td>
-                    <td class="text-dark small fw-medium">
+                    <td data-label="Descripción" class="text-dark small fw-medium">
                       <%= diag.descripcion %>
                     </td>
-                    <td class="text-center text-nowrap">
+                    <td data-label="Tipo" class="text-center text-nowrap">
                       <button type="button"
                               class="btn btn-sm badge px-3 py-2 btn-tipo-diag <%= diag.tipo === 'PRINCIPAL' ? 'btn-diag-principal shadow-sm' : 'btn-diag-secundario' %>"
                               data-trace="C20-39"
@@ -118,7 +118,7 @@
                         <%= diag.tipo %>
                       </button>
                     </td>
-                    <td class="text-center text-nowrap">
+                    <td data-label="Acciones" class="text-center text-nowrap">
                       <% if (!esSoloLectura) { %>
                         <button type="button"
                                 class="btn btn-sm btn-link text-danger text-decoration-none fw-bold p-0 btn-eliminar-diag"
@@ -205,15 +205,15 @@
               <% if (listaProcedimientos.length > 0) { %>
                 <% listaProcedimientos.forEach((proc, index) => { %>
                   <tr class="fila-procedimiento align-middle" data-cups-id="<%= proc.cups_id || proc.id %>">
-                    <td class="font-monospace fw-bold text-nowrap">
+                    <td data-label="Código CUPS" class="font-monospace fw-bold text-nowrap">
                       <span class="badge bg-light text-secondary border px-2 py-1 font-monospace">
                         <%= proc.codigo %>
                       </span>
                     </td>
-                    <td class="text-dark small fw-medium">
+                    <td data-label="Procedimiento" class="text-dark small fw-medium">
                       <%= proc.descripcion %>
                     </td>
-                    <td class="text-nowrap">
+                    <td data-label="Fecha" class="text-nowrap">
                       <input type="date"
                              class="form-control form-control-sm fecha-proc shadow-none"
                              data-trace="C20-46"
@@ -221,7 +221,7 @@
                              style="max-width: 145px;"
                              <%= esSoloLectura ? 'disabled' : '' %>>
                     </td>
-                    <td class="text-center text-nowrap">
+                    <td data-label="Acciones" class="text-center text-nowrap">
                       <% if (!esSoloLectura) { %>
                         <button type="button"
                                 class="btn btn-sm btn-link text-danger text-decoration-none fw-bold p-0 btn-eliminar-proc"

@@ -317,7 +317,7 @@
             %>
             <tr>
               <!-- Orden [10.32]: código con enlace a /ordenes/:id/imprimir en nueva pestaña -->
-              <td class="ps-4 py-3 text-nowrap">
+              <td data-label="Orden" class="ps-4 py-3 text-nowrap">
                 <a href="/ordenes/<%= o.id %>/imprimir"
                    target="_blank"
                    class="fw-bold font-monospace text-primary text-decoration-none"
@@ -328,7 +328,7 @@
               </td>
 
               <!-- Paciente [10.33]: nombre completo -->
-              <td class="py-3" data-trace="C7-LISTA-PACIENTE">
+              <td data-label="Paciente" class="py-3" data-trace="C7-LISTA-PACIENTE">
                 <span class="fw-semibold text-dark"><%= nombrePaciente %></span>
                 <% if (o.tipo_documento && o.numero_documento) { %>
                   <div class="small text-muted"><%= o.tipo_documento %> <%= o.numero_documento %></div>
@@ -338,12 +338,12 @@
               </td>
 
               <!-- Fecha [10.34]: DD/MM/YYYY -->
-              <td class="py-3 text-nowrap" data-trace="C7-LISTA-FECHA">
+              <td data-label="Fecha" class="py-3 text-nowrap" data-trace="C7-LISTA-FECHA">
                 <span class="text-secondary"><%= fechaTexto %></span>
               </td>
 
               <!-- Tipo [10.35]: Capitalizado -->
-              <td class="py-3 text-nowrap" data-trace="C7-LISTA-TIPO">
+              <td data-label="Tipo" class="py-3 text-nowrap" data-trace="C7-LISTA-TIPO">
                 <% if (String(o.tipo).toUpperCase() === 'LABORATORIO') { %>
                   <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1">
                     <%= tipoTexto %>
@@ -366,7 +366,7 @@
               </td>
 
               <!-- Estado orden [10.36, 10.39] -->
-              <td class="py-3 text-nowrap" data-trace="C7-LISTA-ESTADO">
+              <td data-label="Estado orden" class="py-3 text-nowrap" data-trace="C7-LISTA-ESTADO">
                 <% if (o.estado === 'PENDIENTE') { %>
                   <span class="badge bg-secondary text-white px-2 py-1" data-trace="C10-39">PENDIENTE</span>
                 <% } else if (o.estado === 'EN_PROCESO') { %>
@@ -381,7 +381,7 @@
               </td>
 
               <!-- Resultado clínico [10.37, 10.40] -->
-              <td class="py-3 text-nowrap">
+              <td data-label="Resultado clínico" class="py-3 text-nowrap">
                 <% if (resultadoId || o.estado === 'COMPLETADA') { %>
                   <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1" data-trace="C10-40">REALIZADO</span>
                 <% } else if (o.estado === 'EN_PROCESO') { %>
@@ -396,7 +396,7 @@
               </td>
 
               <!-- Acción [10.38, 10.41] -->
-              <td class="pe-4 py-3 text-end text-nowrap">
+              <td data-label="Acción" class="pe-4 py-3 text-end text-nowrap">
                 <div class="d-inline-flex align-items-center gap-1">
                   <% if (resultadoId) { %>
                     <a href="/resultados/<%= resultadoId %>"

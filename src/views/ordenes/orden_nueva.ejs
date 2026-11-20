@@ -258,18 +258,18 @@
                   const cantItems = o.cantidad_procedimientos || o.total_items || (Array.isArray(o.items) ? o.items.length : 1);
                 %>
                 <tr>
-                  <td class="ps-3">
+                  <td data-label="Código" class="ps-3">
                     <span class="badge bg-light text-dark font-monospace border px-2 py-1"><%= o.codigo %></span>
                   </td>
-                  <td>
+                  <td data-label="Tipo">
                     <span class="badge <%= badgeTipo %> px-2 py-1"><%= o.tipo %></span>
                   </td>
-                  <td class="text-secondary small"><%= fechaFormateada %></td>
-                  <td>
+                  <td data-label="Fecha y hora" class="text-secondary small"><%= fechaFormateada %></td>
+                  <td data-label="Estado">
                     <span class="badge <%= badgeEstado %>"><%= o.estado %></span>
                   </td>
-                  <td class="text-center font-monospace"><%= cantItems %></td>
-                  <td class="text-end pe-3">
+                  <td data-label="Procedimientos" class="text-center font-monospace"><%= cantItems %></td>
+                  <td data-label="Acción" class="text-end pe-3">
                     <a href="/ordenes/<%= o.id %>/imprimir"
                        target="_blank"
                        rel="noopener noreferrer"

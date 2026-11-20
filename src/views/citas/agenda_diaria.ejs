@@ -41,7 +41,7 @@
           <span class="text-muted small">Control de citas, sala de espera e inicio de atención clínica</span>
         </div>
 
-        <form class="d-flex flex-wrap align-items-center gap-2" method="get" action="/agenda">
+        <form class="d-flex flex-wrap align-items-center gap-2 agenda-filter-form" method="get" action="/agenda">
           <% if (!esMedico) { %>
             <div class="d-flex align-items-center gap-1">
               <label for="selectMedico" class="form-label small text-muted mb-0 me-1">Profesional:</label>
@@ -171,17 +171,17 @@
                     <% } else { %>
                       <% filasCitas.forEach(c=> { %>
                         <tr data-cita="<%= c.id %>" data-paciente="<%= c.paciente %>">
-                          <td class="cell-time">
+                          <td data-label="Hora" class="cell-time">
                             <span class="agenda-hora-pill">
                               <%= c.hora %>
                             </span>
                           </td>
-                          <td>
+                          <td data-label="Paciente">
                             <span class="fw-semibold text-dark">
                               <%= c.paciente %>
                             </span>
                           </td>
-                          <td>
+                          <td data-label="Estado">
                             <% if (c.estado==='PROGRAMADA' ) { %>
                               <span
                                 class="badge rounded-pill bg-secondary-subtle text-secondary border border-secondary-subtle px-2 py-1"
@@ -212,7 +212,7 @@
                                           </span>
                                           <% } %>
                           </td>
-                          <td class="text-end cell-actions" data-trace="C18-31">
+                          <td data-label="Acción" class="text-end cell-actions" data-trace="C18-31">
                             <div class="d-inline-flex align-items-center gap-1 justify-content-end">
                               <% if (c.estado==='PROGRAMADA' ) { %>
                                 <button type="button" data-accion="estado" data-loading-text="Confirmando..." class="btn btn-sm btn-outline-primary btn-accion-estado" data-id="<%= c.id %>" data-estado="CONFIRMADA" <%=puedeEscribir ? '' : 'disabled' %>>Confirmar</button>
@@ -350,13 +350,13 @@
                             <% const badgeClass=mEsp> 30 ? 'badge-espera-urgente' : (mEsp >= 15 ?
                               'badge-espera-moderada' : 'badge-espera-normal'); %>
                               <tr data-cita="<%= p.cita_id %>">
-                                <td class="text-muted small cell-time">
+                                <td data-label="Llegada" class="text-muted small cell-time">
                                   <%= p.hora_llegada %>
                                 </td>
-                                <td class="fw-semibold text-dark small">
+                                <td data-label="Paciente" class="fw-semibold text-dark small">
                                   <%= p.paciente %>
                                 </td>
-                                <td class="text-end small">
+                                <td data-label="Espera" class="text-end small">
                                   <span class="badge <%= badgeClass %> rounded-pill px-2 py-1">
                                     <%= mEsp %> min
                                   </span>

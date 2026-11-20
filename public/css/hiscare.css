@@ -2808,3 +2808,811 @@ td:has(> .badge) {
     scroll-behavior: auto !important;
   }
 }
+
+/* === MOBILE EMERGENCY ACCESS ARCHITECTURE (<= 991.98px & <= 767.98px) === */
+
+/* --------------------------------------------------------------------------
+   M1. PANELES MAESTRO-DETALLE & ADAPTACIÓN DE TABLETS/MÓVILES (<= 991.98px)
+   -------------------------------------------------------------------------- */
+@media (max-width: 991.98px) {
+  /* Desactivar sticky-top en vistas maestro-detalle para evitar solapamientos */
+  #panelDetalleLateral,
+  #panelDetalle {
+    position: static !important;
+    top: auto !important;
+    max-height: none !important;
+    overflow-y: visible !important;
+    border-top: 3px solid var(--hiscare-primary, #0b5ed7) !important;
+    box-shadow: var(--hiscare-elevation-2, 0 4px 12px rgba(15, 23, 42, 0.08)) !important;
+  }
+
+  [data-bs-theme="dark"] #panelDetalleLateral,
+  [data-bs-theme="dark"] #panelDetalle {
+    border-top-color: var(--hiscare-primary, #3b82f6) !important;
+    box-shadow: var(--hiscare-elevation-3, 0 10px 24px rgba(2, 6, 23, 0.6)) !important;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   M2. ARQUITECTURA MÓVIL COMPLETA: CONTENEDORES, TABLAS EN TARJETAS,
+       DATATABLES, FORMULARIOS Y VISOR (<= 767.98px)
+   -------------------------------------------------------------------------- */
+@media (max-width: 767.98px) {
+  /* 1. Safe areas, scroll padding y prevención de desbordamiento hasta 320px */
+  html {
+    scroll-padding-bottom: calc(3.5rem + env(safe-area-inset-bottom, 0px));
+    scroll-padding-top: 4rem;
+  }
+
+  body {
+    overflow-wrap: break-word;
+  }
+
+  :where(a, code) {
+    overflow-wrap: anywhere;
+  }
+
+  /* Evitar que contenedores de tablas con tarjetas apiladas fuercen scroll horizontal */
+  .table-responsive {
+    overflow-x: visible;
+  }
+
+  .table-responsive .table:not(#tablaSignos) {
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+
+  .table-responsive:has(.table:not(#tablaSignos)) {
+    overflow-x: visible !important;
+    background-color: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    max-height: none !important;
+  }
+
+  .hc-tabla-card:has(.table:not(#tablaSignos)),
+  .card:has(.table:not(#tablaSignos)) {
+    overflow: visible;
+  }
+
+  /* Mantener scroll horizontal suave con primera columna sticky en signos vitales (9 cols) */
+  .table-responsive:has(#tablaSignos) {
+    overflow-x: auto !important;
+  }
+
+  #tablaSignos {
+    min-width: 540px !important;
+  }
+
+  #tablaSignos th:first-child,
+  #tablaSignos td:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    background-color: var(--hiscare-surface-1, #ffffff);
+    box-shadow: 2px 0 4px rgba(15, 23, 42, 0.06);
+  }
+
+  /* 2. Transformación completa de tablas operativas a tarjetas móviles */
+  .table:not(#tablaSignos) thead {
+    display: none !important;
+  }
+
+  .table:not(#tablaSignos),
+  .table:not(#tablaSignos) tbody,
+  .table:not(#tablaSignos) tr,
+  .table:not(#tablaSignos) td {
+    display: block;
+    width: 100%;
+  }
+
+  .table:not(#tablaSignos) tbody tr {
+    background-color: var(--hiscare-surface-1, #ffffff);
+    border: 1px solid var(--hiscare-border-color, #e2e8f0);
+    border-radius: 0.75rem;
+    padding: 0.65rem 0.85rem;
+    margin-bottom: 0.75rem;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.05);
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .table:not(#tablaSignos) tbody tr:last-child {
+    margin-bottom: 0;
+  }
+
+  .table:not(#tablaSignos) tbody td {
+    display: flex !important;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.42rem 0 !important;
+    border-bottom: 1px dashed var(--hiscare-border-color, #e2e8f0) !important;
+    text-align: right !important;
+    white-space: normal !important;
+    font-size: 0.84rem;
+    min-height: 2.1rem;
+    max-width: 100% !important;
+  }
+
+  .table:not(#tablaSignos) tbody td > * {
+    min-width: 0;
+  }
+
+  .table:not(#tablaSignos) tbody td .text-truncate {
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: unset !important;
+    max-width: 100% !important;
+  }
+
+  .table:not(#tablaSignos) tbody td:first-child,
+  #tablaAnalitos tbody th[scope="row"]:first-child {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+    width: auto;
+    margin: -0.65rem -0.85rem 0.35rem -0.85rem;
+    padding: 0.55rem 0.85rem !important;
+    border-radius: 0.75rem 0.75rem 0 0;
+    border-bottom: 1px solid var(--hiscare-border-color, #e2e8f0) !important;
+    font-weight: 700;
+    text-align: left;
+  }
+
+  .table:not(#tablaSignos) tbody td:first-child,
+  #tablaAnalitos tbody tr:not(.analito-row-alterado):not(.analito-row-critico) th[scope="row"]:first-child {
+    background-color: rgba(11, 94, 215, 0.05);
+  }
+
+  #tablaAnalitos tbody th[scope="row"]:first-child::before {
+    content: "Examen";
+    font-weight: 600;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--hiscare-text-secondary, #475569);
+    text-align: left;
+    flex-shrink: 0;
+    max-width: 45%;
+  }
+
+  .table:not(#tablaSignos) tbody td:last-child {
+    border-bottom: none !important;
+    padding-top: 0.55rem !important;
+    padding-bottom: 0.15rem !important;
+    flex-wrap: wrap;
+  }
+
+  .table:not(#tablaSignos) tbody td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--hiscare-text-secondary, #475569);
+    text-align: left;
+    flex-shrink: 0;
+    max-width: 45%;
+  }
+
+  /* Filas de estado vacío */
+  .table:not(#tablaSignos) tbody td[colspan] {
+    display: block !important;
+    text-align: center !important;
+    margin: 0 !important;
+    background: transparent !important;
+    border: none !important;
+    padding: 1.25rem 0.5rem !important;
+    font-weight: 500;
+  }
+
+  .table:not(#tablaSignos) tbody td[colspan]::before {
+    display: none !important;
+    content: none !important;
+  }
+
+  /* Comodidad táctil para botones de acción en la última celda de cada tarjeta */
+  .table:not(#tablaSignos) tbody td:last-child > div,
+  .table:not(#tablaSignos) tbody td:last-child > .btn-group {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 0.45rem !important;
+    flex: 1 1 auto;
+  }
+
+  .table:not(#tablaSignos) tbody td:last-child .btn,
+  .table:not(#tablaSignos) tbody td:last-child form {
+    min-height: 38px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .table:not(#tablaSignos) tbody td:last-child form .btn {
+    min-height: 38px;
+    width: 100%;
+  }
+
+  /* Mapeo CSS :nth-of-type(N)::before de respaldo para filas SSR y JS sin data-label */
+  .table:not(#tablaSignos) tbody td:not([data-label]):nth-of-type(1)::before { content: var(--col-1, ""); }
+  .table:not(#tablaSignos) tbody td:not([data-label]):nth-of-type(2)::before { content: var(--col-2, ""); }
+  .table:not(#tablaSignos) tbody td:not([data-label]):nth-of-type(3)::before { content: var(--col-3, ""); }
+  .table:not(#tablaSignos) tbody td:not([data-label]):nth-of-type(4)::before { content: var(--col-4, ""); }
+  .table:not(#tablaSignos) tbody td:not([data-label]):nth-of-type(5)::before { content: var(--col-5, ""); }
+  .table:not(#tablaSignos) tbody td:not([data-label]):nth-of-type(6)::before { content: var(--col-6, ""); }
+  .table:not(#tablaSignos) tbody td:not([data-label]):nth-of-type(7)::before { content: var(--col-7, ""); }
+
+  /* Definición de encabezados por tabla */
+  #tablaCitasDashboard {
+    --col-1: "Hora";
+    --col-2: "Paciente";
+    --col-3: "Profesional";
+    --col-4: "Estado";
+  }
+
+  #tablaAgenda {
+    --col-1: "Hora";
+    --col-2: "Paciente";
+    --col-3: "Estado";
+    --col-4: "Acción";
+  }
+
+  #tablaSalaEspera {
+    --col-1: "Llegada";
+    --col-2: "Paciente";
+    --col-3: "Espera";
+  }
+
+  [data-trace="C15-tabla-resultados"] {
+    --col-1: "Documento";
+    --col-2: "Nombres y Apellidos";
+    --col-3: "Edad";
+    --col-4: "EPS";
+    --col-5: "Teléfono";
+    --col-6: "Acciones";
+  }
+
+  #tablaContactos {
+    --col-1: "Nombre";
+    --col-2: "Parentesco";
+    --col-3: "Teléfono";
+  }
+
+  #tablaMovimientos {
+    --col-1: "Fecha";
+    --col-2: "Evento";
+    --col-3: "Código / Estado";
+  }
+
+  #tablaAtenciones {
+    --col-1: "Fecha / Hora";
+    --col-2: "Paciente";
+    --col-3: "EPS";
+    --col-4: "Médico";
+    --col-5: "Motivo de consulta";
+    --col-6: "Estado";
+    --col-7: "Acción";
+  }
+
+  #tablaDiagnosticos {
+    --col-1: "Código CIE-10";
+    --col-2: "Descripción";
+    --col-3: "Tipo";
+    --col-4: "Acciones";
+  }
+
+  #tablaProcedimientos {
+    --col-1: "Código CUPS";
+    --col-2: "Procedimiento";
+    --col-3: "Fecha";
+    --col-4: "Acciones";
+  }
+
+  #contenedorOrdenNueva #tablaProcedimientos,
+  #tablaProcedimientos[data-trace="C7-27"] {
+    --col-1: "Código CUPS";
+    --col-2: "Descripción";
+    --col-3: "Cantidad";
+    --col-4: "Acción";
+  }
+
+  #tablaConsentimientos {
+    --col-1: "Tipo";
+    --col-2: "Fecha";
+    --col-3: "Estado de firma";
+    --col-4: "Acciones";
+  }
+
+  #tablaAdendas {
+    --col-1: "Fecha y hora";
+    --col-2: "Autor";
+    --col-3: "Texto";
+  }
+
+  #tablaOrdenes {
+    --col-1: "Orden";
+    --col-2: "Paciente";
+    --col-3: "Fecha";
+    --col-4: "Tipo";
+    --col-5: "Estado orden";
+    --col-6: "Resultado clínico";
+    --col-7: "Acción";
+  }
+
+  #tablaOrdenesEmitidas {
+    --col-1: "Código";
+    --col-2: "Tipo";
+    --col-3: "Fecha y hora";
+    --col-4: "Estado";
+    --col-5: "Procedimientos";
+    --col-6: "Acción";
+  }
+
+  #tablaIntegraciones {
+    --col-1: "Orden";
+    --col-2: "Paciente";
+    --col-3: "Sistema destino";
+    --col-4: "Id de despacho";
+    --col-5: "Estado de envío";
+    --col-6: "Intentos";
+    --col-7: "Acciones";
+  }
+
+  #tablaResultados {
+    --col-1: "Fecha";
+    --col-2: "Orden";
+    --col-3: "Tipo";
+    --col-4: "Estudio";
+    --col-5: "Estado";
+  }
+
+  #tablaAnalitos {
+    --col-1: "Resultado";
+    --col-2: "Referencia";
+    --col-3: "Estado";
+  }
+
+  #tablaExamenes {
+    --col-1: "CUPS";
+    --col-2: "Examen";
+    --col-3: "Cant.";
+  }
+
+  #tablaAuditoria {
+    --col-1: "Fecha y hora";
+    --col-2: "Usuario";
+    --col-3: "IP / equipo";
+    --col-4: "Acción";
+    --col-5: "Tabla";
+    --col-6: "Detalle";
+  }
+
+  #tablaUsuarios {
+    --col-1: "Nombre";
+    --col-2: "Correo";
+    --col-3: "Rol";
+    --col-4: "Especialidades";
+    --col-5: "Estado";
+    --col-6: "Acciones";
+  }
+
+  #tablaMatrizPermisos {
+    --col-1: "Módulo";
+    --col-2: "MED";
+    --col-3: "REC";
+    --col-4: "ENF";
+    --col-5: "AUD";
+    --col-6: "ADM";
+  }
+
+  #tablaAseguradoras {
+    --col-1: "Entidad";
+    --col-2: "Tipo de plan";
+    --col-3: "Afiliados";
+    --col-4: "Estado";
+    --col-5: "Acciones";
+  }
+
+  #tablaEspecialidades {
+    --col-1: "Especialidad";
+    --col-2: "Profesionales";
+    --col-3: "Acción";
+  }
+
+  #tablaFranjasHorarias {
+    --col-1: "Día";
+    --col-2: "Hora inicio";
+    --col-3: "Hora fin";
+    --col-4: "Duración (min)";
+    --col-5: "Quitar";
+  }
+
+  #tablaProfesionalesEspecialidad {
+    --col-1: "Profesional";
+    --col-2: "Rol";
+    --col-3: "Asignado desde";
+  }
+
+  .table:has(#historialBody) {
+    --col-1: "Fecha";
+    --col-2: "Usuario";
+    --col-3: "Cambio";
+  }
+
+  .table:has([data-trace="C17-42"]) {
+    --col-1: "Concepto";
+    --col-2: "Cita original";
+    --col-3: "Cita nueva";
+  }
+
+  /* 3. DataTables Mobile Layout */
+  .dt-container .row,
+  .dt-container .dt-layout-row {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 0.65rem;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+
+  .dt-container .row > [class*="col-"],
+  .dt-container .dt-layout-cell {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+    text-align: left !important;
+  }
+
+  .dt-container .dt-length,
+  .dt-container .dt-search,
+  .dt-container .dt-info,
+  .dt-container .dt-paging {
+    width: 100% !important;
+    text-align: left !important;
+    margin: 0 !important;
+  }
+
+  .dt-container .dt-search,
+  .dt-container .dt-search label {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.25rem;
+    width: 100%;
+    margin: 0;
+  }
+
+  .dt-container .dt-search input {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-left: 0 !important;
+    min-height: 44px;
+    font-size: 16px !important;
+  }
+
+  .dt-container .dt-length select {
+    min-height: 44px;
+    font-size: 16px !important;
+  }
+
+  .dt-container .dt-paging {
+    justify-content: center !important;
+    flex-wrap: wrap;
+    padding-bottom: 0.5rem;
+  }
+
+  /* 4. Filtros de agenda, subnavegación admin, tabs, signos y franjas */
+  .agenda-filter-form,
+  [data-trace="C2-form-filtro"],
+  form[action="/agenda"] {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch !important;
+    gap: 0.5rem !important;
+  }
+
+  .agenda-filter-form > div,
+  [data-trace="C2-form-filtro"] > div,
+  form[action="/agenda"] > div,
+  .agenda-filter-form .input-group,
+  .agenda-filter-form #selectMedico,
+  .agenda-filter-form #btnConsultarAgenda,
+  [data-trace="C2-form-filtro"] .input-group,
+  [data-trace="C2-form-filtro"] #selectMedico,
+  [data-trace="C2-form-filtro"] #btnConsultarAgenda,
+  form[action="/agenda"] .input-group,
+  form[action="/agenda"] #selectMedico,
+  form[action="/agenda"] #btnConsultarAgenda,
+  form[action="/agenda"] button[type="submit"],
+  form[action="/agenda"] .select2-container {
+    width: 100% !important;
+    flex: 1 1 100% !important;
+  }
+
+  .agenda-filter-form .input-group #inputFecha,
+  [data-trace="C2-form-filtro"] .input-group #inputFecha,
+  form[action="/agenda"] .input-group #inputFecha {
+    flex: 1 1 auto !important;
+    width: 1% !important;
+  }
+
+  form[action="/agenda"] > div {
+    flex-wrap: wrap;
+  }
+
+  form[action="/agenda"] > div > label {
+    width: 100%;
+    margin-bottom: 0.15rem !important;
+  }
+
+  /* Subnavegación de administración y pestañas con scroll horizontal táctil */
+  [data-trace="C26-subnav-admin"],
+  #adminUsuariosApp .nav-pills:not(.sidebar-menu),
+  #adminEspecialidadesApp .nav-pills:not(.sidebar-menu),
+  #adminAseguradorasApp .nav-pills:not(.sidebar-menu),
+  #tabsFiltroAtenciones,
+  #tabsDetallePaciente {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    max-width: 100%;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  [data-trace="C26-subnav-admin"]::-webkit-scrollbar,
+  #adminUsuariosApp .nav-pills:not(.sidebar-menu)::-webkit-scrollbar,
+  #adminEspecialidadesApp .nav-pills:not(.sidebar-menu)::-webkit-scrollbar,
+  #adminAseguradorasApp .nav-pills:not(.sidebar-menu)::-webkit-scrollbar,
+  #tabsFiltroAtenciones::-webkit-scrollbar,
+  #tabsDetallePaciente::-webkit-scrollbar {
+    display: none;
+  }
+
+  [data-trace="C26-subnav-admin"] .nav-link,
+  #adminUsuariosApp .nav-pills:not(.sidebar-menu) .nav-link,
+  #adminEspecialidadesApp .nav-pills:not(.sidebar-menu) .nav-link,
+  #adminAseguradorasApp .nav-pills:not(.sidebar-menu) .nav-link,
+  #tabsFiltroAtenciones .nav-link,
+  #tabsDetallePaciente .nav-link,
+  .visor-tablist .visor-tab {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  /* Grilla compacta de 4 columnas para los 8 signos vitales en Evolución SOAP */
+  #gridSignosVitales > div {
+    width: 25% !important;
+    flex: 0 0 25% !important;
+  }
+
+  #gridSignosVitales .rounded {
+    padding: 0.4rem 0.25rem !important;
+  }
+
+  #gridSignosVitales .fs-5 {
+    font-size: clamp(0.82rem, 3.2vw, 1.05rem) !important;
+  }
+
+  /* Grilla de franjas horarias en cita nueva / gestión */
+  #grillaFranjas {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, minmax(82px, 1fr));
+    gap: 0.5rem !important;
+    align-items: stretch !important;
+  }
+
+  #grillaFranjas > #grillaFranjasPlaceholder,
+  #grillaFranjas > .alert,
+  #grillaFranjas > .text-muted {
+    grid-column: 1 / -1;
+  }
+
+  #grillaFranjas .btn,
+  #grillaFranjas button {
+    min-height: 44px;
+    width: 100%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Inputs táctiles sin auto-zoom iOS en #formSignos */
+  #formSignos .form-control,
+  #formSignos .form-control-sm,
+  #formSignos .input-group-sm > .form-control,
+  #formSignos .input-group-sm > .input-group-text {
+    font-size: 16px !important;
+    min-height: 42px;
+  }
+
+  #formSignos .row {
+    margin-bottom: 0.65rem !important;
+  }
+
+  /* 5. Visor de resultados y modales <dialog> nativos en móvil */
+  .visor-hero-actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+  }
+
+  .visor-hero-actions > #btnMarcarRevisado {
+    grid-column: 1 / -1;
+  }
+
+  .visor-hero-actions > .btn,
+  .visor-hero-actions > a.btn {
+    width: 100%;
+    min-height: 44px;
+    justify-content: center;
+  }
+
+  dialog.visor-modal,
+  dialog.visor-modal.visor-modal--sm,
+  dialog.visor-modal.visor-modal--md,
+  dialog.visor-modal.visor-modal--lg,
+  dialog.visor-modal.visor-modal--xl {
+    width: 95vw;
+    max-width: 95vw;
+    margin: auto;
+    border-radius: 0.85rem;
+  }
+
+  .visor-modal-header {
+    padding: 0.85rem 1rem;
+    gap: 0.5rem;
+  }
+
+  .visor-modal-header .btn-close {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .visor-modal-body {
+    padding: 0.9rem 1rem;
+  }
+
+  .visor-modal-footer {
+    padding: 0.75rem 1rem;
+    flex-wrap: wrap;
+  }
+
+  .visor-modal-footer .btn {
+    min-height: 44px;
+  }
+
+  /* 6. Soporte Dark Mode para tarjetas móviles y elementos adaptados */
+  [data-bs-theme="dark"] #tablaSignos th:first-child,
+  [data-bs-theme="dark"] #tablaSignos td:first-child {
+    background-color: var(--hiscare-surface-1, #0d182d);
+    box-shadow: 2px 0 6px rgba(2, 6, 23, 0.45);
+  }
+
+  [data-bs-theme="dark"] .table:not(#tablaSignos) tbody tr {
+    background-color: var(--hiscare-surface-1, #0d182d);
+    border-color: var(--hiscare-border-color, rgba(148, 163, 184, 0.22));
+    box-shadow: 0 4px 12px rgba(2, 6, 23, 0.45);
+  }
+
+  [data-bs-theme="dark"] .table:not(#tablaSignos) tbody td {
+    border-bottom-color: rgba(148, 163, 184, 0.16) !important;
+    color: var(--hiscare-text-main, #f1f5f9) !important;
+  }
+
+  [data-bs-theme="dark"] .table:not(#tablaSignos) tbody td:first-child,
+  [data-bs-theme="dark"] #tablaAnalitos tbody th[scope="row"]:first-child {
+    border-bottom-color: rgba(148, 163, 184, 0.22) !important;
+    color: #f8fafc !important;
+  }
+
+  [data-bs-theme="dark"] .table:not(#tablaSignos) tbody td:first-child,
+  [data-bs-theme="dark"] #tablaAnalitos tbody tr:not(.analito-row-alterado):not(.analito-row-critico) th[scope="row"]:first-child {
+    background-color: rgba(37, 99, 235, 0.16);
+  }
+
+  [data-bs-theme="dark"] .table:not(#tablaSignos) tbody td::before,
+  [data-bs-theme="dark"] #tablaAnalitos tbody th[scope="row"]:first-child::before {
+    color: var(--hiscare-text-secondary, #cbd5e1);
+  }
+
+  [data-bs-theme="dark"] .table:not(#tablaSignos) tbody td[colspan] {
+    background: transparent !important;
+    border: none !important;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   M3. REFINAMIENTO ULTRA-COMPACTO PARA SMARTPHONES ESTRECHOS (<= 575.98px)
+   -------------------------------------------------------------------------- */
+@media (max-width: 575.98px) {
+  /* Cabeceras de página apiladas con acciones primarias a ancho completo */
+  #contenidoPrincipal > .container-fluid > .d-flex.justify-content-between,
+  #contenidoPrincipal > .d-flex.justify-content-between,
+  .d-flex.justify-content-between.align-items-center.mb-3:not(.card-header):not(.modal-header):not(.topbar) {
+    flex-direction: column;
+    align-items: stretch !important;
+    gap: 0.75rem !important;
+  }
+
+  #contenidoPrincipal > .container-fluid > .d-flex.justify-content-between > .d-flex,
+  #contenidoPrincipal > .container-fluid > .d-flex.justify-content-between > div:last-child,
+  #contenidoPrincipal > .container-fluid > .d-flex.justify-content-between > .btn,
+  #contenidoPrincipal > .container-fluid > .d-flex.justify-content-between > a.btn {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  #contenidoPrincipal > .container-fluid > .d-flex.justify-content-between > .d-flex > .btn,
+  #contenidoPrincipal > .container-fluid > .d-flex.justify-content-between > div:last-child > .btn,
+  #contenidoPrincipal > .container-fluid > .d-flex.justify-content-between > .d-flex > a.btn,
+  #contenidoPrincipal > .container-fluid > .d-flex.justify-content-between > div:last-child > a.btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Rangos de fechas en ordenes_listado.ejs y auditoria_listado.ejs */
+  #contenedorRangoFechas.input-group {
+    display: grid !important;
+    grid-template-columns: minmax(3.5rem, auto) 1fr;
+    gap: 0.35rem;
+    align-items: stretch;
+    width: 100%;
+  }
+
+  #barraFiltrosAuditoria #contenedorRangoFechas.input-group,
+  #contenedorRangoFechas.input-group:has(> input:first-child) {
+    grid-template-columns: 1fr;
+  }
+
+  #contenedorRangoFechas.input-group > .input-group-text,
+  #contenedorRangoFechas.input-group > .form-control {
+    width: 100% !important;
+    margin-left: 0 !important;
+    border-radius: var(--hiscare-radius-md, 0.5rem) !important;
+    min-height: 44px;
+    font-size: 16px !important;
+  }
+
+  #barraFiltrosAuditoria #contenedorRangoFechas.input-group > .input-group-text,
+  #contenedorRangoFechas.input-group:has(> input:first-child) > .input-group-text {
+    min-height: 28px;
+    justify-content: center;
+    padding: 0.2rem 0.5rem;
+  }
+
+  /* Tabs SOAP en cuadrícula 2x2 */
+  #soapTabs {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.4rem !important;
+    width: 100%;
+  }
+
+  #soapTabs .tab-soap {
+    width: 100%;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+
+  #soapTabs #indicadorBorrador,
+  #soapTabs .soap-autosave-badge {
+    grid-column: 1 / -1;
+    justify-self: end;
+  }
+}
+

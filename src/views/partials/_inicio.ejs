@@ -24,9 +24,10 @@
   <link rel="stylesheet" href="/css/print.css" media="print">
 </head>
 <body class="bg-light">
-<div class="d-flex min-vh-100">
+<div id="sidebarBackdrop" class="sidebar-backdrop" aria-hidden="true"></div>
+<div class="d-flex min-vh-100 position-relative">
   <%- include('_sidebar') %>
   <div class="flex-grow-1 d-flex flex-column min-vh-100 main-wrapper">
     <%- include('_topbar') %>
     <%- include('_alertas') %>
-    <main class="flex-grow-1 p-4" id="contenidoPrincipal">
+    <main class="flex-grow-1 p-2 p-sm-3 p-md-4" id="contenidoPrincipal">

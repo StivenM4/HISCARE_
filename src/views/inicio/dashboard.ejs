@@ -132,10 +132,10 @@
                     data-medico-id="<%= c.medico_id || '' %>"
                     data-fecha="<%= typeof fechaHoy !== 'undefined' ? fechaHoy : '' %>"
                     style="cursor: pointer;">
-                  <td class="fw-semibold"><%= c.hora %></td>
-                  <td><%= c.paciente %></td>
-                  <td><%= c.medico %></td>
-                  <td>
+                  <td data-label="Hora" class="fw-semibold"><%= c.hora %></td>
+                  <td data-label="Paciente"><%= c.paciente %></td>
+                  <td data-label="Profesional"><%= c.medico %></td>
+                  <td data-label="Estado">
                     <span class="badge estado-<%= c.estado %> badge-estado-<%= estadoClase %> px-2 py-1">
                       <%= formatearEstadoCitaSSR(c.estado) %>
                     </span>

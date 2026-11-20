@@ -275,7 +275,7 @@ document.addEventListener('DOMContentLoaded', () => {
       `;
 
       itemRow.addEventListener('click', () => {
-        seleccionarHito(hito);
+        seleccionarHito(hito, true);
       });
 
       timelineLista.appendChild(itemRow);
@@ -285,7 +285,7 @@ document.addEventListener('DOMContentLoaded', () => {
   /**
    * Resalta el hito activo en el DOM y carga su resumen
    */
-  function seleccionarHito(hito) {
+  function seleccionarHito(hito, esClicUsuario = false) {
     if (!hito) return;
 
     const todasLasFilas = timelineLista.querySelectorAll('.timeline-row-item');
@@ -306,7 +306,9 @@ document.addEventListener('DOMContentLoaded', () => {
       if (cardActiva) {
         cardActiva.classList.add('timeline-item-selected');
       }
-      filaActiva.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      if (!esClicUsuario && typeof filaActiva.scrollIntoView === 'function') {
+        filaActiva.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
     }
 
     eventoId = hito.id;
@@ -318,6 +320,13 @@ document.addEventListener('DOMContentLoaded', () => {
       cargarResumenAtencion(hito.atencion_id);
     } else {
       mostrarPlaceholderPanel('El evento seleccionado no tiene una atención clínica vinculada.');
+    }
+
+    if (esClicUsuario) {
+      const panel = document.getElementById('panelDetalleLateral');
+      if (typeof window !== 'undefined' && window.innerWidth < 992 && panel && typeof panel.scrollIntoView === 'function') {
+        panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
     }
   }
 

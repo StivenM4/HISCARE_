@@ -820,8 +820,8 @@
                     data-revisado="<%= esRevisado ? 'true' : 'false' %>"
                     tabindex="0"
                     aria-current="<%= esSeleccionado ? 'true' : 'false' %>">
-                  <td class="ps-3 text-nowrap fw-medium small text-dark tabular-nums"><%= fechaFormateada %></td>
-                  <td class="text-nowrap font-monospace small fw-bold text-primary">
+                  <td data-label="Fecha" class="ps-3 text-nowrap fw-medium small text-dark tabular-nums"><%= fechaFormateada %></td>
+                  <td data-label="Orden" class="text-nowrap font-monospace small fw-bold text-primary">
                     <span><%= codOrden %></span>
                     <% if (r.tiene_archivo || r.archivo || r.archivo_url) { %>
                       <span class="ms-1 text-muted" title="Incluye archivo adjunto" aria-label="Incluye archivo adjunto">
@@ -831,9 +831,9 @@
                       </span>
                     <% } %>
                   </td>
-                  <td class="small text-secondary"><%= tipoLimpio %></td>
-                  <td class="small text-dark"><%= r.nombre_examen || r.examen_principal || formatearTipoEstudio(r.tipo) %></td>
-                  <td class="pe-3 text-end text-nowrap">
+                  <td data-label="Tipo" class="small text-secondary"><%= tipoLimpio %></td>
+                  <td data-label="Estudio" class="small text-dark"><%= r.nombre_examen || r.examen_principal || formatearTipoEstudio(r.tipo) %></td>
+                  <td data-label="Estado" class="pe-3 text-end text-nowrap">
                     <% if (esRevisado) { %>
                       <span class="badge bg-secondary text-white fw-bold badge-estado-resultado" data-trace="C25-27">REVISADO</span>
                     <% } else { %>

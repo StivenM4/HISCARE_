@@ -9,8 +9,8 @@
   <link rel="stylesheet" href="/vendor/sweetalert2/sweetalert2.min.css">
   <link rel="stylesheet" href="/css/hiscare.css">
 </head>
-<body class="bg-light d-flex align-items-center justify-content-center min-vh-100">
-  <form method="post" action="/auth/cambiar-clave" class="card p-4 shadow-sm" style="width: 420px" id="formCambiarClave">
+<body class="bg-light d-flex align-items-center justify-content-center min-vh-100 p-3">
+  <form method="post" action="/auth/cambiar-clave" class="card p-4 shadow-sm" style="width: 100%; max-width: 420px" id="formCambiarClave">
     <input type="hidden" name="_csrf" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
     <div class="fs-3 fw-bold text-center mb-2" data-trace="C1-1">HISCARE</div>
     <h2 class="h5 text-center mb-2">Actualizar contraseña</h2>

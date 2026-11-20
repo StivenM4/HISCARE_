@@ -310,7 +310,7 @@
   }
 
   // Carga del detalle en el panel derecho [23.35]
-  async function cargarDetalle(integracionId) {
+  async function cargarDetalle(integracionId, opciones = {}) {
     if (!integracionId) return;
     ordenSeleccionadaId = integracionId;
 
@@ -322,6 +322,13 @@
         tr.classList.remove('table-primary');
       }
     });
+
+    if (opciones && opciones.scrollMobile) {
+      const panel = document.getElementById('panelDetalle');
+      if (typeof window !== 'undefined' && window.innerWidth < 992 && panel && typeof panel.scrollIntoView === 'function') {
+        panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    }
 
     if (detalleIndicadorSeleccion) {
       detalleIndicadorSeleccion.textContent = 'Cargando...';
@@ -534,12 +541,12 @@
         if (btnDetalle) {
           e.stopPropagation();
           const id = btnDetalle.dataset.id;
-          cargarDetalle(id);
+          cargarDetalle(id, { scrollMobile: true });
           return;
         }
 
         if (fila && fila.dataset.id) {
-          cargarDetalle(fila.dataset.id);
+          cargarDetalle(fila.dataset.id, { scrollMobile: true });
         }
       });
     }
