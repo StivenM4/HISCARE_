@@ -1,0 +1,387 @@
+<!doctype html>
+<html lang="es">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="csrf-token" content="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
+  <title>Sesión expirada · HISCARE</title>
+  <link rel="stylesheet" href="/vendor/bootstrap/css/bootstrap.min.css">
+  <link rel="stylesheet" href="/vendor/sweetalert2/sweetalert2.min.css">
+  <link rel="stylesheet" href="/public/css/hiscare.css">
+  <link rel="stylesheet" href="/public/css/hiscare-login.css">
+</head>
+
+<body class="hiscare-login-body">
+  <!-- Fondo clínico animado interactivo estilo HISCARE -->
+  <div class="hiscare-login-bg" id="hiscareLoginBg" aria-hidden="true">
+    <div class="hiscare-login-grid"></div>
+    <div class="hiscare-orb hiscare-orb--cobalt"></div>
+    <div class="hiscare-orb hiscare-orb--cyan"></div>
+    <div class="hiscare-orb hiscare-orb--emerald"></div>
+    <canvas id="hiscareClinicalCanvas"></canvas>
+    <div class="hiscare-login-spotlight"></div>
+
+    <!-- Trazo ECG clínico sutil -->
+    <div class="hiscare-bg-ecg">
+      <svg viewBox="0 0 1440 100" preserveAspectRatio="none" focusable="false">
+        <defs>
+          <linearGradient id="hiscareEcgGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#2563eb" stop-opacity="0.1" />
+            <stop offset="35%" stop-color="#06b6d4" stop-opacity="0.55" />
+            <stop offset="70%" stop-color="#10b981" stop-opacity="0.45" />
+            <stop offset="100%" stop-color="#2563eb" stop-opacity="0.1" />
+          </linearGradient>
+        </defs>
+        <path class="hiscare-ecg-trace"
+          d="M0,56 L180,56 L205,56 L218,46 L230,66 L245,14 L260,88 L274,38 L286,56 L470,56 L495,56 L508,46 L520,66 L535,14 L550,88 L564,38 L576,56 L820,56 L845,56 L858,46 L870,66 L885,14 L900,88 L914,38 L926,56 L1170,56 L1195,56 L1208,46 L1220,66 L1235,14 L1250,88 L1264,38 L1276,56 L1440,56" />
+        <path class="hiscare-ecg-sweep"
+          d="M0,56 L180,56 L205,56 L218,46 L230,66 L245,14 L260,88 L274,38 L286,56 L470,56 L495,56 L508,46 L520,66 L535,14 L550,88 L564,38 L576,56 L820,56 L845,56 L858,46 L870,66 L885,14 L900,88 L914,38 L926,56 L1170,56 L1195,56 L1208,46 L1220,66 L1235,14 L1250,88 L1264,38 L1276,56 L1440,56" />
+      </svg>
+    </div>
+  </div>
+
+  <!-- Control discreto para pausar animación ambiental (WCAG 2.2.2) -->
+  <button type="button" class="login-ambient-control" id="btnToggleAmbient" aria-label="Pausar animación de fondo">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+      stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <rect x="6" y="4" width="4" height="16" rx="1" />
+      <rect x="14" y="4" width="4" height="16" rx="1" />
+    </svg>
+    <span id="ambientToggleText">Pausar fondo</span>
+  </button>
+
+  <main class="login-shell">
+    <div class="login-grid">
+      <!-- Panel izquierdo de marca institucional HISCARE (visible en desktop) -->
+      <section class="login-brand-panel d-none d-lg-flex" aria-label="Información institucional HISCARE">
+        <div class="login-anim-stagger-1">
+          <h2 class="login-hero-title">
+            Estación Clínica <span class="login-hero-accent">HISCARE</span>
+          </h2>
+          <p class="login-hero-desc mt-3">
+            Plataforma hospitalaria integral para gestión de agenda, triage asistencial, evolución médica y continuidad
+            clínica bajo trazabilidad auditada.
+          </p>
+        </div>
+      </section>
+
+      <!-- Tarjeta elevada de sesión expirada -->
+      <section class="card login-card auth-card border-0 login-anim-card" aria-labelledby="expiredHeading">
+        <div class="login-card-header">
+          <a href="/" class="login-brand-link" aria-label="HISCARE - Ir al inicio del sistema">
+            <span class="login-brand-emblem" aria-hidden="true">
+              <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M8 1a1 1 0 0 1 1 1v5h5a1 1 0 1 1 0 2H9v5a1 1 0 1 1-2 0V9H2a1 1 0 1 1 0-2h5V2a1 1 0 0 1 1-1z" />
+              </svg>
+            </span>
+            <span class="login-brand-text">HISCARE</span>
+          </a>
+
+          <!-- 27.15: Ícono de temporizador/reloj con tono ámbar/naranja -->
+          <div class="login-expired-icon-row">
+            <div class="login-expired-icon-wrap" data-trace="C27-15" aria-hidden="true">
+              <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" fill="currentColor"
+                class="bi bi-clock-history" viewBox="0 0 16 16">
+                <path d="M8.515 1.019A7 7 0 0 0 8 1V0a8 8 0 0 1 .589.022zm2.004.45a7 7 0 0 0-.985-.299l.219-.976q.576.128 1.123.318zm1.94.97a7 7 0 0 0-.766-.566l.487-.87a8 8 0 0 1 .917.674zM13.6 4.02a7 7 0 0 0-.52-.693l.69-.72a8 8 0 0 1 .632.83zm1.196 1.764a7 7 0 0 0-.29-.76l.87-.487q.224.402.406.828zm.713 1.94a7 7 0 0 0-.115-.812l.976-.219c.07.35.105.707.105 1.066q0 .147-.008.293l-.988-.13a7 7 0 0 0-.01-.198m.05 1.972q.01-.19.01-.383l.999.043q.002.261-.02.52l-.989-.18zm-.362 1.93q.154-.344.275-.705l.95.312a8 8 0 0 1-.341.875zm-.76 1.782q.278-.266.521-.56l.76.65a8 8 0 0 1-.652.704zm-1.196 1.545q.375-.184.72-.403l.535.842q-.43.272-.897.494zm-1.63 1.222q.436-.1.85-.246l.328.944a8 8 0 0 1-1.047.31zM8.5 15q.49 0 .97-.06l.123.992A8 8 0 0 1 8 16v-1zm-1.5 0q-.49 0-.97-.06l-.123.992A8 8 0 0 0 8 16v-1zm-1.94-.97q-.436-.1-.85-.246l-.328.944a8 8 0 0 0 1.047.31zm-1.63-1.222q-.375-.184-.72-.403l-.535.842q.43.272.897.494zm-1.196-1.545q-.278-.266-.521-.56l-.76.65q.304.367.652.704zm-.76-1.782q-.154-.344-.275-.705l-.95.312q.152.448.341.875zm-.362-1.93q-.01.19-.01.383l-.999.043q-.002-.261.02-.52l.989.18zm.05-1.972q0-.147.008-.293l.988.13q.01.099.01.198a7 7 0 0 0 .115.812l-.976.219a8 8 0 0 1-.105-1.066m.713-1.94q.12-.375.29-.76l-.87-.487a8 8 0 0 0-.406.828zm1.196-1.764q.23-.362.52-.693l-.69-.72a8 8 0 0 0-.632.83zm1.94-.97q.347-.208.766-.566l-.487-.87a8 8 0 0 0-.917.674zm2.004-.45q.475-.17.985-.299l-.219-.976A8 8 0 0 0 7.5.022V1q.48 0 .985.019"/>
+                <path d="M8.5 4.5a.5.5 0 0 0-1 0v4.793l2.854 1.712a.5.5 0 0 0 .513-.858L8.5 8.793z"/>
+              </svg>
+            </div>
+          </div>
+
+          <!-- 27.16: Título Su sesión expiró por inactividad -->
+          <h1 id="expiredHeading" class="login-title" data-trace="C27-16">Su sesión expiró por inactividad</h1>
+
+          <% const tieneBorradorServer = typeof borrador !== 'undefined' && borrador && borrador.titulo; %>
+
+          <!-- 27.17: Texto explicativo de inactividad de 15 minutos -->
+          <p class="login-subtitle" data-trace="C27-17">Su sesión se cerró por inactividad. Por seguridad la sesión se cerró tras 15 minutos sin actividad.<span id="textoBorradorInfo" class="<%= tieneBorradorServer ? '' : 'd-none' %>"> El texto que estaba escribiendo se conservó como borrador.</span></p>
+        </div>
+
+        <!-- Alerta de posibles errores de validación/credenciales -->
+        <div class="alert alert-danger login-alert <%= (typeof error !== 'undefined' && error) ? '' : 'd-none' %>"
+          id="loginError" role="alert" tabindex="-1">
+          <svg class="login-alert-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="12" />
+            <line x1="12" y1="16" x2="12.01" y2="16" />
+          </svg>
+          <span id="loginErrorText">
+            <%= (typeof error !== 'undefined' && error) ? error
+              : 'Credenciales inválidas. Verifique su correo y contraseña' %>
+          </span>
+        </div>
+
+        <!-- 27.18: Alerta verde de borrador recuperado -->
+        <div id="alertaBorrador"
+          class="alert alert-success login-alert login-draft-alert <%= tieneBorradorServer ? 'd-flex' : 'd-none' %> align-items-center"
+          role="status" data-trace="C27-18">
+          <svg class="login-alert-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+            <polyline points="17 21 17 13 7 13 7 21" />
+            <polyline points="7 3 7 8 15 8" />
+          </svg>
+          <div class="small">
+            Borrador recuperado: <strong id="borradorResumen">"<%= tieneBorradorServer ? borrador.titulo : '' %>"</strong> <span class="text-muted">guardado automáticamente</span>
+          </div>
+        </div>
+
+        <!-- Formulario de reingreso -->
+        <form method="post" action="/auth/login" id="formSesionExpirada" novalidate>
+          <input type="hidden" name="_csrf" value="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
+          <input type="hidden" name="expirada" value="true">
+          <input type="hidden" name="next" value="<%= typeof next !== 'undefined' ? next : (locals.next || '') %>">
+
+          <!-- 27.19, 27.20: Correo institucional -->
+          <div class="login-field login-anim-stagger-1">
+            <div class="login-label-row">
+              <label for="email" class="form-label login-label" data-trace="C27-19">Correo institucional</label>
+            </div>
+            <div class="login-input-wrap" id="emailWrap">
+              <span class="login-input-icon" aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="2" y="4" width="20" height="16" rx="2" />
+                  <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+                </svg>
+              </span>
+              <input type="email" id="email" name="email" class="form-control login-input"
+                placeholder="aperez@hiscare.edu.co" required autofocus autocomplete="username" spellcheck="false"
+                autocapitalize="none" autocorrect="off" enterkeyhint="next" aria-invalid="false"
+                data-error="emailFeedback" value="<%= locals.email || '' %>" data-trace="C27-20">
+              <span class="login-valid-badge" aria-hidden="true">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              </span>
+            </div>
+            <div id="emailFeedback" class="login-field-error">
+              <span aria-hidden="true">!</span>
+              <span id="emailFeedbackText">Ingrese un correo institucional válido.</span>
+            </div>
+          </div>
+
+          <!-- 27.21, 27.22: Contraseña -->
+          <div class="login-field login-anim-stagger-2">
+            <div class="login-label-row">
+              <label for="password" class="form-label login-label" data-trace="C27-21">Contraseña</label>
+              <span id="capsLockIndicator" class="login-capslock-badge d-none" role="status" aria-live="polite">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                  stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M12 19V5" />
+                  <path d="m5 12 7-7 7 7" />
+                </svg>
+                <span>Bloq Mayús</span>
+              </span>
+            </div>
+            <div class="login-input-wrap" id="passwordWrap">
+              <span class="login-input-icon" aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                </svg>
+              </span>
+              <input type="password" id="password" name="password" class="form-control login-input"
+                placeholder="••••••••" required minlength="8" autocomplete="current-password" enterkeyhint="done"
+                aria-invalid="false" data-error="passwordFeedback" data-trace="C27-22">
+              <button type="button" class="login-toggle-btn" id="btnTogglePassword" title="Mostrar contraseña"
+                aria-label="Mostrar contraseña" aria-pressed="false" aria-describedby="togglePasswordHint">
+                <svg class="icon-eye" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+                <svg class="icon-eye-off" width="19" height="19" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                  aria-hidden="true">
+                  <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
+                  <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" />
+                  <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" />
+                  <line x1="2" y1="2" x2="22" y2="22" />
+                </svg>
+              </button>
+              <span id="togglePasswordHint" class="visually-hidden">Atención: al activar esta opción su contraseña
+                será visible en pantalla.</span>
+            </div>
+            <div id="passwordFeedback" class="login-field-error">
+              <span aria-hidden="true">!</span>
+              <span id="passwordFeedbackText">La contraseña debe tener al menos 8 caracteres.</span>
+            </div>
+          </div>
+
+          <!-- 27.23: Botón Iniciar sesión y recuperar borrador -->
+          <button type="submit" class="btn btn-primary login-submit-btn login-anim-stagger-3" id="btnIniciarRecuperar"
+            data-trace="C27-23">
+            <span id="btnIniciarRecuperarText">Iniciar sesión y recuperar borrador</span>
+            <svg class="btn-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M5 12h14" />
+              <path d="m12 5 7 7-7 7" />
+            </svg>
+          </button>
+
+          <div class="login-footer-links login-anim-stagger-3">
+            <a href="/auth/recuperar" class="login-help-link">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                <path d="M12 17h.01" />
+              </svg>
+              <span>¿Olvidó su contraseña? Contactar a Sistemas</span>
+            </a>
+          </div>
+        </form>
+      </section>
+    </div>
+  </main>
+
+  <div id="loginLiveRegion" class="visually-hidden" aria-live="polite" aria-atomic="true"></div>
+
+  <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="/vendor/sweetalert2/sweetalert2.all.min.js"></script>
+  <script>
+    (function () {
+      const tieneBorradorServer = <%= tieneBorradorServer ? 'true' : 'false' %>;
+
+      function tieneContenidoEnValor(val, keyName) {
+        if (val === null || val === undefined || typeof val === 'boolean') return false;
+        if (typeof val === 'string') return val.trim().length > 0;
+        if (typeof val === 'number') {
+          if (keyName && /^(timestamp|updatedAt|createdAt|savedAt|fecha|ts|id)$/i.test(keyName)) {
+            return false;
+          }
+          return !Number.isNaN(val);
+        }
+        if (Array.isArray(val)) {
+          return val.some(function (item) {
+            return tieneContenidoEnValor(item);
+          });
+        }
+        if (typeof val === 'object') {
+          return Object.keys(val).some(function (k) {
+            if (/^(timestamp|updatedAt|createdAt|savedAt|fecha|ts)$/i.test(k)) {
+              return false;
+            }
+            return tieneContenidoEnValor(val[k], k);
+          });
+        }
+        return false;
+      }
+
+      function esValorBorradorValido(raw) {
+        if (typeof raw !== 'string') return false;
+        const trimmed = raw.trim();
+        if (!trimmed) return false;
+        if (
+          trimmed.startsWith('{') ||
+          trimmed.startsWith('[') ||
+          trimmed === 'null' ||
+          trimmed === 'undefined' ||
+          trimmed === '""'
+        ) {
+          try {
+            const parsed = JSON.parse(trimmed);
+            return tieneContenidoEnValor(parsed);
+          } catch (e) {
+            return trimmed !== 'null' && trimmed !== 'undefined';
+          }
+        }
+        return true;
+      }
+
+      function obtenerNombreBorrador(clave, valorRaw) {
+        if (clave.startsWith('hiscare:soap:')) {
+          try {
+            const parsed = JSON.parse(valorRaw);
+            if (parsed && typeof parsed === 'object') {
+              if (typeof parsed.objetivo === 'string' && parsed.objetivo.trim()) return 'Evolución SOAP - Objetivo';
+              if (typeof parsed.subjetivo === 'string' && parsed.subjetivo.trim()) return 'Evolución SOAP - Subjetivo';
+              if (typeof parsed.analisis === 'string' && parsed.analisis.trim()) return 'Evolución SOAP - Análisis';
+              if (typeof parsed.plan === 'string' && parsed.plan.trim()) return 'Evolución SOAP - Plan';
+            }
+          } catch (e) {}
+          return 'Evolución SOAP';
+        }
+
+        const partes = clave.split(':');
+        const campo = (partes[partes.length - 1] || '').toLowerCase();
+        const mapa = {
+          objetivo: 'Evolución SOAP - Objetivo',
+          soap: 'Evolución SOAP - Objetivo',
+          subjetivo: 'Evolución SOAP - Subjetivo',
+          analisis: 'Evolución SOAP - Análisis',
+          plan: 'Evolución SOAP - Plan',
+          motivo: 'Motivo de consulta',
+          alta: 'Nota de alta',
+          orden: 'Orden médica',
+        };
+        if (mapa[campo]) return mapa[campo];
+        if (clave.includes('/pacientes/nuevo')) return 'Registro de paciente';
+        if (campo) return campo.replace(/_/g, ' ');
+        return 'Evolución SOAP';
+      }
+
+      const borradoresLocales = [];
+      try {
+        for (let i = 0; i < localStorage.length; i++) {
+          const k = localStorage.key(i);
+          if (k && (k.startsWith('hiscare:borrador:') || k.startsWith('hiscare:soap:'))) {
+            const v = localStorage.getItem(k);
+            if (esValorBorradorValido(v)) {
+              borradoresLocales.push({ clave: k, valor: v });
+            }
+          }
+        }
+      } catch (e) {
+        // Almacenamiento local restringido o inaccesible
+      }
+
+      const alertaBorrador = document.getElementById('alertaBorrador');
+      const textoBorradorInfo = document.getElementById('textoBorradorInfo');
+      const borradorResumen = document.getElementById('borradorResumen');
+      const btnIniciarRecuperar = document.getElementById('btnIniciarRecuperar');
+      const btnIniciarRecuperarText = document.getElementById('btnIniciarRecuperarText');
+      const tieneBorrador = tieneBorradorServer || borradoresLocales.length > 0;
+
+      if (tieneBorrador) {
+        if (alertaBorrador) {
+          alertaBorrador.classList.remove('d-none');
+          alertaBorrador.classList.add('d-flex');
+        }
+        if (textoBorradorInfo) {
+          textoBorradorInfo.classList.remove('d-none');
+        }
+        if (borradoresLocales.length > 0 && borradorResumen) {
+          const ultimo = borradoresLocales[borradoresLocales.length - 1];
+          borradorResumen.textContent = '"' + obtenerNombreBorrador(ultimo.clave, ultimo.valor) + '"';
+        }
+        if (btnIniciarRecuperarText) {
+          btnIniciarRecuperarText.textContent = 'Iniciar sesión y recuperar borrador';
+        } else if (btnIniciarRecuperar) {
+          btnIniciarRecuperar.textContent = 'Iniciar sesión y recuperar borrador';
+        }
+      } else {
+        if (alertaBorrador) {
+          alertaBorrador.classList.remove('d-flex');
+          alertaBorrador.classList.add('d-none');
+        }
+        if (textoBorradorInfo) {
+          textoBorradorInfo.classList.add('d-none');
+        }
+        if (btnIniciarRecuperarText) {
+          btnIniciarRecuperarText.textContent = 'Iniciar sesión';
+        } else if (btnIniciarRecuperar) {
+          btnIniciarRecuperar.textContent = 'Iniciar sesión';
+        }
+      }
+    })();
+  </script>
+  <script src="/public/js/login.js"></script>
+</body>
+
+</html>

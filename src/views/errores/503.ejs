@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Servicio no disponible · HISCARE</title>
+  <link rel="stylesheet" href="/vendor/bootstrap/css/bootstrap.min.css">
+  <link rel="stylesheet" href="/css/hiscare.css">
+</head>
+<body class="bg-light d-flex align-items-center justify-content-center min-vh-100 p-3">
+  <div class="card p-4 p-sm-5 shadow-sm border-0 rounded-3 text-center" style="max-width: 480px; width: 100%;">
+    <!-- Número 503 en gris pizarra oscuro -->
+    <div class="display-3 fw-bold text-secondary mb-1" style="color: #4a5568 !important;" data-trace="C27-24">503</div>
+
+    <!-- Título Servicio no disponible temporalmente -->
+    <h1 class="h4 fw-bold text-dark mb-2" data-trace="C27-25">Servicio no disponible temporalmente</h1>
+
+    <!-- Mensaje de tranquilidad sobre datos salvados -->
+    <p class="text-secondary mb-3" data-trace="C27-26">HISCARE no puede atender la solicitud en este momento. Los datos que ya fueron confirmados están a salvo.</p>
+
+    <!-- Alerta sin detalles técnicos -->
+    <div class="alert alert-warning text-start py-2 px-3 small mb-3" role="status" data-trace="C27-27">
+      ⚠ No se muestran detalles técnicos del error al usuario.
+    </div>
+
+    <!-- Metadatos de incidente y reintento -->
+    <div class="text-start mb-4">
+      <!-- Código de incidente -->
+      <div class="d-flex justify-content-between py-1 border-bottom">
+        <span class="text-muted" data-trace="C27-28">Código de incidente</span>
+        <code class="text-primary fw-bold" data-trace="C27-29"><%= incidente %></code>
+      </div>
+
+      <!-- Siguiente intento con cuenta regresiva -->
+      <div class="d-flex justify-content-between py-1 border-bottom">
+        <span class="text-muted" data-trace="C27-30">Siguiente intento</span>
+        <span class="text-dark fw-medium" data-trace="C27-31">Automático en <span id="contador-segundos">30</span> s</span>
+      </div>
+    </div>
+
+    <!-- Botón Reintentar ahora -->
+    <button type="button" class="btn btn-outline-primary w-100 py-2 fw-semibold" onclick="location.reload()" data-trace="C27-32">Reintentar ahora</button>
+  </div>
+
+  <script>
+    (function () {
+      let segundos = 30;
+      const el = document.getElementById('contador-segundos');
+      const intervalo = setInterval(function () {
+        segundos--;
+        if (el) el.textContent = segundos;
+        if (segundos <= 0) {
+          clearInterval(intervalo);
+          location.reload();
+        }
+      }, 1000);
+    })();
+  </script>
+</body>
+</html>

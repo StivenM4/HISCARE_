@@ -1,0 +1,413 @@
+<%- include('../partials/_inicio', { titulo: 'Nota de alta (epicrisis)', figuraTrace: 'C21' }) %>
+<!-- Nota de alta (epicrisis) -->
+<%- include('../partials/_banner_paciente', { figuraTrace: 'C21', seccion: 'alta' }) %>
+<%- include('../partials/_tabs_atencion', { figuraTrace: 'C21', seccion: 'alta' }) %>
+
+<%
+  const idAtencion = atencion.id;
+  const esCerrada = (atencion.estado === 'CERRADA');
+  const rolUsuario = (typeof usuario !== 'undefined' && usuario && usuario.rol) ? usuario.rol : '';
+  const esSoloLectura = Boolean((typeof soloLectura !== 'undefined' && soloLectura) || esCerrada || (rolUsuario && rolUsuario !== 'MEDICO' && rolUsuario !== 'ADMINISTRADOR'));
+
+  // 1. Contenido de resumen y recomendaciones (nota guardada o borrador activo)
+  const notaExistente = (typeof nota !== 'undefined' && nota) ? nota : null;
+  const borradorExistente = (typeof borrador !== 'undefined' && borrador) ? borrador : null;
+
+  const resumenBorrador = borradorExistente ? (borradorExistente.resumen || (borradorExistente.contenido && borradorExistente.contenido.resumen) || '') : '';
+  const recomendacionesBorrador = borradorExistente ? (borradorExistente.recomendaciones || (borradorExistente.contenido && borradorExistente.contenido.recomendaciones) || '') : '';
+
+  const resumenVal = (notaExistente && notaExistente.resumen) ? notaExistente.resumen : resumenBorrador;
+  const recomendacionesVal = (notaExistente && notaExistente.recomendaciones) ? notaExistente.recomendaciones : recomendacionesBorrador;
+
+  // 2. Fecha y hora de la nota
+  let fechaHoraVal = new Date().toLocaleString('es-CO', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false }) + ' (automática)';
+  if (notaExistente && (notaExistente.fecha_formateada || notaExistente.fecha)) {
+    fechaHoraVal = notaExistente.fecha_formateada || String(notaExistente.fecha);
+  } else if (typeof fechaActual !== 'undefined' && fechaActual) {
+    fechaHoraVal = fechaActual;
+  }
+
+  // 3. Profesional tratante
+  function formatearNombreProfesional(nombre, reg) {
+    const regTxt = reg ? `RM ${reg}` : 'Registro médico institucional';
+    if (!nombre) return `Profesional médico en sesión — ${regTxt}`;
+    const n = String(nombre).trim();
+    let pref = n;
+    if (!n.toLowerCase().startsWith('dr.') && !n.toLowerCase().startsWith('dra.')) {
+      pref = (n.toLowerCase().includes('ana') || n.toLowerCase().includes('diana') || n.toLowerCase().includes('laura'))
+        ? `Dra. ${n}`
+        : `Dr. ${n}`;
+    }
+    return `${pref} — ${regTxt}`;
+  }
+
+  let profesionalVal = 'Profesional médico en sesión';
+  if (notaExistente && (notaExistente.medico_nombre || notaExistente.medico)) {
+    profesionalVal = formatearNombreProfesional(notaExistente.medico_nombre || notaExistente.medico, notaExistente.registro_medico);
+  } else if (typeof usuario !== 'undefined' && usuario && usuario.nombre) {
+    profesionalVal = formatearNombreProfesional(usuario.nombre, usuario.registro_medico);
+  } else if (atencion && atencion.medico_nombre) {
+    profesionalVal = formatearNombreProfesional(atencion.medico_nombre, atencion.medico_registro);
+  }
+
+  // 4. Extracción de datos precargados de la atención
+  const resData = (typeof resumen !== 'undefined' && resumen) ? resumen : {};
+  
+  // Diagnóstico principal
+  let diagPrincipal = null;
+  if (typeof diagnosticoPrincipal !== 'undefined' && diagnosticoPrincipal) {
+    diagPrincipal = diagnosticoPrincipal;
+  } else if (resData.diagnostico_principal) {
+    diagPrincipal = resData.diagnostico_principal;
+  } else if (typeof diagnosticos !== 'undefined' && Array.isArray(diagnosticos)) {
+    diagPrincipal = diagnosticos.find(d => d.tipo === 'PRINCIPAL') || null;
+  } else if (Array.isArray(resData.diagnosticos)) {
+    diagPrincipal = resData.diagnosticos.find(d => d.tipo === 'PRINCIPAL') || null;
+  }
+
+  const codDiagPrincipal = diagPrincipal ? diagPrincipal.codigo : 'SIN-COD';
+  const descDiagPrincipal = diagPrincipal ? diagPrincipal.descripcion : 'Sin diagnóstico principal codificado (requerido en Diagnósticos)';
+
+  // Diagnósticos secundarios
+  let diagSecundarios = [];
+  if (typeof diagnosticosSecundarios !== 'undefined' && Array.isArray(diagnosticosSecundarios)) {
+    diagSecundarios = diagnosticosSecundarios;
+  } else if (Array.isArray(resData.diagnosticos_secundarios)) {
+    diagSecundarios = resData.diagnosticos_secundarios;
+  } else if (typeof diagnosticos !== 'undefined' && Array.isArray(diagnosticos)) {
+    diagSecundarios = diagnosticos.filter(d => d.tipo === 'SECUNDARIO');
+  } else if (Array.isArray(resData.diagnosticos)) {
+    diagSecundarios = resData.diagnosticos.filter(d => d.tipo === 'SECUNDARIO');
+  }
+
+  const textoDiagSecundarios = diagSecundarios.length > 0
+    ? diagSecundarios.map(d => `${d.codigo} ${d.descripcion}`).join('; ')
+    : 'Ninguno registrado';
+
+  // Procedimientos
+  let listaProcs = [];
+  if (typeof procedimientos !== 'undefined' && Array.isArray(procedimientos)) {
+    listaProcs = procedimientos;
+  } else if (Array.isArray(resData.procedimientos)) {
+    listaProcs = resData.procedimientos;
+  }
+
+  const textoProcedimientos = listaProcs.length > 0
+    ? listaProcs.map(p => p.codigo || (p.cups_codigo || p.descripcion)).join(', ')
+    : 'Ninguno registrado';
+
+  // Órdenes diagnósticas
+  let listaOrdenes = [];
+  if (typeof ordenes !== 'undefined' && Array.isArray(ordenes)) {
+    listaOrdenes = ordenes;
+  } else if (Array.isArray(resData.ordenes)) {
+    listaOrdenes = resData.ordenes;
+  }
+
+  const textoOrdenes = listaOrdenes.length > 0
+    ? listaOrdenes.map(o => `${o.codigo} · ${o.estado}`).join(', ')
+    : 'Sin órdenes emitidas';
+
+  // Resultados
+  let listaResultados = [];
+  if (typeof resultados !== 'undefined' && Array.isArray(resultados)) {
+    listaResultados = resultados;
+  } else if (Array.isArray(resData.resultados)) {
+    listaResultados = resData.resultados;
+  }
+
+  const textoResultados = listaResultados.length > 0
+    ? listaResultados.map(r => `${r.codigo || (r.id ? 'RES-...' + String(r.id).slice(-3) : 'RES-...654')} ${r.revisado ? 'revisado' : 'pendiente'}`).join(', ')
+    : 'Sin resultados registrados';
+%>
+
+<div class="container-fluid px-0"
+     id="contenedorNotaAlta"
+     data-atencion-id="<%= idAtencion %>"
+     data-solo-lectura="<%= esSoloLectura ? 'true' : 'false' %>">
+
+  <!-- Mensajes y alertas del sistema -->
+  <div id="contenedorAlertasNotaAlta"></div>
+
+  <!-- Layout Bootstrap 5 de dos columnas: Formulario Epicrisis a la izquierda, Datos precargados a la derecha -->
+  <div class="row g-4">
+
+    <!-- ======================================================== -->
+    <!-- Columna Principal (Izquierda): Epicrisis / Nota de alta   -->
+    <!-- ======================================================== -->
+    <div class="col-12 col-lg-8">
+      <div class="card shadow-sm border-0 bg-white p-4 h-100" style="border-radius: 0.5rem;">
+
+        <!-- [21.27] Título / Encabezado "Epicrisis" -->
+        <div class="d-flex align-items-center justify-content-between mb-4 border-bottom pb-3">
+          <div class="d-flex align-items-center gap-2">
+            <svg width="22" height="22" fill="currentColor" class="bi bi-file-earmark-medical text-primary" viewBox="0 0 16 16">
+              <path d="M7.5 5.5a.5.5 0 0 0-1 0v.634l-.549-.317a.5.5 0 0 0-.5.866L6 7l-.549.317a.5.5 0 0 0 .5.866l.549-.317V8.5a.5.5 0 1 0 1 0v-.634l.549.317a.5.5 0 1 0 .5-.866L8 7l.549-.317a.5.5 0 1 0-.5-.866l-.549.317V5.5zm-2 4.5a.5.5 0 0 0 0 1h5a.5.5 0 0 0 0-1h-5zm0 2a.5.5 0 0 0 0 1h5a.5.5 0 0 0 0-1h-5z"/>
+              <path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2zM9.5 3A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5v2z"/>
+            </svg>
+            <h4 class="fw-bold text-dark fs-5 mb-0" data-trace="C21-27">Epicrisis</h4>
+          </div>
+          <span class="badge <%= notaExistente ? 'bg-success bg-opacity-10 text-success border border-success border-opacity-25' : 'bg-light text-secondary border' %> px-2 py-1 small">
+            <%= notaExistente ? 'Nota registrada' : 'Nueva nota de alta' %>
+          </span>
+        </div>
+
+        <!-- Fila de metadatos automáticos: Fecha/Hora y Profesional Tratante -->
+        <div class="row g-3 mb-4">
+          <!-- [21.32, 21.33] Fecha y hora de la nota -->
+          <div class="col-12 col-md-6">
+            <label for="fechaHoraNota" class="form-label text-secondary small fw-semibold mb-1" data-trace="C21-32">
+              Fecha y hora de la nota
+            </label>
+            <div class="input-group">
+              <span class="input-group-text bg-light border-end-0 text-secondary">
+                <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+              </span>
+              <input type="text"
+                     class="form-control bg-light border-start-0 ps-0 shadow-none"
+                     id="fechaHoraNota"
+                     data-trace="C21-33"
+                     value="<%= fechaHoraVal %>"
+                     readonly>
+            </div>
+            <div class="form-text small text-muted">Asignada automáticamente por el sistema.</div>
+          </div>
+
+          <!-- [21.34, 21.35] Profesional -->
+          <div class="col-12 col-md-6">
+            <label for="profesionalNota" class="form-label text-secondary small fw-semibold mb-1" data-trace="C21-34">
+              Profesional
+            </label>
+            <div class="input-group">
+              <span class="input-group-text bg-light border-end-0 text-secondary">
+                <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                </svg>
+              </span>
+              <input type="text"
+                     class="form-control bg-light border-start-0 ps-0 shadow-none"
+                     id="profesionalNota"
+                     data-trace="C21-35"
+                     value="<%= profesionalVal %>"
+                     readonly>
+            </div>
+            <div class="form-text small text-muted">Médico tratante responsable del alta clínica.</div>
+          </div>
+        </div>
+
+        <!-- [21.28, 21.29] Resumen clínico de la atención -->
+        <div class="mb-4">
+          <div class="d-flex align-items-center justify-content-between mb-1">
+            <label for="resumenClinico" class="form-label text-dark fw-semibold small mb-0" data-trace="C21-28">
+              Resumen clínico de la atención
+            </label>
+            <span class="small text-muted" id="contadorResumen">
+              <span id="conteoResumen" class="<%= resumenVal.trim().length >= 20 ? 'text-success fw-bold' : 'text-danger fw-bold' %>"><%= resumenVal.trim().length %></span> / 20 mín.
+            </span>
+          </div>
+          <textarea class="form-control shadow-none"
+                    id="resumenClinico"
+                    name="resumen"
+                    data-trace="C21-29"
+                    rows="5"
+                    placeholder="Describa el resumen de la atención, evolución clínica, hallazgos y estado del paciente al momento del egreso (mínimo 20 caracteres)..."
+                    <%= esSoloLectura ? 'disabled' : '' %>><%= resumenVal %></textarea>
+          <div class="d-flex justify-content-between align-items-center mt-1">
+            <span class="form-text small text-muted">Mínimo 20 caracteres.</span>
+          </div>
+        </div>
+
+        <!-- [21.30, 21.31] Recomendaciones terapéuticas y de seguimiento -->
+        <div class="mb-4">
+          <div class="d-flex align-items-center justify-content-between mb-1">
+            <label for="recomendacionesSeguimiento" class="form-label text-dark fw-semibold small mb-0" data-trace="C21-30">
+              Recomendaciones terapéuticas y de seguimiento
+            </label>
+            <span class="small text-muted" id="contadorRecomendaciones">
+              <span id="conteoRecomendaciones" class="<%= recomendacionesVal.trim().length >= 20 ? 'text-success fw-bold' : 'text-danger fw-bold' %>"><%= recomendacionesVal.trim().length %></span> / 20 mín.
+            </span>
+          </div>
+          <textarea class="form-control shadow-none"
+                    id="recomendacionesSeguimiento"
+                    name="recomendaciones"
+                    data-trace="C21-31"
+                    rows="5"
+                    placeholder="Indique las recomendaciones terapéuticas, plan farmacológico, signos de alarma y pautas de control ambulatorio (mínimo 20 caracteres)..."
+                    <%= esSoloLectura ? 'disabled' : '' %>><%= recomendacionesVal %></textarea>
+          <div class="d-flex justify-content-between align-items-center mt-1">
+            <span class="form-text small text-muted">Instrucciones de egreso y continuidad asistencial (mínimo 20 caracteres).</span>
+          </div>
+        </div>
+
+        <!-- [21.48] Alerta informativa -->
+        <div class="alert alert-info border border-info-subtle shadow-sm py-2 px-3 mb-4 d-flex align-items-center gap-2"
+             id="alertaRequisitoCierre"
+             data-trace="C21-48"
+             role="alert">
+          <svg width="18" height="18" fill="currentColor" class="bi bi-info-circle-fill text-info flex-shrink-0" viewBox="0 0 16 16">
+            <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/>
+          </svg>
+          <span class="small text-dark fw-medium">
+            ℹ La nota de alta es requisito para cerrar la atención clínica.
+          </span>
+        </div>
+
+        <!-- Barra inferior de acciones y estado de guardado [21.49, 21.50] -->
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 pt-3 border-top mt-auto">
+          <!-- Indicador de autoguardado en tiempo real -->
+          <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-light text-secondary border small d-inline-flex align-items-center gap-1" id="estadoAutoguardado">
+              <span class="spinner-border spinner-border-sm d-none" id="spinnerAutoguardado" style="width: 12px; height: 12px;" role="status"></span>
+              <span id="textoAutoguardado">Borrador al día</span>
+            </span>
+          </div>
+
+          <div class="d-flex align-items-center gap-2 ms-auto">
+            <!-- [21.49] Botón Guardar borrador -->
+            <button type="button"
+                    class="btn btn-outline-secondary fw-medium d-inline-flex align-items-center gap-2"
+                    id="btnGuardarBorrador"
+                    data-trace="C21-49"
+                    <%= esSoloLectura ? 'disabled' : '' %>>
+              <span class="spinner-border spinner-border-sm d-none" id="spinnerBorrador" role="status" aria-hidden="true"></span>
+              <span>Guardar borrador</span>
+            </button>
+
+            <!-- [21.50] Botón Guardar nota de alta -->
+            <button type="button"
+                    class="btn btn-primary fw-medium d-inline-flex align-items-center gap-2"
+                    id="btnGuardarNotaAlta"
+                    data-trace="C21-50"
+                    <%= esSoloLectura ? 'disabled' : '' %>>
+              <span class="spinner-border spinner-border-sm d-none" id="spinnerGuardar" role="status" aria-hidden="true"></span>
+              <span id="textoBotonGuardar">Guardar nota de alta</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ======================================================== -->
+    <!-- Columna Lateral (Derecha): Datos precargados [21.36–21.47] -->
+    <!-- ======================================================== -->
+    <div class="col-12 col-lg-4">
+      <div class="card shadow-sm border-0 bg-white p-4 h-100" style="border-radius: 0.5rem;" data-trace="C21-36" id="panelDatosPrecargados">
+
+        <!-- Encabezado del panel lateral -->
+        <div class="d-flex align-items-center justify-content-between mb-3 border-bottom pb-2">
+          <h5 class="fw-bold text-dark fs-6 mb-0 d-flex align-items-center gap-2">
+            <svg width="18" height="18" fill="currentColor" class="bi bi-clipboard2-pulse text-primary" viewBox="0 0 16 16">
+              <path d="M10 .5a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5.5.5 0 0 1-.5.5.5.5 0 0 0-.5.5V2a.5.5 0 0 0 .5.5h5A.5.5 0 0 0 11 2v-.5a.5.5 0 0 0-.5-.5.5.5 0 0 1-.5-.5Z"/>
+              <path d="M4.085 1H3.5A1.5 1.5 0 0 0 2 2.5v12A1.5 1.5 0 0 0 3.5 16h9a1.5 1.5 0 0 0 1.5-1.5v-12A1.5 1.5 0 0 0 12.5 1h-.585c.055.156.085.325.085.5V2a1.5 1.5 0 0 1-1.5 1.5h-5A1.5 1.5 0 0 1 4 2v-.5c0-.175.03-.344.085-.5ZM9.979 5.356a.5.5 0 0 0-.968.04L7.92 10.49l-.94-3.135a.5.5 0 0 0-.926-.08L4.69 10H3.5a.5.5 0 0 0 0 1h1.5a.5.5 0 0 0 .468-.325l.834-2.5 1.02 3.4a.5.5 0 0 0 .932.064l1.192-5.565 1.05 3.149a.5.5 0 0 0 .949.022l1.045-2.09.28.56a.5.5 0 0 0 .894-.447l-.75-1.5a.5.5 0 0 0-.895.002l-.634 1.268-1.025-3.076Z"/>
+            </svg>
+            Datos precargados de la atención
+          </h5>
+          <span class="badge bg-light text-secondary border small">Lectura automática</span>
+        </div>
+
+        <p class="small text-muted mb-3">
+          Información registrada en las pestañas previas de la atención clínica:
+        </p>
+
+        <!-- [21.37, 21.38, 21.39] Diagnóstico Principal -->
+        <div class="mb-3">
+          <div class="text-secondary small fw-semibold mb-1" data-trace="C21-37">
+            Diagnóstico principal
+          </div>
+          <div class="d-flex align-items-center gap-2 p-2 bg-light rounded border border-light-subtle"
+               id="contenedorDiagPrincipal"
+               data-trace="C21-38">
+            <span class="badge bg-primary font-monospace" data-trace="C21-39" id="badgeDiagPrincipal"><%= codDiagPrincipal %></span>
+            <span class="small fw-semibold text-dark text-truncate" id="descDiagPrincipal" title="<%= descDiagPrincipal %>">
+              <%= descDiagPrincipal %>
+            </span>
+          </div>
+        </div>
+
+        <!-- [21.40, 21.41] Secundario -->
+        <div class="mb-3">
+          <div class="text-secondary small fw-semibold mb-1" data-trace="C21-40">
+            Secundario
+          </div>
+          <div class="p-2 bg-light rounded border border-light-subtle small text-dark"
+               id="contenedorDiagSecundarios"
+               data-trace="C21-41">
+            <%= textoDiagSecundarios %>
+          </div>
+        </div>
+
+        <!-- [21.42, 21.43] Procedimientos -->
+        <div class="mb-3">
+          <div class="text-secondary small fw-semibold mb-1" data-trace="C21-42">
+            Procedimientos
+          </div>
+          <div class="p-2 bg-light rounded border border-light-subtle small font-monospace text-dark"
+               id="contenedorProcedimientos"
+               data-trace="C21-43">
+            <%= textoProcedimientos %>
+          </div>
+        </div>
+
+        <!-- [21.44, 21.45] Órdenes -->
+        <div class="mb-3">
+          <div class="text-secondary small fw-semibold mb-1" data-trace="C21-44">
+            Órdenes
+          </div>
+          <div class="p-2 bg-light rounded border border-light-subtle small text-dark d-flex align-items-center justify-content-between"
+               id="contenedorOrdenes"
+               data-trace="C21-45">
+            <span class="font-monospace fw-semibold"><%= textoOrdenes %></span>
+          </div>
+        </div>
+
+        <!-- [21.46, 21.47] Resultados -->
+        <div class="mb-3">
+          <div class="text-secondary small fw-semibold mb-1" data-trace="C21-46">
+            Resultados
+          </div>
+          <div class="p-2 bg-light rounded border border-light-subtle small text-dark d-flex align-items-center justify-content-between"
+               id="contenedorResultados"
+               data-trace="C21-47">
+            <span class="text-truncate"><%= textoResultados %></span>
+            <% if (textoResultados.includes('revisado')) { %>
+              <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 small">Revisado</span>
+            <% } %>
+          </div>
+        </div>
+
+        <!-- Nota al pie del panel -->
+        <div class="mt-auto pt-3 border-top small text-muted d-flex align-items-center justify-content-between">
+          <span>Actualizado en tiempo real</span>
+          <button type="button" class="btn btn-link btn-sm text-decoration-none p-0" id="btnRefrescarResumen" title="Refrescar datos precargados">
+            ↻ Actualizar
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- Datos iniciales serializados para hidratación y testing -->
+<script id="datosInicialesNotaAlta" type="application/json">
+<%- JSON.stringify({
+  atencionId: idAtencion,
+  soloLectura: esSoloLectura,
+  resumen: resumenVal,
+  recomendaciones: recomendacionesVal,
+  fechaHora: fechaHoraVal,
+  profesional: profesionalVal,
+  diagnosticoPrincipal: { codigo: codDiagPrincipal, descripcion: descDiagPrincipal },
+  diagnosticosSecundarios: diagSecundarios,
+  procedimientos: listaProcs,
+  ordenes: listaOrdenes,
+  resultados: listaResultados
+}).replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/&/g, '\\u0026') %>
+</script>
+
+<%- include('../partials/_fin', { scripts: ['/js/nota_alta.js'] }) %>

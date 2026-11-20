@@ -1,0 +1,339 @@
+<%- include('../partials/_inicio', { titulo: typeof titulo !== 'undefined' ? titulo : 'Pacientes' }) %>
+<!-- Búsqueda de pacientes -->
+
+<%
+  const tipoVal = (typeof tipo !== 'undefined' && tipo != null) ? String(tipo) : '';
+  const qVal = (typeof q !== 'undefined' && q != null) ? String(q) : '';
+  const docVal = (typeof documento !== 'undefined' && documento != null) ? String(documento) : '';
+  const nombresVal = (typeof nombres !== 'undefined' && nombres != null) ? String(nombres) : '';
+  const apellidosVal = (typeof apellidos !== 'undefined' && apellidos != null) ? String(apellidos) : '';
+  const edadVal = (typeof edad !== 'undefined' && edad != null) ? String(edad) : '';
+  const epsVal = (typeof eps !== 'undefined' && eps != null) ? String(eps) : '';
+  const listaAseguradoras = (typeof aseguradoras !== 'undefined' && Array.isArray(aseguradoras)) ? aseguradoras : [];
+  const listaPacientes = (typeof pacientes !== 'undefined' && Array.isArray(pacientes)) ? pacientes : [];
+  const pagActual = (typeof page !== 'undefined' && page != null && Number(page) > 0) ? Math.floor(Number(page)) : 1;
+  const limitVal = (typeof limit !== 'undefined' && limit != null && Number(limit) > 0) ? Math.floor(Number(limit)) : null;
+  const totalPacientes = (typeof total !== 'undefined' && total != null) ? Number(total) : listaPacientes.length;
+  const totalPaginasVal = (typeof totalPaginas !== 'undefined' && totalPaginas != null && Number(totalPaginas) > 0) ? Math.floor(Number(totalPaginas)) : 1;
+  const hayFiltrosActivo = (typeof hayFiltros !== 'undefined')
+    ? Boolean(hayFiltros)
+    : Boolean(tipoVal || docVal || nombresVal || apellidosVal || edadVal || epsVal || qVal);
+
+  let epsLabel = epsVal;
+  if (epsVal === 'SIN_EPS' || epsVal === '__SIN_EPS__') {
+    epsLabel = 'Sin EPS';
+  } else if (epsVal) {
+    const asegEncontrada = listaAseguradoras.find(a => String(a.id) === epsVal || String(a.nombre) === epsVal);
+    if (asegEncontrada && asegEncontrada.nombre) {
+      epsLabel = asegEncontrada.nombre;
+    }
+  }
+
+  function urlPaginaPaciente(targetPage) {
+    const params = new URLSearchParams();
+    if (qVal) params.set('q', qVal);
+    if (tipoVal) params.set('tipo', tipoVal);
+    if (docVal) params.set('documento', docVal);
+    if (nombresVal) params.set('nombres', nombresVal);
+    if (apellidosVal) params.set('apellidos', apellidosVal);
+    if (edadVal) params.set('edad', edadVal);
+    if (epsVal) params.set('eps', epsVal);
+    if (limitVal) params.set('limit', String(limitVal));
+    params.set('page', String(targetPage));
+    return '/pacientes?' + params.toString();
+  }
+
+  const resumenFiltros = [];
+  if (tipoVal) resumenFiltros.push(`Tipo: ${tipoVal}`);
+  if (docVal) resumenFiltros.push(`Documento: ${docVal}`);
+  if (nombresVal) resumenFiltros.push(`Nombres: ${nombresVal}`);
+  if (apellidosVal) resumenFiltros.push(`Apellidos: ${apellidosVal}`);
+  if (edadVal) resumenFiltros.push(`Edad: ${edadVal} años`);
+  if (epsVal) resumenFiltros.push(`EPS: ${epsLabel}`);
+  if (qVal) resumenFiltros.push(`Búsqueda rápida: ${qVal}`);
+%>
+
+<div class="container-fluid px-0">
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+    <div>
+      <h1 class="h3 fw-bold text-dark mb-1">Búsqueda de pacientes</h1>
+      <p class="text-muted small mb-0">Localice pacientes registrados combinando identificación, nombres, edad, EPS o búsqueda rápida.</p>
+    </div>
+    <div>
+      <a href="/pacientes/nuevo" class="btn btn-primary d-inline-flex align-items-center gap-1 shadow-sm" data-trace="C15-20">
+        <span class="fw-bold">+</span> Registrar paciente
+      </a>
+    </div>
+  </div>
+
+  <!-- Formulario de búsqueda multicriterio [15.15 - 15.19] -->
+  <div class="card border-0 shadow-sm rounded-3 mb-4">
+    <div class="card-body p-4">
+      <form action="/pacientes" method="GET" class="row g-3 align-items-end" id="formBusquedaPacientes">
+        <!-- Grupo Identificación: Tipo y Número de documento -->
+        <div class="col-12 col-sm-6 col-lg-3">
+          <label for="tipo" class="form-label small fw-semibold text-secondary" data-trace="C15-15">Tipo de documento</label>
+          <select id="tipo" name="tipo" class="form-select" data-trace="C15-16">
+            <option value="" <%= !tipoVal ? 'selected' : '' %>>Todos los tipos</option>
+            <option value="CC" <%= tipoVal === 'CC' ? 'selected' : '' %>>CC · Cédula de ciudadanía</option>
+            <option value="TI" <%= tipoVal === 'TI' ? 'selected' : '' %>>TI · Tarjeta de identidad</option>
+            <option value="CE" <%= tipoVal === 'CE' ? 'selected' : '' %>>CE · Cédula de extranjería</option>
+            <option value="RC" <%= tipoVal === 'RC' ? 'selected' : '' %>>RC · Registro civil</option>
+            <option value="PA" <%= tipoVal === 'PA' ? 'selected' : '' %>>PA · Pasaporte</option>
+            <option value="PT" <%= tipoVal === 'PT' ? 'selected' : '' %>>PT · Permiso por protección temporal</option>
+            <option value="PE" <%= tipoVal === 'PE' ? 'selected' : '' %>>PE · Permiso especial de permanencia</option>
+            <option value="CN" <%= tipoVal === 'CN' ? 'selected' : '' %>>CN · Certificado de nacido vivo</option>
+            <option value="AS" <%= tipoVal === 'AS' ? 'selected' : '' %>>AS · Adulto sin identificar</option>
+            <option value="MS" <%= tipoVal === 'MS' ? 'selected' : '' %>>MS · Menor sin identificar</option>
+            <option value="CD" <%= tipoVal === 'CD' ? 'selected' : '' %>>CD · Carné diplomático</option>
+          </select>
+        </div>
+
+        <div class="col-12 col-sm-6 col-lg-3">
+          <label for="documento" class="form-label small fw-semibold text-secondary">Número de documento</label>
+          <input type="text"
+                 id="documento"
+                 name="documento"
+                 class="form-control"
+                 placeholder="Ej. 1098..."
+                 value="<%= docVal %>">
+        </div>
+
+        <div class="col-12 col-sm-6 col-lg-3">
+          <label for="nombres" class="form-label small fw-semibold text-secondary">Nombres</label>
+          <input type="text"
+                 id="nombres"
+                 name="nombres"
+                 class="form-control"
+                 placeholder="Ej. Juan Diego"
+                 value="<%= nombresVal %>">
+        </div>
+
+        <div class="col-12 col-sm-6 col-lg-3">
+          <label for="apellidos" class="form-label small fw-semibold text-secondary">Apellidos</label>
+          <input type="text"
+                 id="apellidos"
+                 name="apellidos"
+                 class="form-control"
+                 placeholder="Ej. Pérez García"
+                 value="<%= apellidosVal %>">
+        </div>
+
+        <!-- Fila 2: Edad, EPS, Búsqueda rápida y Botones -->
+        <div class="col-12 col-sm-4 col-lg-2">
+          <label for="edad" class="form-label small fw-semibold text-secondary">Edad</label>
+          <input type="number"
+                 id="edad"
+                 name="edad"
+                 class="form-control"
+                 min="0"
+                 max="150"
+                 step="1"
+                 placeholder="Ej. 16"
+                 value="<%= edadVal %>">
+        </div>
+
+        <div class="col-12 col-sm-8 col-lg-3">
+          <label for="eps" class="form-label small fw-semibold text-secondary">EPS</label>
+          <select id="eps" name="eps" class="form-select">
+            <option value="" <%= !epsVal ? 'selected' : '' %>>Todas las EPS</option>
+            <option value="SIN_EPS" <%= (epsVal === 'SIN_EPS' || epsVal === '__SIN_EPS__') ? 'selected' : '' %>>Sin EPS</option>
+            <% listaAseguradoras.forEach(a => { %>
+              <%
+                const asegVal = (a && a.id != null) ? String(a.id) : String((a && a.nombre) || '');
+                const asegNombre = (a && a.nombre) ? String(a.nombre) : asegVal;
+                const estaSeleccionada = Boolean(epsVal && (epsVal === asegVal || epsVal === asegNombre));
+              %>
+              <option value="<%= asegVal %>" <%= estaSeleccionada ? 'selected' : '' %>><%= asegNombre %></option>
+            <% }) %>
+          </select>
+        </div>
+
+        <div class="col-12 col-lg-4">
+          <label for="q" class="form-label small fw-semibold text-secondary" data-trace="C15-17">Número de documento o nombre</label>
+          <input type="text"
+                 id="q"
+                 name="q"
+                 class="form-control"
+                 placeholder="1234567890 o Juan Pérez"
+                 value="<%= qVal %>"
+                 data-trace="C15-18"
+                 autofocus>
+        </div>
+
+        <div class="col-12 col-lg-3 d-flex gap-2">
+          <button type="submit" class="btn btn-primary flex-grow-1 shadow-sm" data-trace="C15-19">
+            Buscar
+          </button>
+          <a href="/pacientes" class="btn btn-outline-secondary" id="btnLimpiarFiltrosPacientes">
+            Limpiar
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Resultados de búsqueda -->
+  <div class="card border-0 shadow-sm rounded-3 hc-tabla-card">
+    <div class="card-body p-4 hc-tabla-body">
+      <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+        <div>
+          <h2 class="h6 fw-bold text-dark mb-1">
+            <% if (hayFiltrosActivo) { %>
+              Resultados de búsqueda
+            <% } else { %>
+              Pacientes registrados recientemente
+            <% } %>
+          </h2>
+          <% if (resumenFiltros.length > 0) { %>
+            <div class="d-flex flex-wrap align-items-center gap-1" id="resumenFiltrosPacientes">
+              <span class="small text-muted me-1">Filtros activos:</span>
+              <% resumenFiltros.forEach(item => { %>
+                <span class="badge bg-primary-subtle text-primary border border-primary-subtle fw-medium"><%= item %></span>
+              <% }) %>
+            </div>
+          <% } %>
+        </div>
+        <span class="badge bg-light text-secondary border" id="conteoPacientesResultado">
+          <%= totalPacientes %> paciente(s)
+        </span>
+      </div>
+
+      <div class="hc-tabla-contenedor">
+        <% if (listaPacientes.length > 0) { %>
+          <div class="table-responsive" tabindex="0" role="region" aria-label="Resultados de búsqueda de pacientes">
+            <table class="table table-hover align-middle mb-0" data-trace="C15-tabla-resultados" data-no-datatable>
+              <thead class="table-light">
+                <tr>
+                  <th scope="col" class="small text-secondary">Documento</th>
+                  <th scope="col" class="small text-secondary">Nombres y Apellidos</th>
+                  <th scope="col" class="small text-secondary">Edad</th>
+                  <th scope="col" class="small text-secondary">EPS</th>
+                  <th scope="col" class="small text-secondary">Teléfono</th>
+                  <th scope="col" class="small text-secondary text-end" data-orderable="false">Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% listaPacientes.forEach(p => { %>
+                  <tr>
+                    <td class="font-monospace fw-semibold"><%= p.tipo_documento %> <%= p.numero_documento %></td>
+                    <td class="fw-semibold text-dark"><%= p.nombres %> <%= p.apellidos %></td>
+                    <td><%= p.edad != null ? p.edad + ' años' : '—' %></td>
+                    <td><% if (p.eps) { %><%= p.eps %><% } else { %><span class="text-muted fst-italic">Sin EPS</span><% } %></td>
+                    <td class="font-monospace"><%= p.telefono || '—' %></td>
+                    <td class="text-end">
+                      <a href="/pacientes/<%= p.id %>" class="btn btn-sm btn-outline-primary" data-trace="C15-ver-ficha">
+                        Ver ficha
+                      </a>
+                    </td>
+                  </tr>
+                <% }) %>
+              </tbody>
+            </table>
+          </div>
+        <% } else { %>
+          <div class="hc-estado-vacio text-center py-5" data-trace="C15-vacio">
+            <div class="text-secondary opacity-50 mb-3">
+              <svg width="48" height="48" fill="currentColor" class="bi bi-people" viewBox="0 0 16 16">
+                <path d="M15 14s1 0 1-1-1-4-5-4-5 3-5 4 1 1 1 1h8Zm-7.978-1A.261.261 0 0 1 7 12.996c.001-.264.167-1.03.76-1.72C8.312 10.629 9.282 10 11 10c1.717 0 2.687.63 3.24 1.276.593.69.758 1.457.76 1.72l-.008.002a.274.274 0 0 1-.014.002H7.022ZM11 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm3-2a3 3 0 1 1-6 0 3 3 0 0 1 6 0ZM6.936 9.28a5.88 5.88 0 0 0-1.23-.247A7.35 7.35 0 0 0 5 9c-4 0-5 3-5 4 1 1 1 1h4.216A2.238 2.238 0 0 1 5 13c0-1.01.377-2.042 1.09-2.904.243-.294.526-.569.846-.816ZM4.92 10A5.493 5.493 0 0 0 4 13H1c0-.26.164-1.03.76-1.724.545-.636 1.492-1.256 3.16-1.275ZM1.5 5.5a3 3 0 1 1 6 0 3 3 0 0 1-6 0Zm3-2a2 2 0 1 0 0 4 2 2 0 0 0 0-4Z"/>
+              </svg>
+            </div>
+            <h3 class="h6 fw-bold text-dark mb-1">No se encontraron pacientes</h3>
+            <p class="text-muted small mb-3">No hay pacientes que coincidan con la búsqueda o aún no ha ingresado un término.</p>
+            <div class="d-flex flex-wrap justify-content-center gap-2">
+              <% if (hayFiltrosActivo) { %>
+                <a href="/pacientes" class="btn btn-outline-secondary btn-sm">
+                  Limpiar filtros
+                </a>
+              <% } %>
+              <a href="/pacientes/nuevo" class="btn btn-outline-primary btn-sm d-inline-flex align-items-center gap-1" data-trace="C15-20-vacio">
+                <span>+</span> Registrar paciente
+              </a>
+            </div>
+          </div>
+        <% } %>
+      </div>
+    </div>
+
+    <% if (totalPaginasVal > 1) { %>
+      <%
+        const pagInicio = totalPaginasVal <= 7 ? 1 : Math.max(2, pagActual - 2);
+        const pagFin = totalPaginasVal <= 7 ? totalPaginasVal : Math.min(totalPaginasVal - 1, pagActual + 2);
+        const pagAnterior = Math.min(totalPaginasVal, Math.max(1, pagActual - 1));
+      %>
+      <div class="card-footer bg-white border-top px-4 py-3 d-flex flex-wrap align-items-center justify-content-between gap-2" id="paginacionPacientes">
+        <div class="small text-muted">
+          Página <strong><%= pagActual %></strong> de <strong><%= totalPaginasVal %></strong>
+          (<%= totalPacientes %> paciente<%= totalPacientes === 1 ? '' : 's' %>)
+        </div>
+        <nav aria-label="Paginación de pacientes">
+          <ul class="pagination pagination-sm mb-0">
+            <li class="page-item <%= pagActual <= 1 ? 'disabled' : '' %>">
+              <% if (pagActual <= 1) { %>
+                <span class="page-link" aria-disabled="true">&laquo; Anterior</span>
+              <% } else { %>
+                <a class="page-link" href="<%= urlPaginaPaciente(pagAnterior) %>" aria-label="Página anterior">&laquo; Anterior</a>
+              <% } %>
+            </li>
+
+            <% if (totalPaginasVal <= 7) { %>
+              <% for (let p = 1; p <= totalPaginasVal; p++) { %>
+                <li class="page-item <%= p === pagActual ? 'active' : '' %>">
+                  <% if (p === pagActual) { %>
+                    <span class="page-link" aria-current="page"><%= p %></span>
+                  <% } else { %>
+                    <a class="page-link" href="<%= urlPaginaPaciente(p) %>"><%= p %></a>
+                  <% } %>
+                </li>
+              <% } %>
+            <% } else { %>
+              <li class="page-item <%= pagActual === 1 ? 'active' : '' %>">
+                <% if (pagActual === 1) { %>
+                  <span class="page-link" aria-current="page">1</span>
+                <% } else { %>
+                  <a class="page-link" href="<%= urlPaginaPaciente(1) %>">1</a>
+                <% } %>
+              </li>
+
+              <% if (pagInicio > 2) { %>
+                <li class="page-item disabled"><span class="page-link" aria-hidden="true">&hellip;</span></li>
+              <% } %>
+
+              <% for (let p = pagInicio; p <= pagFin; p++) { %>
+                <li class="page-item <%= p === pagActual ? 'active' : '' %>">
+                  <% if (p === pagActual) { %>
+                    <span class="page-link" aria-current="page"><%= p %></span>
+                  <% } else { %>
+                    <a class="page-link" href="<%= urlPaginaPaciente(p) %>"><%= p %></a>
+                  <% } %>
+                </li>
+              <% } %>
+
+              <% if (pagFin < totalPaginasVal - 1) { %>
+                <li class="page-item disabled"><span class="page-link" aria-hidden="true">&hellip;</span></li>
+              <% } %>
+
+              <li class="page-item <%= pagActual === totalPaginasVal ? 'active' : '' %>">
+                <% if (pagActual === totalPaginasVal) { %>
+                  <span class="page-link" aria-current="page"><%= totalPaginasVal %></span>
+                <% } else { %>
+                  <a class="page-link" href="<%= urlPaginaPaciente(totalPaginasVal) %>"><%= totalPaginasVal %></a>
+                <% } %>
+              </li>
+            <% } %>
+
+            <li class="page-item <%= pagActual >= totalPaginasVal ? 'disabled' : '' %>">
+              <% if (pagActual >= totalPaginasVal) { %>
+                <span class="page-link" aria-disabled="true">Siguiente &raquo;</span>
+              <% } else { %>
+                <a class="page-link" href="<%= urlPaginaPaciente(pagActual + 1) %>" aria-label="Página siguiente">Siguiente &raquo;</a>
+              <% } %>
+            </li>
+          </ul>
+        </nav>
+      </div>
+    <% } %>
+  </div>
+</div>
+
+<%- include('../partials/_fin') %>

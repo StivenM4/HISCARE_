@@ -1,0 +1,445 @@
+<%
+  const citaObj = (typeof cita !== 'undefined' && cita) ? cita : {};
+  const citaId = citaObj.id || '';
+  const codigoVisible = citaObj.codigo_visible || ('CIT-' + (citaId ? citaId.slice(-3).toUpperCase() : '001'));
+  
+  // Nombre y documento del paciente [17.18]
+  let pacienteNombre = 'Juan Diego Pérez García';
+  let pacienteDoc = 'C.C. 1.234.567.890';
+  if (citaObj.paciente_nombre) {
+    pacienteNombre = citaObj.paciente_nombre;
+  } else if (citaObj.paciente) {
+    if (typeof citaObj.paciente === 'string') {
+      pacienteNombre = citaObj.paciente;
+    } else {
+      pacienteNombre = citaObj.paciente.nombre || `${citaObj.paciente.nombres || ''} ${citaObj.paciente.apellidos || ''}`.trim() || pacienteNombre;
+      if (citaObj.paciente.documento) pacienteDoc = citaObj.paciente.documento;
+      else if (citaObj.paciente.numero_documento) pacienteDoc = `${citaObj.paciente.tipo_documento || 'CC'} ${citaObj.paciente.numero_documento}`;
+    }
+  }
+  if (citaObj.paciente_documento) {
+    pacienteDoc = citaObj.paciente_documento;
+  }
+
+  // Nombre del profesional [17.20]
+  let profesionalNombre = 'Dra. Ana Pérez';
+  if (citaObj.profesional_nombre) profesionalNombre = citaObj.profesional_nombre;
+  else if (citaObj.medico_nombre) profesionalNombre = citaObj.medico_nombre;
+  else if (citaObj.medico) {
+    profesionalNombre = typeof citaObj.medico === 'string' ? citaObj.medico : (citaObj.medico.nombre || profesionalNombre);
+  }
+
+  // Fecha y hora formateada original [17.22]
+  let fechaHoraFormateada = citaObj.fecha_hora_formateada || '';
+  if (!fechaHoraFormateada && citaObj.fecha) {
+    try {
+      const fIni = new Date(citaObj.fecha);
+      if (!isNaN(fIni.getTime())) {
+        const dia = String(fIni.getDate()).padStart(2, '0');
+        const mes = String(fIni.getMonth() + 1).padStart(2, '0');
+        const anio = fIni.getFullYear();
+        const hIni = String(fIni.getHours()).padStart(2, '0') + ':' + String(fIni.getMinutes()).padStart(2, '0');
+        let hFin = '';
+        if (citaObj.hora_fin) {
+          const fFin = new Date(citaObj.hora_fin);
+          hFin = String(fFin.getHours()).padStart(2, '0') + ':' + String(fFin.getMinutes()).padStart(2, '0');
+        } else {
+          const dur = Number(citaObj.duracion_minutos || 30);
+          const fFin = new Date(fIni.getTime() + dur * 60000);
+          hFin = String(fFin.getHours()).padStart(2, '0') + ':' + String(fFin.getMinutes()).padStart(2, '0');
+        }
+        fechaHoraFormateada = `${dia}/${mes}/${anio} ${hIni} - ${hFin}`;
+      } else {
+        fechaHoraFormateada = String(citaObj.fecha);
+      }
+    } catch(e) {
+      fechaHoraFormateada = String(citaObj.fecha);
+    }
+  }
+  if (!fechaHoraFormateada) {
+    fechaHoraFormateada = '30/09/2026 09:00 - 09:30';
+  }
+
+  // Estado y posibilidad de modificación
+  const estadoCita = citaObj.estado || 'CONFIRMADA';
+  const estadoCitaEtiqueta = estadoCita === 'EN_SALA' ? 'En sala de espera' : (estadoCita === 'NO_ASISTIO' ? 'No asistió' : estadoCita);
+  const puedeModificar = (estadoCita === 'PROGRAMADA' || estadoCita === 'CONFIRMADA');
+
+  // Hoy y fecha sugerida para reprogramación
+  const hoyStr = (typeof fechaHoy !== 'undefined' && fechaHoy)
+    ? fechaHoy
+    : new Date().toLocaleDateString('en-CA', { timeZone: 'America/Bogota' });
+
+  let fechaSugerida = hoyStr;
+  if (typeof fecha !== 'undefined' && fecha) {
+    fechaSugerida = fecha;
+  } else if (citaObj.fecha) {
+    try {
+      const f = new Date(citaObj.fecha);
+      if (!isNaN(f.getTime())) {
+        const fStr = f.toLocaleDateString('en-CA', { timeZone: 'America/Bogota' });
+        if (fStr >= hoyStr) fechaSugerida = fStr;
+      }
+    } catch(e) {}
+  }
+
+  // Clase de badge según estado [17.24]
+  let badgeEstadoClass = 'bg-primary';
+  if (estadoCita === 'CONFIRMADA') badgeEstadoClass = 'bg-primary';
+  else if (estadoCita === 'PROGRAMADA') badgeEstadoClass = 'bg-info-subtle text-info-emphasis border border-info-subtle';
+  else if (estadoCita === 'CANCELADA') badgeEstadoClass = 'bg-danger';
+  else if (estadoCita === 'REPROGRAMADA') badgeEstadoClass = 'bg-warning-subtle text-warning-emphasis border border-warning-subtle';
+  else if (estadoCita === 'EN_SALA') badgeEstadoClass = 'bg-warning-subtle text-warning-emphasis border border-warning-subtle';
+  else if (estadoCita === 'ATENDIDA') badgeEstadoClass = 'bg-success';
+  else badgeEstadoClass = 'bg-secondary';
+%>
+<%- include('../partials/_inicio', { titulo: 'Gestión de la cita ' + codigoVisible }) %>
+<!-- Gestión, cancelación y reprogramación de citas -->
+
+<div class="container-fluid px-0" id="gestionCitaContenedor"
+     data-cita-id="<%= citaId %>"
+     data-paciente-id="<%= citaObj.paciente_id || '' %>"
+     data-medico-id="<%= citaObj.medico_id || '' %>"
+     data-estado="<%= estadoCita %>"
+     data-codigo-visible="<%= codigoVisible %>"
+     data-fecha-original="<%= fechaHoraFormateada %>"
+     data-puede-modificar="<%= puedeModificar ? 'true' : 'false' %>">
+
+  <!-- [17.15] Encabezado del flujo -->
+  <div class="d-flex flex-wrap align-items-center justify-content-between mb-4 pb-2 border-bottom">
+    <div>
+      <h1 class="h3 fw-bold text-dark mb-1" data-trace="C17-15">Gestión de la cita <%= codigoVisible %></h1>
+      <p class="text-muted small mb-0">Reprograme o cancele la cita médica garantizando consistencia transaccional y registro en auditoría.</p>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+      <a href="<%= citaObj.paciente_id ? ('/pacientes/' + citaObj.paciente_id) : '/agenda' %>" class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-1">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-left" viewBox="0 0 16 16">
+          <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
+        </svg>
+        <span>Volver</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Aviso si la cita no admite modificaciones -->
+  <% if (!puedeModificar) { %>
+    <div class="alert alert-warning d-flex align-items-center gap-2 mb-4 shadow-sm" role="alert" id="alertaEstadoNoModificable">
+      <span class="fs-5">⚠️</span>
+      <div>
+        <strong>Aviso:</strong> La cita en estado <span class="badge <%= badgeEstadoClass %>"><%= estadoCitaEtiqueta %></span> no admite modificaciones. Solo citas en estado <strong>PROGRAMADA</strong> o <strong>CONFIRMADA</strong> admiten reprogramación o cancelación.
+      </div>
+    </div>
+  <% } %>
+
+  <!-- Formulario y Layout de dos columnas -->
+  <div class="row g-4">
+
+    <!-- Panel Izquierdo: Cita original e historial [17.16] -->
+    <div class="col-lg-5 col-xl-5">
+      <div class="card border-0 shadow-sm rounded-3 h-100" data-trace="C17-16">
+        <div class="card-header bg-white py-3 border-bottom">
+          <h2 class="h5 fw-bold mb-0 text-primary">Cita original</h2>
+        </div>
+        <div class="card-body p-4 d-flex flex-column gap-3">
+
+          <!-- [17.17] Label Paciente y [17.18] Paciente -->
+          <div>
+            <label class="form-label fw-semibold text-secondary small mb-1" data-trace="C17-17">Paciente</label>
+            <div class="p-3 bg-light rounded-3 border d-flex align-items-center justify-content-between" data-trace="C17-18" id="pacienteInfoOriginal">
+              <div>
+                <div class="fw-bold text-dark" id="nombrePacienteDisplay"><%= pacienteNombre %></div>
+                <div class="text-muted small" id="docPacienteDisplay"><%= pacienteDoc %></div>
+              </div>
+              <span class="badge bg-secondary-subtle text-secondary border">Paciente</span>
+            </div>
+          </div>
+
+          <!-- [17.19] Label Profesional y [17.20] Profesional -->
+          <div>
+            <label class="form-label fw-semibold text-secondary small mb-1" data-trace="C17-19">Profesional</label>
+            <div class="p-2 bg-light rounded-3 border fw-semibold text-dark small" data-trace="C17-20" id="profesionalOriginalDisplay">
+              <%= profesionalNombre %>
+            </div>
+          </div>
+
+          <!-- [17.21] Label Fecha y hora y [17.22] Fecha y hora -->
+          <div>
+            <label class="form-label fw-semibold text-secondary small mb-1" data-trace="C17-21">Fecha y hora</label>
+            <div class="p-2 bg-light rounded-3 border fw-semibold text-dark small font-monospace" data-trace="C17-22" id="fechaHoraOriginalDisplay">
+              <%= fechaHoraFormateada %>
+            </div>
+          </div>
+
+          <!-- [17.23] Label Estado y [17.24] Badge de estado -->
+          <div>
+            <label class="form-label fw-semibold text-secondary small mb-1" data-trace="C17-23">Estado</label>
+            <div data-trace="C17-24">
+              <span class="badge <%= badgeEstadoClass %> px-2 py-1 fs-6" id="estadoOriginalBadge"><%= estadoCitaEtiqueta %></span>
+            </div>
+          </div>
+
+          <!-- [17.25] Label Acción y botones toggle [17.26] Reprogramar / [17.27] Cancelar -->
+          <div class="pt-2 border-top">
+            <label class="form-label fw-semibold text-secondary small mb-2" data-trace="C17-25">Acción</label>
+            <div class="btn-group w-100" role="group" aria-label="Selección de acción">
+              <button type="button" class="btn btn-outline-primary <%= puedeModificar ? 'active' : '' %>" id="btnToggleReprogramar" data-accion="reprogramar" data-trace="C17-26" <%= !puedeModificar ? 'disabled' : '' %>>
+                Reprogramar
+              </button>
+              <button type="button" class="btn btn-outline-danger" id="btnToggleCancelar" data-accion="cancelar" data-trace="C17-27" <%= !puedeModificar ? 'disabled' : '' %>>
+                Cancelar cita
+              </button>
+            </div>
+          </div>
+
+          <!-- [17.28] Label Motivo del cambio y [17.29] Textarea motivo -->
+          <div>
+            <label for="motivoCambio" class="form-label fw-semibold text-secondary small mb-1" data-trace="C17-28">
+              Motivo del cambio (obligatorio)
+            </label>
+            <textarea id="motivoCambio"
+                      name="motivo"
+                      class="form-control"
+                      rows="3"
+                      placeholder="Paciente solicita cambio por viaje laboral."
+                      maxlength="200"
+                      minlength="5"
+                      data-trace="C17-29"
+                      <%= !puedeModificar ? 'disabled' : '' %>></textarea>
+            <div class="d-flex justify-content-between align-items-center mt-1">
+              <small class="text-muted" id="motivoAyudaTexto">Mínimo 5, máximo 200 caracteres.</small>
+              <small class="text-muted" id="motivoContador">0 / 200</small>
+            </div>
+            <div class="invalid-feedback" id="motivoErrorFeedback">
+              El motivo es obligatorio y debe contener entre 5 y 200 caracteres.
+            </div>
+          </div>
+
+          <!-- [17.30] Encabezado Historial de cambios y Tabla [17.31 - 17.34] -->
+          <div class="mt-auto pt-3 border-top">
+            <h3 class="h6 fw-bold text-dark mb-2 d-flex align-items-center gap-1" data-trace="C17-30">
+              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" class="bi bi-clock-history text-secondary" viewBox="0 0 16 16">
+                <path d="M8.515 1.019A7 7 0 0 0 8 1V0a8 8 0 0 1 .589.022zm2.004.45a7 7 0 0 0-.985-.299l.219-.976q.576.129 1.126.342zm1.37.71a7 7 0 0 0-.439-.27l.493-.87a8 8 0 0 1 .979.613l-.539.814zm2.146 2.146l.814-.539a8 8 0 0 1 .613.979l-.87.493a7 7 0 0 0-.557-.933zm.71 1.37a7 7 0 0 0-.27-.439l.87-.493q.342.55.514 1.126l-.976.219a7 7 0 0 0-.138-.413zM16 8q0 .296-.022.589l-.976-.219A7 7 0 0 0 15 8h1zM8 15a7 7 0 1 0 0-14 7 7 0 0 0 0 14m0 1A8 8 0 1 1 8 0a8 8 0 0 1 0 16"/>
+                <path d="M8 4.5a.5.5 0 0 1 .5.5v3.293l2.146 2.147a.5.5 0 0 1-.708.708l-2.5-2.5A.5.5 0 0 1 7.5 8.5V5a.5.5 0 0 1 .5-.5"/>
+              </svg>
+              <span>Historial de cambios de la cita</span>
+            </h3>
+            <div class="table-responsive rounded-2 border bg-white" style="max-height: 180px; overflow-y: auto;">
+              <table class="table table-sm table-hover mb-0">
+                <thead class="table-light text-secondary small sticky-top">
+                  <tr>
+                    <th scope="col" style="width: 32%;" data-trace="C17-32">Fecha</th>
+                    <th scope="col" style="width: 33%;" data-trace="C17-33">Usuario</th>
+                    <th scope="col" style="width: 35%;" data-trace="C17-34">Cambio</th>
+                  </tr>
+                </thead>
+                <tbody id="historialBody" data-trace="C17-31">
+                  <% if (typeof historial !== 'undefined' && Array.isArray(historial) && historial.length > 0) { %>
+                    <% historial.forEach(h => { %>
+                      <tr>
+                        <td class="small text-nowrap"><%= h.fecha_formateada || h.fecha %></td>
+                        <td class="small"><%= h.usuario || h.usuario_nombre || 'Sistema' %></td>
+                        <td class="small"><%= h.cambio || h.accion || h.detalle || 'Modificación' %></td>
+                      </tr>
+                    <% }) %>
+                  <% } else { %>
+                    <tr id="historialPlaceholderFila">
+                      <td colspan="3" class="text-muted text-center py-2 small">Sin modificaciones previas registradas</td>
+                    </tr>
+                  <% } %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Panel Derecho: Nueva fecha y hora / Confirmación [17.35] -->
+    <div class="col-lg-7 col-xl-7">
+      <div class="card border-0 shadow-sm rounded-3 h-100">
+        <div class="card-header bg-white py-3 border-bottom d-flex align-items-center justify-content-between">
+          <h2 class="h5 fw-bold mb-0 text-primary" data-trace="C17-35" id="encabezadoPanelDerecho">
+            Nueva fecha y hora
+          </h2>
+          <span class="badge bg-primary-subtle text-primary border" id="badgeModoActivo">Modo Reprogramación</span>
+        </div>
+        <div class="card-body p-4 d-flex flex-column justify-content-between">
+
+          <!-- Sección específica de Reprogramación -->
+          <div id="seccionReprogramacion">
+            
+            <div class="row g-3 mb-3">
+              <!-- [17.36] Label Profesional y [17.37] Select Profesional -->
+              <div class="col-md-6">
+                <label for="selectProfesional" class="form-label fw-semibold text-secondary small mb-1" data-trace="C17-36">Profesional</label>
+                <select id="selectProfesional" class="form-select" data-trace="C17-37" <%= !puedeModificar ? 'disabled' : '' %>>
+                  <% if (typeof medicos !== 'undefined' && Array.isArray(medicos) && medicos.length > 0) { %>
+                    <% medicos.forEach(m => { %>
+                      <option value="<%= m.id %>" <%= (m.id === citaObj.medico_id) ? 'selected' : '' %>>
+                        <%= m.nombre %>
+                      </option>
+                    <% }) %>
+                  <% } else { %>
+                    <option value="<%= citaObj.medico_id %>" selected><%= profesionalNombre %></option>
+                  <% } %>
+                </select>
+              </div>
+
+              <!-- [17.38] Label Fecha y [17.39] Input Fecha -->
+              <div class="col-md-6">
+                <label for="inputFecha" class="form-label fw-semibold text-secondary small mb-1" data-trace="C17-38">Fecha</label>
+                <input type="date"
+                       id="inputFecha"
+                       class="form-control"
+                       value="<%= fechaSugerida %>"
+                       min="<%= hoyStr %>"
+                       data-trace="C17-39"
+                       <%= !puedeModificar ? 'disabled' : '' %>>
+              </div>
+            </div>
+
+            <!-- [17.40] Grilla de franjas horarias (reusando _grilla_franjas) -->
+            <div id="contenedorGrillaFranjas" class="mb-3" data-trace="C17-40">
+              <label class="form-label fw-semibold text-secondary small mb-1">Franjas de atención disponibles</label>
+              <%- include('../partials/_grilla_franjas') %>
+            </div>
+
+            <!-- Alerta de conflicto de cruce horario (409 CRUCE_HORARIO) -->
+            <div id="alertaConflicto" class="alert alert-danger mt-3 shadow-sm" style="display: none;">
+              <div class="d-flex align-items-start gap-2 mb-2">
+                <span class="fs-5">⚠️</span>
+                <div class="flex-grow-1">
+                  <div id="alertaConflictoTexto" class="fw-semibold">
+                    La franja acaba de ser tomada por otro usuario. Franjas alternativas disponibles:
+                  </div>
+                </div>
+              </div>
+              <div id="alternativasContenedor" class="d-flex flex-wrap gap-2 pt-1"></div>
+            </div>
+
+            <!-- [17.41] Encabezado Resultado de la reprogramación y [17.42 - 17.44] Tabla comparativa -->
+            <div class="card border rounded-3 bg-light p-3 my-3 shadow-sm" id="cardResultadoReprogramacion">
+              <h3 class="h6 fw-bold text-dark mb-3 d-flex align-items-center gap-2" data-trace="C17-41">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-left-right text-primary" viewBox="0 0 16 16">
+                  <path fill-rule="evenodd" d="M1 11.5a.5.5 0 0 0 .5.5h11.793l-3.147 3.146a.5.5 0 0 0 .708.708l4-4a.5.5 0 0 0 0-.708l-4-4a.5.5 0 0 0-.708.708L13.293 11H1.5a.5.5 0 0 0-.5.5m14-7a.5.5 0 0 1-.5.5H2.707l3.147 3.146a.5.5 0 1 1-.708.708l-4-4a.5.5 0 0 1 0-.708l4-4a.5.5 0 1 1 .708.708L2.707 4H14.5a.5.5 0 0 1 .5.5"/>
+                </svg>
+                <span>Resultado de la reprogramación</span>
+              </h3>
+              <div class="table-responsive">
+                <table class="table table-sm table-bordered bg-white mb-0 align-middle">
+                  <thead class="table-light text-secondary small">
+                    <tr>
+                      <th style="width: 24%;">Concepto</th>
+                      <th style="width: 38%;" data-trace="C17-43">Cita original</th>
+                      <th style="width: 38%;" data-trace="C17-44">Cita nueva</th>
+                    </tr>
+                  </thead>
+                  <tbody data-trace="C17-42">
+                    <tr>
+                      <td class="fw-semibold text-secondary small">Fecha</td>
+                      <td id="comparativaFechaOriginal" class="small"><%= fechaHoraFormateada %></td>
+                      <td id="comparativaFechaNueva" class="small text-primary fw-bold font-monospace">--</td>
+                    </tr>
+                    <tr>
+                      <td class="fw-semibold text-secondary small">Estado</td>
+                      <td id="comparativaEstadoOriginal">
+                        <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle">REPROGRAMADA</span>
+                      </td>
+                      <td id="comparativaEstadoNueva">
+                        <span class="badge bg-success">PROGRAMADA</span>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="fw-semibold text-secondary small">Referencia</td>
+                      <td id="comparativaRefOriginal" class="text-muted small">—</td>
+                      <td id="comparativaRefNueva" class="small text-dark font-monospace">
+                        cita_origen_id = <%= codigoVisible %>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Sección específica de Cancelación (oculta por defecto, mostrada en modo Cancelar) -->
+          <div id="seccionCancelacion" style="display: none;">
+            <div class="card border-danger-subtle bg-danger-subtle rounded-3 p-4 mb-3 shadow-sm">
+              <div class="d-flex align-items-start gap-3">
+                <div class="p-2 bg-danger text-white rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width: 44px; height: 44px;">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" class="bi bi-calendar-x" viewBox="0 0 16 16">
+                    <path d="M6.146 7.146a.5.5 0 0 1 .708 0L8 8.293l1.146-1.147a.5.5 0 1 1 .708.708L8.707 9l1.147 1.146a.5.5 0 0 1-.708.708L8 9.707l-1.146 1.147a.5.5 0 0 1-.708-.708L7.293 9 6.146 7.854a.5.5 0 0 1 0-.708"/>
+                    <path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5M1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4z"/>
+                  </svg>
+                </div>
+                <div class="flex-grow-1">
+                  <h4 class="h5 fw-bold text-danger mb-1">Confirmación de cancelación de cita</h4>
+                  <p class="text-muted small mb-3">
+                    Está a punto de cancelar la cita médica asignada. Esta acción no se puede deshacer de forma automática y liberará la agenda médica correspondiente.
+                  </p>
+                  <div class="bg-white p-3 rounded-2 border">
+                    <div class="row g-2 small">
+                      <div class="col-sm-6">
+                        <span class="text-muted d-block">Código de cita:</span>
+                        <strong class="text-dark"><%= codigoVisible %></strong>
+                      </div>
+                      <div class="col-sm-6">
+                        <span class="text-muted d-block">Paciente:</span>
+                        <strong class="text-dark"><%= pacienteNombre %></strong>
+                      </div>
+                      <div class="col-sm-6">
+                        <span class="text-muted d-block">Profesional:</span>
+                        <strong class="text-dark"><%= profesionalNombre %></strong>
+                      </div>
+                      <div class="col-sm-6">
+                        <span class="text-muted d-block">Fecha y hora programada:</span>
+                        <strong class="text-dark font-monospace"><%= fechaHoraFormateada %></strong>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pie del panel derecho: Alerta informativa [17.45] y Botones [17.46] y [17.47] -->
+          <div class="mt-auto pt-3 border-top">
+            
+            <!-- [17.45] Alerta informativa -->
+            <div class="alert alert-info py-2 mb-3 d-flex align-items-center gap-2 small" id="alertaInformativa" data-trace="C17-45">
+              <span class="fs-6" id="alertaInformativaIcono">ℹ</span>
+              <span id="alertaInformativaTexto">
+                La cita original no se borra: queda con estado REPROGRAMADA y la nueva cita guarda la referencia a ella. Ambas operaciones van en una sola transacción.
+              </span>
+            </div>
+
+            <!-- Botones de acción [17.46] Volver y [17.47] Confirmar -->
+            <div class="d-flex flex-wrap align-items-center justify-content-end gap-2">
+              <a href="<%= citaObj.paciente_id ? ('/pacientes/' + citaObj.paciente_id) : '/agenda' %>"
+                 id="btnVolver"
+                 class="btn btn-outline-secondary px-4"
+                 data-trace="C17-46">
+                Volver
+              </a>
+              <button type="button"
+                      id="btnConfirmarAccion"
+                      class="btn btn-primary px-4 fw-semibold"
+                      data-trace="C17-47"
+                      disabled
+                      <%= !puedeModificar ? 'disabled' : '' %>>
+                Confirmar reprogramación
+              </button>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<%- include('../partials/_fin', { scripts: ['/js/grilla_franjas.js', '/js/cita_gestion.js'] }) %>

@@ -1,0 +1,430 @@
+<%- include('../partials/_inicio', { titulo: 'Especialidades médicas y asignación a profesionales' }) %>
+<!-- Especialidades médicas y asignación a profesionales -->
+
+<div class="container-fluid px-0" id="adminEspecialidadesApp">
+
+  <!-- Encabezado y guía rápida de flujo -->
+  <div class="d-flex flex-wrap align-items-start justify-content-between gap-3 mb-3">
+    <div>
+      <h1 class="h3 fw-bold text-dark mb-1" data-trace="C13-15">Especialidades médicas y asignación a profesionales</h1>
+      <p class="text-muted small mb-0">
+        Administre el catálogo de especialidades, vincule qué especialidades atiende cada médico y configure su agenda semanal en un solo flujo.
+      </p>
+    </div>
+    <div class="d-flex flex-wrap align-items-center gap-2">
+      <span class="badge bg-primary-subtle text-primary border border-primary-subtle fw-semibold">
+        1. Catálogo
+      </span>
+      <span class="text-muted small" aria-hidden="true">→</span>
+      <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle fw-semibold">
+        2. Asignación y horario
+      </span>
+      <span class="text-muted small" aria-hidden="true">→</span>
+      <span class="badge bg-light text-secondary border fw-semibold">
+        3. Cobertura por especialidad
+      </span>
+    </div>
+  </div>
+
+  <!-- Sub-navegación del módulo Administración -->
+  <div class="mb-4 border-bottom pb-2">
+    <ul class="nav nav-pills gap-2" role="tablist">
+      <li class="nav-item" role="presentation">
+        <a class="nav-link text-secondary bg-white border" href="/admin/usuarios" data-trace="C13-15-usr">
+          Usuarios
+        </a>
+      </li>
+      <li class="nav-item" role="presentation">
+        <a class="nav-link active fw-semibold shadow-sm" href="/admin/especialidades" data-trace="C13-15-esp" style="background-color: #0f172a; color: #ffffff;">
+          Especialidades
+        </a>
+      </li>
+      <li class="nav-item" role="presentation">
+        <a class="nav-link text-secondary bg-white border" href="/admin/aseguradoras" data-trace="C13-15-aseg">
+          Aseguradoras
+        </a>
+      </li>
+    </ul>
+  </div>
+
+  <!-- Tarjetas resumen (KPIs) -->
+  <div class="row g-3 mb-4" aria-label="Resumen del catálogo y cobertura">
+    <div class="col-6 col-lg-3">
+      <div class="kpi-card h-100">
+        <div class="kpi-label">Especialidades</div>
+        <div class="kpi-value" id="kpiTotalEspecialidades">0</div>
+        <div class="small text-muted mt-1">Registradas en catálogo</div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="kpi-card h-100">
+        <div class="kpi-label">Con cobertura</div>
+        <div class="kpi-value text-success" id="kpiConCobertura">0</div>
+        <div class="small text-muted mt-1">Con al menos 1 médico</div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="kpi-card h-100">
+        <div class="kpi-label">Sin asignar</div>
+        <div class="kpi-value text-warning" id="kpiSinAsignar">0</div>
+        <div class="small text-muted mt-1">Pendientes de profesional</div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="kpi-card h-100">
+        <div class="kpi-label">Médicos activos</div>
+        <div class="kpi-value text-primary" id="kpiMedicosActivos">0</div>
+        <div class="small text-muted mt-1">Disponibles para agenda</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Flujo principal en 2 paneles claros y espaciados -->
+  <div class="row g-4 mb-4">
+
+    <!-- PANEL 1 (IZQUIERDA): Catálogo de Especialidades -->
+    <div class="col-12 col-xl-5">
+      <div class="card border-0 shadow-sm rounded-3 hc-tabla-card card-accent-primary h-100">
+        <div class="card-header bg-white border-bottom py-3 d-flex align-items-center justify-content-between gap-2">
+          <div>
+            <div class="d-flex align-items-center gap-2">
+              <span class="badge bg-primary-subtle text-primary border border-primary-subtle">Paso 1</span>
+              <h2 class="h5 fw-bold text-dark mb-0" id="tituloCatalogoEspecialidades" data-trace="C13-16">Catálogo de especialidades</h2>
+              <span class="badge rounded-pill bg-light text-secondary border px-2 py-1 small" id="totalEspecialidadesBadge">0 especialidades</span>
+            </div>
+            <p class="text-muted small mb-0 mt-1">Cree, edite o seleccione una especialidad para consultar sus médicos abajo.</p>
+          </div>
+          <div class="spinner-border spinner-border-sm text-secondary d-none" id="loaderEspecialidades" role="status">
+            <span class="visually-hidden">Cargando...</span>
+          </div>
+        </div>
+
+        <div class="card-body p-3 p-md-4 d-flex flex-column gap-3">
+
+          <!-- Bloque: Crear nueva especialidad -->
+          <form id="formEspecialidad" class="p-3 bg-light rounded-3 border" novalidate onsubmit="return false;">
+            <label for="inputNuevaEspecialidad" class="form-label small fw-semibold text-secondary mb-1">
+              Nueva especialidad
+            </label>
+            <div class="input-group">
+              <input
+                type="text"
+                id="inputNuevaEspecialidad"
+                class="form-control"
+                placeholder="Nueva especialidad..."
+                maxlength="100"
+                required
+                data-trace="C13-17"
+              >
+              <button
+                type="button"
+                class="btn btn-primary text-white d-inline-flex align-items-center gap-1 px-3"
+                id="btnAgregarEspecialidad"
+                data-trace="C13-18"
+              >
+                <span class="spinner-border spinner-border-sm d-none" id="loaderBtnAgregarEspecialidad" role="status" aria-hidden="true"></span>
+                <span id="textoBtnAgregarEspecialidad">Agregar</span>
+              </button>
+            </div>
+            <div class="form-text small text-muted mt-1">Ej.: Cardiología, Medicina interna, Pediatría.</div>
+
+            <!-- Aviso de duplicado -->
+            <div id="alertaDuplicado" class="alert alert-danger py-2 px-3 small mt-2 mb-0 d-none" role="alert" data-trace="C13-23">
+              <span id="textoAlertaDuplicado">⚠️ No se permiten duplicados en el catálogo de especialidades.</span>
+              <button type="button" class="btn-close btn-close-sm float-end" id="btnCerrarAlertaDuplicado" aria-label="Cerrar"></button>
+            </div>
+          </form>
+
+          <!-- Barra de búsqueda y filtro rápido del catálogo -->
+          <div class="row g-2 align-items-center">
+            <div class="col-12 col-sm-7">
+              <label for="inputBuscarEspecialidad" class="visually-hidden">Buscar especialidad en el catálogo</label>
+              <div class="input-group input-group-sm">
+                <span class="input-group-text bg-white text-muted">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16" aria-hidden="true">
+                    <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0"/>
+                  </svg>
+                </span>
+                <input
+                  type="search"
+                  id="inputBuscarEspecialidad"
+                  class="form-control"
+                  placeholder="Filtrar especialidades..."
+                  autocomplete="off"
+                >
+                <button type="button" class="btn btn-outline-secondary d-none" id="btnLimpiarBuscarEspecialidad" aria-label="Limpiar búsqueda">
+                  ×
+                </button>
+              </div>
+            </div>
+            <div class="col-12 col-sm-5">
+              <label for="filtroCoberturaCatalogo" class="visually-hidden">Filtrar por cobertura</label>
+              <select id="filtroCoberturaCatalogo" class="form-select form-select-sm" data-no-select2>
+                <option value="">Todas (cobertura)</option>
+                <option value="con_medicos">Con médicos</option>
+                <option value="sin_medicos">Sin asignar (0)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Listado limpio y desplazable de especialidades -->
+          <div tabindex="0" role="region" aria-labelledby="tituloCatalogoEspecialidades" class="table-responsive" style="max-height: 410px; overflow-y: auto;">
+            <table class="table table-hover align-middle mb-0" id="tablaEspecialidades" data-trace="C13-20" data-no-datatable>
+              <thead class="table-light small text-secondary sticky-top" style="z-index: 2;">
+                <tr>
+                  <th scope="col">Especialidad</th>
+                  <th scope="col" class="text-center">Profesionales</th>
+                  <th scope="col" class="text-end" data-orderable="false">Acción</th>
+                </tr>
+              </thead>
+              <tbody id="tbodyEspecialidades">
+                <tr>
+                  <td colspan="3" class="text-center py-4 text-muted small">Cargando catálogo…</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- PANEL 2 (DERECHA): Asignación a Médicos y Horario Semanal -->
+    <div class="col-12 col-xl-7">
+      <div class="card border-0 shadow-sm rounded-3 card-accent-cyan h-100 d-flex flex-column">
+        <div class="card-header bg-white border-bottom py-3 d-flex flex-wrap align-items-center justify-content-between gap-2">
+          <div>
+            <div class="d-flex align-items-center gap-2">
+              <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle">Paso 2</span>
+              <h2 class="h5 fw-bold text-dark mb-0" data-trace="C13-24">Asignación profesional ↔ especialidad (N:M)</h2>
+            </div>
+            <p class="text-muted small mb-0 mt-1">Elija un médico para gestionar sus especialidades habilitadas y franjas semanales de atención.</p>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <span class="his-unsaved-badge d-none" id="badgeCambiosSinGuardarEsp">Cambios sin guardar</span>
+            <div class="spinner-border spinner-border-sm text-secondary d-none" id="loaderMedico" role="status">
+              <span class="visually-hidden">Cargando...</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-body p-3 p-md-4 d-flex flex-column gap-4 flex-grow-1">
+
+          <!-- Bloque A: Selector de Médico -->
+          <div class="p-3 bg-light rounded-3 border">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
+              <label for="selectMedico" class="form-label small fw-semibold text-secondary mb-0" data-trace="C13-25">
+                Profesional médico
+              </label>
+              <span class="small text-muted" id="resumenMedicoSeleccionado">Seleccione un profesional para comenzar</span>
+            </div>
+            <select id="selectMedico" class="form-select" data-trace="C13-26">
+              <option value="">Seleccione un médico institucional…</option>
+            </select>
+          </div>
+
+          <!-- Contenedor de Asignación y Horarios -->
+          <div id="panelMedicoSeleccionado" class="d-flex flex-column gap-4 flex-grow-1">
+
+            <!-- Bloque B: Especialidades Asignadas (Chips) -->
+            <div>
+              <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
+                <div class="d-flex align-items-center gap-2">
+                  <label class="form-label small fw-semibold text-secondary mb-0" data-trace="C13-27">
+                    Especialidades asignadas
+                  </label>
+                  <span class="badge rounded-pill bg-light text-secondary border px-2 py-0 small" id="badgeTotalAsignadasCount">0 asignadas</span>
+                </div>
+                <div class="dropdown" id="dropdownContainerAgregarEspecialidad">
+                  <button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" id="btnAgregarEspecialidadMedico" data-bs-toggle="dropdown" aria-expanded="false" data-trace="C13-30">
+                    + Agregar especialidad
+                  </button>
+                  <ul class="dropdown-menu dropdown-menu-end" id="dropdownEspecialidadesDisponibles" aria-labelledby="btnAgregarEspecialidadMedico" style="max-height: 260px; overflow-y: auto;">
+                    <li><span class="dropdown-item-text text-muted small">Cargando…</span></li>
+                  </ul>
+                </div>
+              </div>
+
+              <div id="contenedorChipsEspecialidades" class="d-flex flex-wrap align-items-center gap-2 p-3 bg-light rounded-3 border" style="min-height: 62px;" data-trace="C13-28">
+                <span id="mensajeSinEspecialidades" class="text-muted small">Seleccione un profesional para ver y asignar sus especialidades.</span>
+              </div>
+
+              <!-- Nota de regla de unicidad -->
+              <div class="alert alert-info py-2 px-3 small d-flex align-items-start gap-2 mt-2 mb-0" data-trace="C13-31">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" class="bi bi-info-circle flex-shrink-0 mt-1" viewBox="0 0 16 16" aria-hidden="true">
+                  <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+                  <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0"/>
+                </svg>
+                <div>
+                  La combinación (usuario_id, especialidad_id) es única en usuario_especialidad; una especialidad no se asigna dos veces al mismo profesional.
+                </div>
+              </div>
+            </div>
+
+            <!-- Bloque C: Horario semanal del profesional -->
+            <div class="pt-3 border-top">
+              <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
+                <div>
+                  <div class="d-flex align-items-center gap-2">
+                    <h3 class="h6 fw-bold text-dark mb-0" id="tituloHorarioSemanal">
+                      Horario semanal del profesional
+                    </h3>
+                    <span class="badge rounded-pill bg-light text-secondary border px-2 py-0 small" id="badgeTotalFranjas">0 franjas</span>
+                  </div>
+                  <p class="text-muted small mb-0 mt-1">Agregue las jornadas disponibles y la duración estándar por cita.</p>
+                </div>
+              </div>
+
+              <!-- Formulario limpio para agregar franja horaria -->
+              <div class="row g-2 align-items-end mb-3 p-3 bg-light rounded-3 border" id="formNuevaFranjaHoraria">
+                <div class="col-12 col-sm-6 col-md-3">
+                  <label for="nuevaFranjaDia" class="form-label small text-secondary mb-1">Día</label>
+                  <select id="nuevaFranjaDia" class="form-select form-select-sm" data-no-select2>
+                    <option value="1">Lunes</option>
+                    <option value="2">Martes</option>
+                    <option value="3">Miércoles</option>
+                    <option value="4">Jueves</option>
+                    <option value="5">Viernes</option>
+                    <option value="6">Sábado</option>
+                    <option value="7">Domingo</option>
+                  </select>
+                </div>
+                <div class="col-6 col-sm-3 col-md-2">
+                  <label for="nuevaFranjaHoraInicio" class="form-label small text-secondary mb-1">Inicio</label>
+                  <input type="time" id="nuevaFranjaHoraInicio" class="form-control form-control-sm" value="08:00">
+                </div>
+                <div class="col-6 col-sm-3 col-md-2">
+                  <label for="nuevaFranjaHoraFin" class="form-label small text-secondary mb-1">Fin</label>
+                  <input type="time" id="nuevaFranjaHoraFin" class="form-control form-control-sm" value="12:00">
+                </div>
+                <div class="col-6 col-sm-6 col-md-2">
+                  <label for="nuevaFranjaDuracion" class="form-label small text-secondary mb-1">Cita</label>
+                  <select id="nuevaFranjaDuracion" class="form-select form-select-sm" data-no-select2>
+                    <option value="15">15 min</option>
+                    <option value="20" selected>20 min</option>
+                    <option value="30">30 min</option>
+                    <option value="45">45 min</option>
+                    <option value="60">60 min</option>
+                  </select>
+                </div>
+                <div class="col-6 col-sm-6 col-md-3 d-grid">
+                  <button type="button" class="btn btn-sm btn-outline-primary" id="btnAgregarFranja" title="Agregar franja al horario">
+                    + Añadir franja
+                  </button>
+                </div>
+              </div>
+
+              <div tabindex="0" role="region" aria-labelledby="tituloHorarioSemanal" class="table-responsive" style="max-height: 250px; overflow-y: auto;">
+                <table class="table table-sm table-hover align-middle mb-0" id="tablaFranjasHorarias">
+                  <thead class="table-light small text-secondary sticky-top" style="z-index: 2;">
+                    <tr>
+                      <th scope="col" style="width: 26%;">Día</th>
+                      <th scope="col" style="width: 20%;">Hora inicio</th>
+                      <th scope="col" style="width: 20%;">Hora fin</th>
+                      <th scope="col" style="width: 22%;">Duración (min)</th>
+                      <th scope="col" style="width: 12%;" class="text-end">Quitar</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tbodyFranjasHorarias">
+                    <tr>
+                      <td colspan="5" class="text-center py-3 text-muted small">No hay franjas configuradas para este profesional</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div id="alertaAsignacion" class="alert alert-success py-2 px-3 small mb-0 d-none" role="alert"></div>
+
+          </div>
+        </div>
+
+        <!-- Pie de acciones claro y separado -->
+        <div class="card-footer bg-light border-top py-3 px-3 px-md-4 d-flex flex-wrap align-items-center justify-content-between gap-2">
+          <span class="small text-muted">Los cambios en especialidades y franjas se guardan en conjunto para el médico seleccionado.</span>
+          <div class="d-flex align-items-center gap-2 ms-auto">
+            <button type="button" class="btn btn-outline-secondary" id="btnCancelarAsignacion" data-trace="C13-37">
+              Cancelar
+            </button>
+            <button type="button" class="btn btn-primary text-white d-inline-flex align-items-center gap-2 px-3" id="btnGuardarAsignacion" data-trace="C13-38">
+              <span class="spinner-border spinner-border-sm d-none" id="loaderBtnGuardarAsignacion" role="status" aria-hidden="true"></span>
+              <span id="textoBtnGuardarAsignacion">Guardar asignación</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <!-- PANEL 3 (ANCHO COMPLETO): Profesionales asignados a la especialidad seleccionada -->
+  <div class="card border-0 shadow-sm rounded-3" id="seccionProfesionalesPorEspecialidad">
+    <div class="card-header bg-white border-bottom py-3 d-flex flex-wrap align-items-center justify-content-between gap-2">
+      <div>
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+          <span class="badge bg-light text-secondary border">Paso 3</span>
+          <h2 class="h5 fw-bold text-dark mb-0" id="tituloProfesionalesEspecialidad" data-trace="C13-32">
+            Profesionales por especialidad: <span class="text-primary fw-semibold" id="spanNombreEspecialidadSeleccionada" data-trace="C13-35">(Seleccione una especialidad)</span>
+          </h2>
+          <span class="badge rounded-pill bg-light text-secondary border px-2 py-1 small" id="badgeProfesionalesEspecialidadCount">0 profesionales</span>
+        </div>
+        <p class="text-muted small mb-0 mt-1">Haga clic en cualquier especialidad del catálogo superior para consultar qué profesionales la atienden.</p>
+      </div>
+    </div>
+    <div class="card-body p-0">
+      <div tabindex="0" role="region" aria-labelledby="tituloProfesionalesEspecialidad" class="table-responsive border-0">
+        <table class="table table-hover align-middle mb-0" id="tablaProfesionalesEspecialidad" data-trace="C13-34">
+          <thead class="table-light small text-secondary">
+            <tr>
+              <th scope="col" class="ps-4">Profesional</th>
+              <th scope="col">Rol</th>
+              <th scope="col" class="pe-4">Asignado desde</th>
+            </tr>
+          </thead>
+          <tbody id="tbodyProfesionalesEspecialidad">
+            <tr>
+              <td colspan="3" class="text-center py-4 text-muted small">Seleccione una especialidad para ver los profesionales asignados</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal para editar nombre de especialidad -->
+  <div class="modal fade" id="modalEditarEspecialidad" tabindex="-1" aria-labelledby="modalEditarEspecialidadLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow">
+        <div class="modal-header bg-white border-bottom py-3">
+          <h5 class="modal-title h6 fw-bold mb-0" id="modalEditarEspecialidadLabel">Editar nombre de especialidad</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body p-4">
+          <form id="formModalEditarEspecialidad" onsubmit="return false;">
+            <input type="hidden" id="inputEditarEspecialidadId" value="">
+            <div class="mb-3">
+              <label for="inputEditarEspecialidadNombre" class="form-label small fw-semibold text-secondary">Nombre de la especialidad</label>
+              <input type="text" class="form-control" id="inputEditarEspecialidadNombre" maxlength="100" required>
+              <div class="form-text small text-muted">El cambio se reflejará en todo el catálogo y en las agendas asociadas.</div>
+            </div>
+            <div id="alertaDuplicadoModal" class="alert alert-danger py-2 px-3 small mb-0 d-none" role="alert">
+              <span id="textoAlertaDuplicadoModal"></span>
+              <button type="button" class="btn-close btn-close-sm float-end" id="btnCerrarAlertaDuplicadoModal" aria-label="Cerrar"></button>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer bg-light border-top">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-primary text-white d-inline-flex align-items-center gap-2" id="btnGuardarModalEditar">
+            <span class="spinner-border spinner-border-sm d-none" id="loaderGuardarModalEditar" role="status" aria-hidden="true"></span>
+            <span id="textoGuardarModalEditar">Guardar cambios</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<%- include('../partials/_fin', { scripts: ['/js/especialidades.js'] }) %>

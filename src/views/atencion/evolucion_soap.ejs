@@ -1,0 +1,427 @@
+<%- include('../partials/_inicio', { titulo: 'Evolución SOAP' }) %>
+<!-- Atención clínica · Evolución SOAP -->
+<%- include('../partials/_banner_paciente', { figuraTrace: 'C6' }) %>
+<%- include('../partials/_tabs_atencion', { figuraTrace: 'C6', seccion: 'evolucion' }) %>
+
+<%
+  const idAtencion = atencion.id;
+  const esCerrada = (atencion.estado === 'CERRADA');
+  const rolUsuario = (typeof usuario !== 'undefined' && usuario && usuario.rol) ? usuario.rol : '';
+  const nombreUsuario = (typeof usuario !== 'undefined' && usuario && usuario.nombre) ? usuario.nombre : '';
+
+  function formatearMedicoFirmante(nombre) {
+    if (!nombre) return 'Dra. Ana Pérez';
+    const n = String(nombre).trim();
+    if (n.toLowerCase().startsWith('dr.') || n.toLowerCase().startsWith('dra.')) return n;
+    if (n.toLowerCase().includes('ana') || n.toLowerCase().includes('diana') || n.toLowerCase().includes('laura') || n.toLowerCase().includes('liliana')) {
+      return `Dra. ${n.replace(/Perez/g, 'Pérez')}`;
+    }
+    return `Dr. ${n}`;
+  }
+  const medicoNombreFirmante = formatearMedicoFirmante(nombreUsuario);
+
+  function limpiarNumero(val) {
+    if (val == null || val === '') return '—';
+    const num = parseFloat(val);
+    return isNaN(num) ? String(val) : String(num);
+  }
+
+  // Extracción de datos de signos vitales (C6-33 a C6-48)
+  const toma = (typeof ultimaToma !== 'undefined' && ultimaToma) ? ultimaToma : null;
+  const taTexto = (toma && toma.presion_sistolica != null && toma.presion_diastolica != null)
+    ? `${toma.presion_sistolica}/${toma.presion_diastolica}`
+    : ((toma && toma.ta_texto) ? toma.ta_texto : '—');
+  const fcValor = toma && toma.frecuencia_cardiaca != null ? String(toma.frecuencia_cardiaca) : '—';
+  const frValor = toma && toma.frecuencia_respiratoria != null ? String(toma.frecuencia_respiratoria) : '—';
+  const tempValor = toma && toma.temperatura_celsius != null ? limpiarNumero(toma.temperatura_celsius) : '—';
+  const spo2Valor = toma && toma.saturacion_oxigeno != null ? String(toma.saturacion_oxigeno) : '—';
+  const pesoValor = toma && toma.peso_kg != null ? limpiarNumero(toma.peso_kg) : '—';
+  const tallaValor = toma && toma.talla_cm != null ? limpiarNumero(toma.talla_cm) : '—';
+  const imcValor = toma && toma.imc != null ? limpiarNumero(toma.imc) : '—';
+  const horaSignos = (toma && (toma.hora_formateada || toma.hora)) ? (toma.hora_formateada || toma.hora) : '';
+
+  // Valores de borrador si existen
+  const bSubjetivo = (typeof borrador !== 'undefined' && borrador && borrador.subjetivo) ? borrador.subjetivo : '';
+  const bObjetivo = (typeof borrador !== 'undefined' && borrador && borrador.objetivo) ? borrador.objetivo : '';
+  const bAnalisis = (typeof borrador !== 'undefined' && borrador && borrador.analisis) ? borrador.analisis : '';
+  const bPlan = (typeof borrador !== 'undefined' && borrador && borrador.plan) ? borrador.plan : '';
+%>
+
+<div class="row g-4" id="evolucionSoap"
+     data-atencion="<%= idAtencion %>"
+     data-solo-lectura="<%= soloLectura ? 'true' : 'false' %>"
+     data-puede-editar="<%= puedeEditar ? 'true' : 'false' %>">
+  
+  <div class="col-12">
+    <!-- Tarjeta Principal del Editor SOAP -->
+    <div class="card shadow-sm border-0 bg-white p-4 mb-4" style="border-radius: 0.5rem;">
+
+      <!-- [6.28–6.31] Pestañas de dimensiones SOAP -->
+      <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3 border-bottom pb-3">
+        <div class="d-flex flex-wrap gap-2" role="tablist" id="soapTabs">
+          <!-- 6.28 Subjetivo -->
+          <button type="button"
+                  class="btn btn-sm px-3 py-2 fw-semibold rounded-pill tab-soap active"
+                  id="tabSoapS"
+                  data-soap="S"
+                  data-trace="C6-28">
+            S · Subjetivo
+          </button>
+          <!-- 6.29 Objetivo -->
+          <button type="button"
+                  class="btn btn-sm px-3 py-2 fw-semibold rounded-pill tab-soap"
+                  id="tabSoapO"
+                  data-soap="O"
+                  data-trace="C6-29">
+            O · Objetivo
+          </button>
+          <!-- 6.30 Análisis -->
+          <button type="button"
+                  class="btn btn-sm px-3 py-2 fw-semibold rounded-pill tab-soap"
+                  id="tabSoapA"
+                  data-soap="A"
+                  data-trace="C6-30">
+            A · Análisis
+          </button>
+          <!-- 6.31 Plan -->
+          <button type="button"
+                  class="btn btn-sm px-3 py-2 fw-semibold rounded-pill tab-soap"
+                  id="tabSoapP"
+                  data-soap="P"
+                  data-trace="C6-31">
+            P · Plan
+          </button>
+        </div>
+
+        <div class="small text-secondary d-none d-md-flex align-items-center gap-1">
+          <svg width="14" height="14" fill="currentColor" class="bi bi-clock-history" viewBox="0 0 16 16">
+            <path d="M8.515 1.019A7 7 0 0 0 8 1V0a8 8 0 0 1 .589.022l-.074.997zm2.004.45a7.003 7.003 0 0 0-.985-.299l.219-.976c.383.086.76.2 1.126.342l-.36.933zm1.37.714a6.974 6.974 0 0 0-.814-.538l.493-.87a7.999 7.999 0 0 1 .933.618l-.612.79zM16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-1 0A7 7 0 1 0 1 8a7 7 0 0 0 14 0zm-8-3a.5.5 0 0 0-.5.5v4.207l2.146 2.147a.5.5 0 0 0 .708-.708L7.5 9.293V5.5A.5.5 0 0 0 7 5z"/>
+          </svg>
+          <span>Evolución médica clínica</span>
+        </div>
+      </div>
+
+      <!-- [6.32–6.48] Franja de Signos Vitales (Solo Lectura) -->
+      <div class="card bg-light border-0 p-3 mb-4 rounded-3" id="franjaSignosVitales" style="background-color: #f8fafc !important;">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
+          <!-- 6.32 Título contextual de signos vitales -->
+          <div class="small fw-semibold text-secondary d-flex align-items-center gap-2" data-trace="C6-32" id="tituloSignosVitales">
+            <svg width="15" height="15" fill="currentColor" class="bi bi-activity text-primary" viewBox="0 0 16 16">
+              <path fill-rule="evenodd" d="M6 2a.5.5 0 0 1 .47.33L10 12.036l1.53-4.593A.5.5 0 0 1 12 7h3.5a.5.5 0 0 1 0 1h-3.162l-1.808 5.426a.5.5 0 0 1-.948.031L6 3.964 4.47 8.557A.5.5 0 0 1 4 9H.5a.5.5 0 0 1 0-1h3.162l1.808-5.426A.5.5 0 0 1 6 2z"/>
+            </svg>
+            <span>Signos vitales de la atención (registrados en Consulta<%= horaSignos ? ', ' + horaSignos : '' %>)</span>
+          </div>
+          <% if (!toma) { %>
+            <a href="/atenciones/<%= idAtencion %>/consulta" class="small text-primary text-decoration-none fw-medium">Registrar en Consulta &rarr;</a>
+          <% } %>
+        </div>
+
+        <% if (!toma) { %>
+          <div class="alert alert-warning py-2 px-3 small border-0 mb-3 d-flex align-items-center gap-2" role="alert">
+            <svg width="16" height="16" fill="currentColor" class="bi bi-exclamation-circle text-warning flex-shrink-0" viewBox="0 0 16 16">
+              <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+              <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
+            </svg>
+            <span>No hay signos vitales registrados en esta atención. Puede registrarlos en la pestaña <a href="/atenciones/<%= idAtencion %>/consulta" class="alert-link fw-semibold">Consulta</a>.</span>
+          </div>
+        <% } %>
+
+        <div class="row g-2 text-center" id="gridSignosVitales">
+          <!-- TA [6.33, 6.34] -->
+          <div class="col-6 col-sm-3 col-lg">
+            <div class="p-2 rounded bg-white border border-light-subtle shadow-sm h-100">
+              <div class="text-secondary small fw-medium" data-trace="C6-33">TA</div>
+              <div class="fs-5 fw-bold text-dark font-monospace mt-1" data-trace="C6-34"><%= taTexto %></div>
+            </div>
+          </div>
+          <!-- FC [6.36, 6.35] -->
+          <div class="col-6 col-sm-3 col-lg">
+            <div class="p-2 rounded bg-white border border-light-subtle shadow-sm h-100">
+              <div class="text-secondary small fw-medium" data-trace="C6-36">FC</div>
+              <div class="fs-5 fw-bold text-dark font-monospace mt-1" data-trace="C6-35"><%= fcValor %></div>
+            </div>
+          </div>
+          <!-- FR [6.38, 6.37] -->
+          <div class="col-6 col-sm-3 col-lg">
+            <div class="p-2 rounded bg-white border border-light-subtle shadow-sm h-100">
+              <div class="text-secondary small fw-medium" data-trace="C6-38">FR</div>
+              <div class="fs-5 fw-bold text-dark font-monospace mt-1" data-trace="C6-37"><%= frValor %></div>
+            </div>
+          </div>
+          <!-- T °C [6.40, 6.39] -->
+          <div class="col-6 col-sm-3 col-lg">
+            <div class="p-2 rounded bg-white border border-light-subtle shadow-sm h-100">
+              <div class="text-secondary small fw-medium" data-trace="C6-40">T °C</div>
+              <div class="fs-5 fw-bold text-dark font-monospace mt-1" data-trace="C6-39"><%= tempValor %></div>
+            </div>
+          </div>
+          <!-- SpO2 [6.42, 6.41] -->
+          <div class="col-6 col-sm-3 col-lg">
+            <div class="p-2 rounded bg-white border border-light-subtle shadow-sm h-100">
+              <div class="text-secondary small fw-medium" data-trace="C6-42">SpO2</div>
+              <div class="fs-5 fw-bold text-dark font-monospace mt-1" data-trace="C6-41"><%= spo2Valor %></div>
+            </div>
+          </div>
+          <!-- Peso [6.43, 6.44] -->
+          <div class="col-6 col-sm-3 col-lg">
+            <div class="p-2 rounded bg-white border border-light-subtle shadow-sm h-100">
+              <div class="text-secondary small fw-medium" data-trace="C6-43">Peso</div>
+              <div class="fs-5 fw-bold text-dark font-monospace mt-1" data-trace="C6-44"><%= pesoValor %></div>
+            </div>
+          </div>
+          <!-- Talla [6.45, 6.46] -->
+          <div class="col-6 col-sm-3 col-lg">
+            <div class="p-2 rounded bg-white border border-light-subtle shadow-sm h-100">
+              <div class="text-secondary small fw-medium" data-trace="C6-45">Talla</div>
+              <div class="fs-5 fw-bold text-dark font-monospace mt-1" data-trace="C6-46"><%= tallaValor %></div>
+            </div>
+          </div>
+          <!-- IMC [6.47, 6.48] -->
+          <div class="col-6 col-sm-3 col-lg">
+            <div class="p-2 rounded bg-white border border-light-subtle shadow-sm h-100">
+              <div class="text-secondary small fw-medium" data-trace="C6-47">IMC</div>
+              <div class="fs-5 fw-bold text-dark font-monospace mt-1" data-trace="C6-48"><%= imcValor %></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- [6.49–6.50] Paneles de Contenido y Textareas para cada dimensión SOAP -->
+      <form id="formSoap" novalidate>
+        <div id="soapPanes" data-trace="C6-50">
+          
+          <!-- Dimensión S · Subjetivo -->
+          <div class="soap-pane" id="paneSoapS">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+              <label for="subjetivo" class="form-label fw-bold text-dark mb-0 fs-6" data-trace="C6-49">
+                Motivo y síntomas referidos por el paciente
+              </label>
+              <span class="badge bg-light text-primary border px-2 py-1 small fw-semibold">S · Subjetivo <span class="text-danger">*</span></span>
+            </div>
+            <textarea id="subjetivo"
+                      name="subjetivo"
+                      class="form-control font-monospace shadow-none"
+                      rows="9"
+                      placeholder="Describa el motivo de consulta, síntomas actuales según refiere el paciente, evolución cronológica, intensidad y antecedentes pertinentes del cuadro actual..."
+                      data-trace="C6-50"
+                      <%= (soloLectura || !puedeEditar) ? 'disabled' : '' %>><%= bSubjetivo %></textarea>
+          </div>
+
+          <!-- Dimensión O · Objetivo -->
+          <div class="soap-pane d-none" id="paneSoapO">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+              <label for="objetivo" class="form-label fw-bold text-dark mb-0 fs-6" data-trace="C6-49">
+                Hallazgos de exploración física y pruebas
+              </label>
+              <span class="badge bg-light text-primary border px-2 py-1 small fw-semibold">O · Objetivo</span>
+            </div>
+            <textarea id="objetivo"
+                      name="objetivo"
+                      class="form-control font-monospace shadow-none"
+                      rows="9"
+                      placeholder="Registre examen físico detallado por sistemas, estado general, signos y hallazgos semiológicos relevantes o pruebas paraclínicas revisadas..."
+                      data-trace="C6-50"
+                      <%= (soloLectura || !puedeEditar) ? 'disabled' : '' %>><%= bObjetivo %></textarea>
+          </div>
+
+          <!-- Dimensión A · Análisis -->
+          <div class="soap-pane d-none" id="paneSoapA">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+              <label for="analisis" class="form-label fw-bold text-dark mb-0 fs-6" data-trace="C6-49">
+                Impresión diagnóstica y evolución clínica
+              </label>
+              <span class="badge bg-light text-primary border px-2 py-1 small fw-semibold">A · Análisis <span class="text-danger">*</span></span>
+            </div>
+            <textarea id="analisis"
+                      name="analisis"
+                      class="form-control font-monospace shadow-none"
+                      rows="9"
+                      placeholder="Consigne el análisis clínico razonado, evolución del estado del paciente, correlación paraclínica, hipótesis diagnósticas y diagnósticos diferenciales..."
+                      data-trace="C6-50"
+                      <%= (soloLectura || !puedeEditar) ? 'disabled' : '' %>><%= bAnalisis %></textarea>
+          </div>
+
+          <!-- Dimensión P · Plan -->
+          <div class="soap-pane d-none" id="paneSoapP">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+              <label for="plan" class="form-label fw-bold text-dark mb-0 fs-6" data-trace="C6-49">
+                Plan diagnóstico, terapéutico y recomendaciones
+              </label>
+              <span class="badge bg-light text-primary border px-2 py-1 small fw-semibold">P · Plan</span>
+            </div>
+            <textarea id="plan"
+                      name="plan"
+                      class="form-control font-monospace shadow-none"
+                      rows="9"
+                      placeholder="Formule la conducta terapéutica, plan de manejo, medicamentos prescritos, exámenes de control solicitados, interconsultas y recomendaciones al paciente..."
+                      data-trace="C6-50"
+                      <%= (soloLectura || !puedeEditar) ? 'disabled' : '' %>><%= bPlan %></textarea>
+          </div>
+
+        </div>
+      </form>
+
+      <!-- [6.51–6.53] Barra de acciones inferiores -->
+      <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 pt-3 mt-4 border-top" id="barraAccionesEvolucion">
+        <div class="d-flex align-items-center gap-2">
+          <% if (!soloLectura && puedeEditar) { %>
+            <button type="button"
+                    class="btn btn-outline-secondary d-inline-flex align-items-center gap-2 px-3 py-2 shadow-sm"
+                    id="btnGuardarBorrador"
+                    data-trace="C6-51">
+              <svg width="15" height="15" fill="currentColor" class="bi bi-save" viewBox="0 0 16 16">
+                <path d="M2 1a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H9.5a1 1 0 0 0-1 1v7.293l2.646-2.647a.5.5 0 0 1 .708.708l-3.5 3.5a.5.5 0 0 1-.708 0l-3.5-3.5a.5.5 0 1 1 .708-.708L7.5 9.293V2a2 2 0 0 1 2-2H14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h2.5a.5.5 0 0 1 0 1H2z"/>
+              </svg>
+              <span>Guardar borrador</span>
+            </button>
+          <% } %>
+
+          <!-- Indicador de estado de autoguardado -->
+          <div class="small text-muted d-flex align-items-center gap-2" id="indicadorBorrador">
+            <span class="spinner-border spinner-border-sm text-primary d-none" id="spinnerBorrador" role="status" aria-hidden="true"></span>
+            <span id="textoBorrador">
+              <% if (typeof borrador !== 'undefined' && borrador && borrador.actualizado_en) { %>
+                Borrador guardado automáticamente
+              <% } %>
+            </span>
+          </div>
+        </div>
+
+        <div class="d-flex align-items-center gap-2 ms-auto">
+          <a href="/atenciones/<%= idAtencion %>/consulta"
+             class="btn btn-outline-secondary px-3 py-2"
+             id="btnCancelar"
+             data-trace="C6-52">
+            Cancelar
+          </a>
+
+          <% if (!soloLectura && puedeEditar) { %>
+            <button type="button"
+                    class="btn btn-primary d-inline-flex align-items-center gap-2 px-3 py-2 shadow-sm text-white"
+                    id="btnFirmarEvolucion"
+                    data-trace="C6-53">
+              <svg width="16" height="16" fill="currentColor" class="bi bi-shield-lock-fill" viewBox="0 0 16 16">
+                <path fill-rule="evenodd" d="M8 0c-.69 0-1.843.265-2.928.56-1.11.3-2.229.655-2.887.87a1.54 1.54 0 0 0-1.044 1.262c-.596 4.477.787 7.795 2.464 9.99a11.777 11.777 0 0 0 2.871 2.503l.524.306.524-.306a11.777 11.777 0 0 0 2.871-2.503c1.677-2.195 3.06-5.513 2.464-9.99a1.54 1.54 0 0 0-1.044-1.263 62.467 62.467 0 0 0-2.887-.87C9.843.266 8.69 0 8 0zm0 5a1.5 1.5 0 0 1 .5 2.915l.385 1.99a.5.5 0 0 1-.491.595h-.788a.5.5 0 0 1-.49-.595l.384-1.99A1.5 1.5 0 0 1 8 5z"/>
+              </svg>
+              <span>Firmar y sellar evolución</span>
+            </button>
+          <% } %>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Historial de evoluciones firmadas -->
+    <div class="card shadow-sm border-0 bg-white mb-4" style="border-radius: 0.5rem;" id="seccionHistorialEvoluciones">
+      <div class="card-header bg-white border-bottom py-3 d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center gap-2">
+          <svg width="18" height="18" fill="currentColor" class="bi bi-journal-medical text-primary" viewBox="0 0 16 16">
+            <path fill-rule="evenodd" d="M8 4a.5.5 0 0 1 .5.5v.634l.549-.317a.5.5 0 1 1 .5.866L9 6l.549.317a.5.5 0 1 1-.5.866L8.5 6.866V7.5a.5.5 0 0 1-1 0v-.634l-.549.317a.5.5 0 1 1-.5-.866L7 6l-.549-.317a.5.5 0 1 1 .5-.866l.549.317V4.5A.5.5 0 0 1 8 4zM5 1a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V3a2 2 0 0 0-2-2H5zm0 1h6a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z"/>
+          </svg>
+          <h3 class="fs-6 fw-bold text-dark mb-0">Evoluciones médicas firmadas</h3>
+        </div>
+        <span class="badge bg-secondary-subtle text-secondary" id="badgeTotalEvoluciones"><%= (evoluciones && evoluciones.length) || 0 %> registradas</span>
+      </div>
+      <div class="card-body p-3" id="listaEvolucionesFirmadas">
+        <% if (evoluciones && evoluciones.length > 0) { %>
+          <div class="d-flex flex-column gap-3">
+            <% evoluciones.forEach((evo) => { %>
+              <div class="border rounded-3 p-3 bg-light bg-opacity-50 item-evolucion" id="evo-<%= evo.id %>">
+                <div class="d-flex flex-wrap align-items-center justify-content-between pb-2 mb-2 border-bottom">
+                  <div class="fw-bold text-dark d-flex align-items-center gap-2">
+                    <svg width="16" height="16" fill="currentColor" class="bi bi-patch-check-fill text-success" viewBox="0 0 16 16">
+                      <path d="M10.067.87a2.89 2.89 0 0 0-4.134 0l-.622.637-.89-.011a2.89 2.89 0 0 0-2.924 2.924l.01.89-.636.622a2.89 2.89 0 0 0 0 4.134l.637.622-.011.89a2.89 2.89 0 0 0 2.924 2.924l.89-.01.622.636a2.89 2.89 0 0 0 4.134 0l.622-.637.89.011a2.89 2.89 0 0 0 2.924-2.924l-.01-.89.636-.622a2.89 2.89 0 0 0 0-4.134l-.637-.622.011-.89a2.89 2.89 0 0 0-2.924-2.924l-.89.01-.622-.636zm.287 5.984-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 1 1 .708-.708L7.5 8.793l2.646-2.647a.5.5 0 0 1 .708.708z"/>
+                    </svg>
+                    <span class="encabezado-firma"><%= evo.encabezado_firma || evo.medico %></span>
+                  </div>
+                  <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 fw-medium">Firmada y sellada</span>
+                </div>
+                
+                <div class="row g-2 small">
+                  <% if (evo.subjetivo) { %>
+                    <div class="col-12">
+                      <div class="p-2 bg-white rounded border-start border-3 border-primary shadow-xs">
+                        <strong class="text-primary d-block mb-1">S · Subjetivo</strong>
+                        <div class="text-dark font-sans" style="white-space: pre-wrap;"><%= evo.subjetivo %></div>
+                      </div>
+                    </div>
+                  <% } %>
+                  <% if (evo.objetivo) { %>
+                    <div class="col-12">
+                      <div class="p-2 bg-white rounded border-start border-3 border-info shadow-xs">
+                        <strong class="text-info d-block mb-1">O · Objetivo</strong>
+                        <div class="text-dark font-sans" style="white-space: pre-wrap;"><%= evo.objetivo %></div>
+                      </div>
+                    </div>
+                  <% } %>
+                  <% if (evo.analisis) { %>
+                    <div class="col-12">
+                      <div class="p-2 bg-white rounded border-start border-3 border-warning shadow-xs">
+                        <strong class="text-warning-emphasis d-block mb-1">A · Análisis</strong>
+                        <div class="text-dark font-sans" style="white-space: pre-wrap;"><%= evo.analisis %></div>
+                      </div>
+                    </div>
+                  <% } %>
+                  <% if (evo.plan) { %>
+                    <div class="col-12">
+                      <div class="p-2 bg-white rounded border-start border-3 border-success shadow-xs">
+                        <strong class="text-success d-block mb-1">P · Plan</strong>
+                        <div class="text-dark font-sans" style="white-space: pre-wrap;"><%= evo.plan %></div>
+                      </div>
+                    </div>
+                  <% } %>
+                </div>
+              </div>
+            <% }) %>
+          </div>
+        <% } else { %>
+          <div class="text-center py-4 text-muted small" id="sinEvoluciones">
+            <svg width="32" height="32" fill="currentColor" class="bi bi-clock-history mb-2 opacity-50" viewBox="0 0 16 16">
+              <path d="M8.515 1.019A7 7 0 0 0 8 1V0a8 8 0 0 1 .589.022l-.074.997zm2.004.45a7.003 7.003 0 0 0-.985-.299l.219-.976c.383.086.76.2 1.126.342l-.36.933zm1.37.714a6.974 6.974 0 0 0-.814-.538l.493-.87a7.999 7.999 0 0 1 .933.618l-.612.79zM16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-1 0A7 7 0 1 0 1 8a7 7 0 0 0 14 0zm-8-3a.5.5 0 0 0-.5.5v4.207l2.146 2.147a.5.5 0 0 0 .708-.708L7.5 9.293V5.5A.5.5 0 0 0 7 5z"/>
+            </svg>
+            <p class="mb-0">No hay evoluciones médicas previas registradas para esta atención.</p>
+          </div>
+        <% } %>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- Modal de confirmación para Firma y Sellado -->
+<div class="modal fade" id="modalConfirmarFirma" tabindex="-1" aria-labelledby="modalConfirmarFirmaLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content shadow border-0" style="border-radius: 0.5rem;">
+      <div class="modal-header border-bottom-0 pb-0">
+        <h5 class="modal-title fs-5 fw-bold text-dark d-flex align-items-center gap-2" id="modalConfirmarFirmaLabel">
+          <svg width="20" height="20" fill="currentColor" class="bi bi-shield-check text-primary" viewBox="0 0 16 16">
+            <path d="M5.338 1.59a61.44 61.44 0 0 0-2.837.856.481.481 0 0 0-.328.39c-.554 4.157.726 7.19 2.253 9.188a10.725 10.725 0 0 0 2.287 2.233c.346.244.652.42.893.533.12.057.218.095.293.118a.55.55 0 0 0 .101.025.615.615 0 0 0 .1-.025c.076-.023.174-.061.294-.118.24-.113.547-.29.893-.533a10.726 10.726 0 0 0 2.287-2.233c1.527-1.997 2.807-5.031 2.253-9.188a.48.48 0 0 0-.328-.39c-.651-.213-1.75-.56-2.837-.855C9.552 1.29 8.531 1.067 8 1.067c-.53 0-1.552.223-2.662.524zM5.072.56C6.157.265 7.31 0 8 0s1.843.265 2.928.56c1.11.3 2.229.655 2.887.87a1.54 1.54 0 0 1 1.044 1.262c.596 4.477-.787 7.795-2.464 9.99a11.775 11.775 0 0 1-2.517 2.453 7.159 7.159 0 0 1-1.048.625c-.28.132-.581.24-.829.24s-.548-.108-.829-.24a7.158 7.158 0 0 1-1.048-.625 11.777 11.777 0 0 1-2.517-2.453C1.928 10.487.545 7.169 1.141 2.692A1.54 1.54 0 0 1 2.185 1.43 62.456 62.456 0 0 1 5.072.56z"/>
+            <path d="M10.854 5.146a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 1 1 .708-.708L7.5 7.793l2.646-2.647a.5.5 0 0 1 .708 0z"/>
+          </svg>
+          Confirmar firma de evolución médica
+        </h5>
+        <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body py-3">
+        <p class="text-secondary mb-3">
+          ¿Confirma la firma y sellado de la evolución médica? Esta acción es irreversible y quedará registrada en la historia clínica del paciente con su firma profesional (<strong class="text-dark"><%= medicoNombreFirmante %></strong>) y marca temporal.
+        </p>
+        <div class="alert alert-warning py-2 px-3 small border-0 mb-0 d-flex align-items-center gap-2">
+          <svg width="16" height="16" fill="currentColor" class="bi bi-exclamation-triangle-fill flex-shrink-0 text-warning" viewBox="0 0 16 16">
+            <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+          </svg>
+          <span>Una vez sellada, la nota no podrá ser modificada; cualquier cambio posterior requerirá una nota de adenda.</span>
+        </div>
+      </div>
+      <div class="modal-footer border-top-0 pt-0">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-primary px-3 shadow-sm text-white" id="btnConfirmarFirma">
+          Confirmar firma
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/_fin', { scripts: ['/js/evolucion_soap.js'] }) %>

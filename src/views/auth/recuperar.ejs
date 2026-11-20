@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Soporte de acceso · HISCARE</title>
+  <link rel="stylesheet" href="/vendor/bootstrap/css/bootstrap.min.css">
+  <link rel="stylesheet" href="/vendor/sweetalert2/sweetalert2.min.css">
+  <link rel="stylesheet" href="/css/hiscare.css">
+</head>
+<body class="bg-light d-flex align-items-center justify-content-center min-vh-100 p-3">
+  <main class="card auth-card shadow-sm border-0 p-4" style="max-width: 440px; width: 100%;">
+    <div class="text-center mb-2">
+      <a href="/auth/login" class="text-decoration-none fs-2 fw-bold text-primary" data-trace="C1-1">HISCARE</a>
+    </div>
+
+    <h1 class="h5 text-center text-secondary mb-3">Restablecimiento de contraseña</h1>
+
+    <div class="alert alert-info small mb-3" role="status">
+      Por política de seguridad clínica, HISCARE no realiza restablecimiento automático ni envío de enlaces por correo electrónico.
+    </div>
+
+    <p class="small text-body-secondary mb-2">
+      Para solicitar una contraseña temporal, comuníquese con el área de <strong>Sistemas / Mesa de Ayuda</strong> siguiendo estos pasos:
+    </p>
+
+    <ol class="small text-body-secondary ps-3 mb-4">
+      <li class="mb-1">Radique un <strong>ticket de soporte</strong> o envíe un correo institucional al área de Sistemas indicando su nombre completo, documento y correo institucional.</li>
+      <li class="mb-1">El administrador validará su identidad y asignará una <strong>contraseña temporal</strong> desde Gestión de Usuarios.</li>
+      <li>Al ingresar con la clave temporal, el sistema le solicitará definir una contraseña personal nueva de inmediato.</li>
+    </ol>
+
+    <a href="/auth/login" class="btn btn-primary w-100">
+      Volver al inicio de sesión
+    </a>
+  </main>
+  <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="/vendor/sweetalert2/sweetalert2.all.min.js"></script>
+</body>
+</html>

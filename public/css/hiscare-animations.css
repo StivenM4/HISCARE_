@@ -1,0 +1,932 @@
+/* ==========================================================================
+   HISCARE CLINICAL OS — Micro-interacciones, Animaciones y Accesibilidad
+   Arquitectura de Grado Hospitalario / Enterprise Clinical OS
+   WCAG 2.1 AA Compliant · Movimiento Reducido (@media prefers-reduced-motion)
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   01. KEYFRAMES DE ANIMACIONES CLÍNICAS (GPU-ONLY)
+   -------------------------------------------------------------------------- */
+
+/* Contrato global de entrada: Vista principal y contenedores con sticky/modales (solo opacity) */
+@keyframes hisViewEnter {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Entrada sutil de superficies clínicas (cards, KPIs, paneles y tarjetas auth/error) */
+@keyframes hisSurfaceEnter {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 8px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+/* Entrada descendente sutil para alertas clínicas visibles */
+@keyframes hisAlertEnter {
+  from {
+    opacity: 0;
+    transform: translate3d(0, -6px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+/* Transición de panel de pestaña clínica activa */
+@keyframes hisTabPaneIn {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 4px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+/* Entrada lateral de notificaciones toast y alertas flotantes */
+@keyframes hisToastEnter {
+  from {
+    opacity: 0;
+    transform: translate3d(12px, 0, 0) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+/* Entrada suave con elevación clínica (Fade In Up) */
+@keyframes fadeInUpClinical {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 12px, 0);
+  }
+  100% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+/* Entrada con escalado suave para paneles y popovers */
+@keyframes fadeInScale {
+  0% {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Pulso de Seguridad y Alerta Vital (Ritmo Cardíaco para Alergias / Triage I) */
+@keyframes pulseVital {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.55);
+  }
+  30% {
+    transform: scale(1.025);
+    box-shadow: 0 0 0 6px rgba(220, 38, 38, 0.15);
+  }
+  50% {
+    transform: scale(1);
+    box-shadow: 0 0 0 8px rgba(220, 38, 38, 0);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0);
+  }
+}
+
+/* Pulso Suave y Continuo para Estados Activos / En Vivo / Sincronización */
+@keyframes pulseGentle {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.65;
+    transform: scale(0.98);
+  }
+}
+
+/* Efecto Shimmer para Esqueletos de Carga (Skeleton Loaders) */
+@keyframes shimmerLoading {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* Halo de Alerta en Notificaciones y Avisos de Comando */
+@keyframes haloAlert {
+  0% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+  }
+}
+
+/* Ritmo Cardíaco ECG para Monitorización de Constantes Vitales */
+@keyframes heartbeatEcg {
+  0% {
+    transform: scale(1);
+  }
+  14% {
+    transform: scale(1.15);
+  }
+  28% {
+    transform: scale(1);
+  }
+  42% {
+    transform: scale(1.18);
+  }
+  70% {
+    transform: scale(1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Desplazamiento Sutil de Aurora Médica en Fondos Institucionales */
+@keyframes auroraShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Barrido de Radar de Telemetría Clínica */
+@keyframes radarScan {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Rebote Sutil de Notificación Recibida */
+@keyframes badgeBounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translate3d(0, 0, 0);
+  }
+  40% {
+    transform: translate3d(0, -4px, 0);
+  }
+  60% {
+    transform: translate3d(0, -2px, 0);
+  }
+}
+
+/* Sello Criptográfico Inmutable (Efecto Estampado) */
+@keyframes stampImmutable {
+  0% {
+    opacity: 0;
+    transform: scale(1.4) rotate(-8deg);
+  }
+  70% {
+    opacity: 0.9;
+    transform: scale(0.97) rotate(2deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   02. ENTRADAS GLOBALES Y CONTRATO DE MOVIMIENTO (prefers-reduced-motion: no-preference)
+   Solo animation-fill-mode: backwards (nunca opacity: 0 fuera de keyframes,
+   nunca forwards con transform para preservar position: sticky y .modal).
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: no-preference) {
+  /* Vista principal: solo opacity para no crear containing block sobre sticky/modales */
+  body:not(.hiscare-login-body) main#contenidoPrincipal {
+    animation: hisViewEnter 190ms var(--hiscare-ease-clinical, cubic-bezier(0.16, 1, 0.3, 1)) backwards;
+  }
+
+  /* Superficies y tarjetas clínicas de nivel de página */
+  body:not(.hiscare-login-body) main#contenidoPrincipal .card:not(.no-enter):not(.modal .card):not(.dropdown-menu .card):not(:has(.modal)),
+  body:not(.hiscare-login-body) .kpi-card:not(.no-enter):not(.modal .kpi-card),
+  body:not(.hiscare-login-body) .quick-access-panel:not(.no-enter) {
+    animation: hisSurfaceEnter var(--hiscare-dur-surface, 240ms) var(--hiscare-ease-clinical, cubic-bezier(0.16, 1, 0.3, 1)) backwards;
+  }
+
+  /* Tablas responsivas de nivel superior: solo opacity */
+  body:not(.hiscare-login-body) main#contenidoPrincipal > .table-responsive,
+  body:not(.hiscare-login-body) main#contenidoPrincipal > .container-fluid > .table-responsive,
+  body:not(.hiscare-login-body) main#contenidoPrincipal .hc-tabla-contenedor > .table-responsive {
+    animation: hisViewEnter var(--hiscare-dur-enter, 220ms) var(--hiscare-ease-clinical, cubic-bezier(0.16, 1, 0.3, 1)) backwards;
+  }
+
+  /* Alertas visibles */
+  #alertas .alert:not(.d-none):not([hidden]),
+  main#contenidoPrincipal .alert:not(.d-none):not([hidden]):not(.modal .alert) {
+    animation: hisAlertEnter 200ms var(--hiscare-ease-clinical, cubic-bezier(0.16, 1, 0.3, 1)) backwards;
+  }
+
+  /* Stagger acotado (0ms, 30ms, 60ms, 90ms) para las primeras 4 columnas */
+  body:not(.hiscare-login-body) main#contenidoPrincipal .row > [class*="col-"]:nth-child(1) > .card:not(.no-enter):not(.modal .card):not(.dropdown-menu .card):not(:has(.modal)),
+  body:not(.hiscare-login-body) main#contenidoPrincipal .row > [class*="col-"]:nth-child(1) > .kpi-card:not(.no-enter) {
+    animation-delay: 0ms;
+  }
+
+  body:not(.hiscare-login-body) main#contenidoPrincipal .row > [class*="col-"]:nth-child(2) > .card:not(.no-enter):not(.modal .card):not(.dropdown-menu .card):not(:has(.modal)),
+  body:not(.hiscare-login-body) main#contenidoPrincipal .row > [class*="col-"]:nth-child(2) > .kpi-card:not(.no-enter) {
+    animation-delay: 30ms;
+  }
+
+  body:not(.hiscare-login-body) main#contenidoPrincipal .row > [class*="col-"]:nth-child(3) > .card:not(.no-enter):not(.modal .card):not(.dropdown-menu .card):not(:has(.modal)),
+  body:not(.hiscare-login-body) main#contenidoPrincipal .row > [class*="col-"]:nth-child(3) > .kpi-card:not(.no-enter) {
+    animation-delay: 60ms;
+  }
+
+  body:not(.hiscare-login-body) main#contenidoPrincipal .row > [class*="col-"]:nth-child(4) > .card:not(.no-enter):not(.modal .card):not(.dropdown-menu .card):not(:has(.modal)),
+  body:not(.hiscare-login-body) main#contenidoPrincipal .row > [class*="col-"]:nth-child(4) > .kpi-card:not(.no-enter) {
+    animation-delay: 90ms;
+  }
+
+  /* Vistas auth/* y errores/* sin .hiscare-login-body */
+  body:not(.hiscare-login-body).d-flex.align-items-center.justify-content-center .card:not(.no-enter):not(.modal .card),
+  body:not(.hiscare-login-body) .auth-card:not(.no-enter):not(.login-card) {
+    animation: hisSurfaceEnter var(--hiscare-dur-surface, 240ms) var(--hiscare-ease-clinical, cubic-bezier(0.16, 1, 0.3, 1)) backwards;
+  }
+
+  /* Pestañas y paneles activos */
+  .tab-content > .tab-pane.active,
+  #soapPanes > .tab-pane.active {
+    animation: hisTabPaneIn var(--hiscare-dur-enter, 220ms) var(--hiscare-ease-clinical, cubic-bezier(0.16, 1, 0.3, 1)) backwards;
+  }
+
+  /* Acordeones al desplegar */
+  .accordion-collapse.show .accordion-body {
+    animation: hisViewEnter 180ms var(--hiscare-ease-clinical, cubic-bezier(0.16, 1, 0.3, 1)) backwards;
+  }
+
+  /* Dropdowns: SOLO opacity para no pisar el translate3d inline de Popper */
+  .dropdown-menu.show {
+    animation: hisViewEnter 160ms var(--hiscare-ease-clinical, cubic-bezier(0.16, 1, 0.3, 1)) backwards;
+  }
+
+  /* Select2 dropdown: solo opacity para respetar posicionamiento calculado */
+  .select2-dropdown {
+    animation: hisViewEnter 160ms var(--hiscare-ease-clinical, cubic-bezier(0.16, 1, 0.3, 1)) backwards;
+  }
+
+  /* Toasts y SweetAlert2 */
+  .toast.showing {
+    animation: hisToastEnter var(--hiscare-dur-enter, 220ms) var(--hiscare-ease-clinical, cubic-bezier(0.16, 1, 0.3, 1)) backwards;
+  }
+
+  .swal2-popup.hiscare-toast-popup.swal2-show {
+    animation: hisToastEnter var(--hiscare-dur-enter, 220ms) var(--hiscare-ease-clinical, cubic-bezier(0.16, 1, 0.3, 1)) backwards !important;
+  }
+
+  .swal2-popup.hiscare-swal-modal.swal2-show {
+    animation: hisSurfaceEnter var(--hiscare-dur-modal, 240ms) var(--hiscare-ease-clinical, cubic-bezier(0.16, 1, 0.3, 1)) backwards !important;
+  }
+
+  /* Clases utilitarias explícitas de entrada */
+  .animate-fade-in-up {
+    animation: fadeInUpClinical var(--hiscare-dur-surface, 240ms) var(--hiscare-ease-clinical, cubic-bezier(0.16, 1, 0.3, 1)) backwards;
+  }
+
+  .animate-fade-in-scale {
+    animation: fadeInScale var(--hiscare-dur-enter, 220ms) var(--hiscare-ease-clinical, cubic-bezier(0.16, 1, 0.3, 1)) backwards;
+  }
+
+  .animate-stamp {
+    animation: stampImmutable 0.45s var(--hiscare-ease-clinical, cubic-bezier(0.16, 1, 0.3, 1)) backwards;
+  }
+}
+
+/* Clases utilitarias de estado continuo */
+.animate-pulse-vital {
+  animation: pulseVital 2.2s infinite ease-in-out;
+}
+
+.animate-pulse-gentle {
+  animation: pulseGentle 2.5s infinite ease-in-out;
+}
+
+.animate-halo-alert {
+  animation: haloAlert 2s infinite var(--hiscare-ease-clinical, cubic-bezier(0.16, 1, 0.3, 1));
+}
+
+.animate-heartbeat {
+  animation: heartbeatEcg 1.6s infinite ease-in-out;
+}
+
+/* Escalonamiento de Entrada Progresiva (Stagger Delays) */
+.stagger-1 { animation-delay: 0.03s; }
+.stagger-2 { animation-delay: 0.06s; }
+.stagger-3 { animation-delay: 0.09s; }
+.stagger-4 { animation-delay: 0.12s; }
+.stagger-5 { animation-delay: 0.15s; }
+
+/* --------------------------------------------------------------------------
+   03. MICRO-INTERACCIONES GLOBALES (PROHIBIDO transition: all)
+   -------------------------------------------------------------------------- */
+
+/* --- Sidebar y Navegación Lateral --- */
+.sidebar .sidebar-link,
+.sidebar-menu .nav-link.sidebar-link {
+  transition: background-color var(--hiscare-dur-micro, 140ms) var(--hiscare-ease-clinical, cubic-bezier(0.16, 1, 0.3, 1)),
+              border-color var(--hiscare-dur-micro, 140ms) var(--hiscare-ease-clinical, cubic-bezier(0.16, 1, 0.3, 1)),
+              color var(--hiscare-dur-micro, 140ms) var(--hiscare-ease-clinical, cubic-bezier(0.16, 1, 0.3, 1)),
+              box-shadow var(--hiscare-dur-micro, 140ms) var(--hiscare-ease-clinical, cubic-bezier(0.16, 1, 0.3, 1)),
+              transform var(--hiscare-dur-micro, 140ms) var(--hiscare-ease-clinical, cubic-bezier(0.16, 1, 0.3, 1));
+}
+
+.sidebar-link .nav-icon {
+  transition: color var(--hiscare-dur-micro, 140ms) var(--hiscare-ease-clinical, cubic-bezier(0.16, 1, 0.3, 1)),
+              opacity var(--hiscare-dur-micro, 140ms) var(--hiscare-ease-clinical, cubic-bezier(0.16, 1, 0.3, 1)),
+              transform var(--hiscare-dur-micro, 140ms) var(--hiscare-ease-clinical, cubic-bezier(0.16, 1, 0.3, 1));
+}
+
+.sidebar-link.active::before {
+  transition: opacity var(--hiscare-dur-micro, 140ms) var(--hiscare-ease-clinical, cubic-bezier(0.16, 1, 0.3, 1)),
+              transform var(--hiscare-dur-enter, 220ms) var(--hiscare-ease-clinical, cubic-bezier(0.16, 1, 0.3, 1));
+}
+
+/* --- Botones y Controles de Topbar con Respuesta Háptica Unificada --- */
+.btn,
+.btn-interactive,
+#btnCampana,
+#btnToggleTheme,
+.topbar-theme-btn,
+#btnToggleSidebar,
+#btnCerrarSidebar {
+  transition: transform var(--hiscare-dur-micro, 140ms) var(--hiscare-ease-clinical, cubic-bezier(0.16, 1, 0.3, 1)),
+              background-color var(--hiscare-dur-micro, 140ms) var(--hiscare-ease-clinical, cubic-bezier(0.16, 1, 0.3, 1)),
+              border-color var(--hiscare-dur-micro, 140ms) var(--hiscare-ease-clinical, cubic-bezier(0.16, 1, 0.3, 1)),
+              color var(--hiscare-dur-micro, 140ms) var(--hiscare-ease-clinical, cubic-bezier(0.16, 1, 0.3, 1)),
+              box-shadow var(--hiscare-dur-micro, 140ms) var(--hiscare-ease-clinical, cubic-bezier(0.16, 1, 0.3, 1));
+}
+
+.btn:hover:not(:disabled):not(.disabled),
+.btn-interactive:hover:not(:disabled):not(.disabled),
+#btnCampana:hover,
+#btnToggleTheme:hover,
+.topbar-theme-btn:hover,
+#btnToggleSidebar:hover {
+  transform: translate3d(0, -1px, 0);
+}
+
+.btn:active:not(:disabled):not(.disabled),
+.btn-interactive:active:not(:disabled):not(.disabled),
+#btnCampana:active,
+#btnToggleTheme:active,
+.topbar-theme-btn:active,
+#btnToggleSidebar:active,
+#btnCerrarSidebar:active {
+  transform: translate3d(0, 1px, 0) scale(0.985);
+}
+
+/* Exclusiones para evitar saltos en grupos compactos y celdas de tabla */
+.input-group .btn:hover:not(:disabled):not(.disabled),
+.table .btn-xs:hover:not(:disabled):not(.disabled),
+.table .btn-sm:hover:not(:disabled):not(.disabled) {
+  transform: none;
+}
+
+.input-group .btn:active:not(:disabled):not(.disabled),
+.table .btn-xs:active:not(:disabled):not(.disabled),
+.table .btn-sm:active:not(:disabled):not(.disabled) {
+  transform: scale(0.985);
+}
+
+/* --- Pestañas Clínicas --- */
+.nav-tabs .nav-link,
+.nav-pills:not(.sidebar-menu) .nav-link,
+#tabsAtencion .nav-link,
+#soapTabs .tab-soap {
+  transition: background-color var(--hiscare-dur-micro, 140ms) var(--hiscare-ease-clinical, cubic-bezier(0.16, 1, 0.3, 1)),
+              color var(--hiscare-dur-micro, 140ms) var(--hiscare-ease-clinical, cubic-bezier(0.16, 1, 0.3, 1)),
+              border-color var(--hiscare-dur-micro, 140ms) var(--hiscare-ease-clinical, cubic-bezier(0.16, 1, 0.3, 1)),
+              box-shadow var(--hiscare-dur-micro, 140ms) var(--hiscare-ease-clinical, cubic-bezier(0.16, 1, 0.3, 1));
+}
+
+/* --- Filas de Tabla (NUNCA transform en tr) --- */
+.table tbody tr,
+.table tbody td,
+.table thead th,
+.table-hover-clinical tbody tr {
+  transition: background-color var(--hiscare-dur-micro, 140ms) var(--hiscare-ease-standard, cubic-bezier(0.4, 0, 0.2, 1)),
+              color var(--hiscare-dur-micro, 140ms) var(--hiscare-ease-standard, cubic-bezier(0.4, 0, 0.2, 1)),
+              box-shadow var(--hiscare-dur-micro, 140ms) var(--hiscare-ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+}
+
+.table-hover-clinical tbody tr:hover,
+.table-hover-clinical tbody tr:hover > * {
+  background-color: var(--hiscare-table-hover-bg, rgba(241, 245, 249, 0.85)) !important;
+}
+
+.clickable-row:hover > td:first-child,
+.fila-resultado:hover > td:first-child {
+  box-shadow: inset 3px 0 0 var(--hiscare-cobalt-600, #2563eb);
+}
+
+/* --- Tarjetas Interactivas (sin mover tarjetas contenedor normales) --- */
+.card-interactive,
+.card-hover,
+.card.clickable-card,
+.kpi-card,
+.quick-access-card,
+.timeline-card {
+  transition: transform var(--hiscare-dur-enter, 220ms) var(--hiscare-ease-clinical, cubic-bezier(0.16, 1, 0.3, 1)),
+              box-shadow var(--hiscare-dur-enter, 220ms) var(--hiscare-ease-clinical, cubic-bezier(0.16, 1, 0.3, 1)),
+              border-color var(--hiscare-dur-enter, 220ms) var(--hiscare-ease-clinical, cubic-bezier(0.16, 1, 0.3, 1)),
+              background-color var(--hiscare-dur-micro, 140ms) var(--hiscare-ease-clinical, cubic-bezier(0.16, 1, 0.3, 1));
+}
+
+.card-interactive:hover,
+.card-hover:hover,
+.card.clickable-card:hover,
+.kpi-card:hover,
+.quick-access-card:hover {
+  transform: translate3d(0, -2px, 0);
+  box-shadow: var(--hiscare-elevation-3, 0 10px 15px -3px rgba(15, 23, 42, 0.08));
+}
+
+/* --- Badges, Pills y Chips --- */
+.badge,
+.agenda-hora-pill,
+.chip-sugerencia,
+.chip-interactive,
+.btn-filtro-periodo,
+.visor-filter-btn {
+  transition: background-color var(--hiscare-dur-micro, 140ms) var(--hiscare-ease-clinical, cubic-bezier(0.16, 1, 0.3, 1)),
+              border-color var(--hiscare-dur-micro, 140ms) var(--hiscare-ease-clinical, cubic-bezier(0.16, 1, 0.3, 1)),
+              color var(--hiscare-dur-micro, 140ms) var(--hiscare-ease-clinical, cubic-bezier(0.16, 1, 0.3, 1)),
+              box-shadow var(--hiscare-dur-micro, 140ms) var(--hiscare-ease-clinical, cubic-bezier(0.16, 1, 0.3, 1)),
+              transform var(--hiscare-dur-micro, 140ms) var(--hiscare-ease-clinical, cubic-bezier(0.16, 1, 0.3, 1));
+}
+
+.chip-sugerencia:hover,
+.chip-interactive:hover,
+.btn-filtro-periodo:hover {
+  transform: translate3d(0, -1px, 0);
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
+}
+
+.chip-sugerencia:active,
+.chip-interactive:active,
+.btn-filtro-periodo:active,
+.visor-filter-btn:active {
+  transform: translate3d(0, 0, 0) scale(0.985);
+}
+
+/* --- Inputs, Selects, Checkboxes y Select2 --- */
+.form-control,
+.form-select,
+.form-check-input,
+.select2-container .select2-selection--single {
+  transition: border-color var(--hiscare-dur-micro, 140ms) var(--hiscare-ease-clinical, cubic-bezier(0.16, 1, 0.3, 1)),
+              box-shadow var(--hiscare-dur-micro, 140ms) var(--hiscare-ease-clinical, cubic-bezier(0.16, 1, 0.3, 1)),
+              background-color var(--hiscare-dur-micro, 140ms) var(--hiscare-ease-clinical, cubic-bezier(0.16, 1, 0.3, 1)),
+              color var(--hiscare-dur-micro, 140ms) var(--hiscare-ease-clinical, cubic-bezier(0.16, 1, 0.3, 1));
+}
+
+/* --- Acordeones, Collapses y Modales Bootstrap --- */
+.collapsing {
+  transition: height var(--hiscare-dur-enter, 220ms) var(--hiscare-ease-clinical, cubic-bezier(0.16, 1, 0.3, 1));
+}
+
+.accordion-button {
+  transition: background-color var(--hiscare-dur-micro, 140ms) var(--hiscare-ease-clinical, cubic-bezier(0.16, 1, 0.3, 1)),
+              color var(--hiscare-dur-micro, 140ms) var(--hiscare-ease-clinical, cubic-bezier(0.16, 1, 0.3, 1)),
+              box-shadow var(--hiscare-dur-micro, 140ms) var(--hiscare-ease-clinical, cubic-bezier(0.16, 1, 0.3, 1));
+}
+
+.accordion-button::after {
+  transition: transform var(--hiscare-dur-enter, 220ms) var(--hiscare-ease-clinical, cubic-bezier(0.16, 1, 0.3, 1));
+}
+
+.modal-backdrop.fade {
+  transition: opacity var(--hiscare-dur-enter, 220ms) var(--hiscare-ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+}
+
+.modal.fade .modal-dialog {
+  transition: transform var(--hiscare-dur-modal, 240ms) var(--hiscare-ease-clinical, cubic-bezier(0.16, 1, 0.3, 1)),
+              opacity var(--hiscare-dur-modal, 240ms) var(--hiscare-ease-clinical, cubic-bezier(0.16, 1, 0.3, 1));
+  transform: translate3d(0, 10px, 0) scale(0.985);
+}
+
+.modal.show .modal-dialog {
+  transform: none;
+}
+
+.alert.fade {
+  transition: opacity var(--hiscare-dur-enter, 220ms) var(--hiscare-ease-standard, cubic-bezier(0.4, 0, 0.2, 1));
+}
+
+/* --------------------------------------------------------------------------
+   04. ESQUELETOS DE CARGA (SKELETON LOADERS & SHIMMER)
+   -------------------------------------------------------------------------- */
+.skeleton-box {
+  display: block;
+  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+  background-size: 200% 100%;
+  animation: shimmerLoading 1.8s infinite linear;
+  border-radius: 6px;
+  min-height: 1.25rem;
+}
+
+.skeleton-text {
+  height: 0.85rem;
+  margin-bottom: 0.5rem;
+  border-radius: 4px;
+}
+
+.skeleton-text:last-child {
+  margin-bottom: 0;
+  width: 70%;
+}
+
+.skeleton-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.skeleton-kpi {
+  height: 110px;
+  border-radius: 12px;
+}
+
+/* --------------------------------------------------------------------------
+   05. ESTADOS DE FOCO ACCESIBLE (WCAG 2.1 AA)
+   -------------------------------------------------------------------------- */
+:focus-visible {
+  outline: 3px solid var(--hiscare-focus-ring, #2563eb) !important;
+  outline-offset: 2px !important;
+}
+
+/* Controles de Formulario con Foco Destacado y Accesible */
+.form-control:focus-visible,
+.form-select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid var(--hiscare-focus-ring, #2563eb) !important;
+  outline-offset: 1px !important;
+  border-color: var(--hiscare-focus-ring, #2563eb) !important;
+  box-shadow: var(--hiscare-focus-shadow, 0 0 0 3px rgba(37, 99, 235, 0.18)) !important;
+}
+
+/* Botones con Foco Visible */
+button:focus-visible,
+.btn:focus-visible,
+a.btn:focus-visible {
+  outline: 3px solid var(--hiscare-focus-ring, #2563eb) !important;
+  outline-offset: 2px !important;
+  box-shadow: var(--hiscare-focus-shadow, 0 0 0 4px rgba(37, 99, 235, 0.25)) !important;
+}
+
+/* Pestañas Clínicas con Foco */
+#tabsAtencion .nav-link:focus-visible,
+#soapTabs .tab-soap:focus-visible {
+  outline: 3px solid var(--hiscare-focus-ring, #2563eb) !important;
+  outline-offset: 2px !important;
+}
+
+/* Compatibilidad con Alto Contraste del Sistema Operativo */
+@media (forced-colors: active) {
+  :focus-visible {
+    outline: 3px solid Highlight !important;
+    outline-offset: 3px !important;
+  }
+
+  .sidebar-link.active::before {
+    background: Highlight !important;
+  }
+
+  .badge-triage {
+    border: 1px solid CanvasText !important;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   06. UTILIDADES VISUALES CLÍNICAS
+   -------------------------------------------------------------------------- */
+/* Paneles de Cristal (Glassmorphism) */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+.glass-panel-dark {
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+}
+
+/* Luces y Resplandores Semánticos */
+.shadow-clinical-glow-blue {
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.18), 0 1px 3px rgba(37, 99, 235, 0.08);
+}
+
+.shadow-clinical-glow-amber {
+  box-shadow: 0 4px 16px rgba(245, 158, 11, 0.18), 0 1px 3px rgba(245, 158, 11, 0.08);
+}
+
+.shadow-clinical-glow-cyan {
+  box-shadow: 0 4px 16px rgba(6, 182, 212, 0.18), 0 1px 3px rgba(6, 182, 212, 0.08);
+}
+
+.shadow-clinical-glow-rose {
+  box-shadow: 0 4px 16px rgba(239, 68, 68, 0.18), 0 1px 3px rgba(239, 68, 68, 0.08);
+}
+
+.shadow-clinical-glow-emerald {
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.18), 0 1px 3px rgba(16, 185, 129, 0.08);
+}
+
+/* Gradientes de Texto de Identidad Institucional */
+.text-gradient-primary {
+  background: linear-gradient(135deg, #1d4ed8 0%, #0284c7 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-gradient-cyan {
+  background: linear-gradient(135deg, #0284c7 0%, #38bdf8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-gradient-dark {
+  background: linear-gradient(135deg, #0f172a 0%, #334155 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Separadores Clínicos */
+.border-clinical-subtle {
+  border-color: var(--hiscare-border-color, #e2e8f0) !important;
+}
+
+.border-clinical-strong {
+  border-color: var(--hiscare-border-strong, #cbd5e1) !important;
+}
+
+/* --------------------------------------------------------------------------
+   07. SOPORTE COMPLETO MODO OSCURO ([data-bs-theme="dark"] y [data-theme="dark"])
+   -------------------------------------------------------------------------- */
+[data-bs-theme="dark"] .table-hover-clinical tbody tr:hover,
+[data-bs-theme="dark"] .table-hover-clinical tbody tr:hover > *,
+[data-theme="dark"] .table-hover-clinical tbody tr:hover,
+[data-theme="dark"] .table-hover-clinical tbody tr:hover > * {
+  background-color: var(--hiscare-table-hover-bg, rgba(30, 41, 59, 0.72)) !important;
+}
+
+[data-bs-theme="dark"] .clickable-row:hover > td:first-child,
+[data-bs-theme="dark"] .fila-resultado:hover > td:first-child,
+[data-theme="dark"] .clickable-row:hover > td:first-child,
+[data-theme="dark"] .fila-resultado:hover > td:first-child {
+  box-shadow: inset 3px 0 0 var(--hiscare-focus-ring, #38bdf8);
+}
+
+[data-bs-theme="dark"] .card-interactive:hover,
+[data-bs-theme="dark"] .card-hover:hover,
+[data-bs-theme="dark"] .card.clickable-card:hover,
+[data-bs-theme="dark"] .kpi-card:hover,
+[data-bs-theme="dark"] .quick-access-card:hover,
+[data-theme="dark"] .card-interactive:hover,
+[data-theme="dark"] .card-hover:hover,
+[data-theme="dark"] .card.clickable-card:hover,
+[data-theme="dark"] .kpi-card:hover,
+[data-theme="dark"] .quick-access-card:hover {
+  box-shadow: var(--hiscare-elevation-3, 0 12px 24px -4px rgba(2, 6, 23, 0.62));
+}
+
+[data-bs-theme="dark"] .chip-sugerencia:hover,
+[data-bs-theme="dark"] .chip-interactive:hover,
+[data-bs-theme="dark"] .btn-filtro-periodo:hover,
+[data-theme="dark"] .chip-sugerencia:hover,
+[data-theme="dark"] .chip-interactive:hover,
+[data-theme="dark"] .btn-filtro-periodo:hover {
+  box-shadow: 0 2px 8px rgba(2, 6, 23, 0.45);
+}
+
+[data-bs-theme="dark"] .skeleton-box,
+[data-theme="dark"] .skeleton-box {
+  background: linear-gradient(90deg, #0f172a 25%, #1e293b 50%, #0f172a 75%);
+  background-size: 200% 100%;
+}
+
+[data-bs-theme="dark"] .glass-panel,
+[data-theme="dark"] .glass-panel {
+  background: var(--hiscare-glass-bg, rgba(11, 21, 40, 0.82));
+  border-color: var(--hiscare-glass-border, rgba(148, 163, 184, 0.16));
+}
+
+[data-bs-theme="dark"] .text-gradient-dark,
+[data-theme="dark"] .text-gradient-dark {
+  background: linear-gradient(135deg, #f8fafc 0%, #cbd5e1 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* --------------------------------------------------------------------------
+   08. MODO DE MOVIMIENTO REDUCIDO (@media prefers-reduced-motion: reduce)
+   Desactiva animaciones y desplazamientos espaciales preservando feedback cromático.
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  html,
+  #tabsAtencion {
+    scroll-behavior: auto !important;
+  }
+
+  body:not(.hiscare-login-body) main#contenidoPrincipal,
+  body:not(.hiscare-login-body) main#contenidoPrincipal .card,
+  body:not(.hiscare-login-body) .kpi-card,
+  body:not(.hiscare-login-body) .quick-access-panel,
+  body:not(.hiscare-login-body) main#contenidoPrincipal .table-responsive,
+  body:not(.hiscare-login-body) .auth-card,
+  #alertas .alert,
+  main#contenidoPrincipal .alert,
+  .tab-content > .tab-pane.active,
+  #soapPanes > .tab-pane.active,
+  .accordion-collapse.show .accordion-body,
+  .dropdown-menu.show,
+  .select2-dropdown,
+  .toast.showing,
+  .swal2-popup.hiscare-toast-popup.swal2-show,
+  .swal2-popup.hiscare-swal-modal.swal2-show,
+  .animate-fade-in-up,
+  .animate-fade-in-scale,
+  .animate-pulse-vital,
+  .animate-pulse-gentle,
+  .animate-halo-alert,
+  .animate-heartbeat,
+  .animate-stamp,
+  .skeleton-box,
+  #bannerAlergias.banner-alergias-badge,
+  .alert-pulse,
+  .badge-live-pulse::before,
+  .badge-espera-urgente,
+  .his-unsaved-badge::before,
+  .his-row-updated,
+  .his-row-updated > td {
+    animation: none !important;
+  }
+
+  .animate-fade-in-up,
+  .animate-fade-in-scale,
+  .animate-pulse-vital,
+  .animate-pulse-gentle,
+  .animate-halo-alert,
+  .animate-heartbeat,
+  .animate-stamp {
+    opacity: 1 !important;
+  }
+
+  /* Mantiene transiciones de color accesibles sin desplazamiento espacial */
+  .btn:hover,
+  .btn:active,
+  .btn-interactive:hover,
+  .btn-interactive:active,
+  #btnCampana:hover,
+  #btnCampana:active,
+  #btnToggleTheme:hover,
+  #btnToggleTheme:active,
+  .topbar-theme-btn:hover,
+  .topbar-theme-btn:active,
+  #btnToggleSidebar:hover,
+  #btnToggleSidebar:active,
+  #btnCerrarSidebar:active,
+  .card-interactive:hover,
+  .card-hover:hover,
+  .card.clickable-card:hover,
+  .kpi-card:hover,
+  .quick-access-card:hover,
+  .quick-access-card:active,
+  .quick-access-card:hover .quick-access-icon,
+  .quick-access-card:hover .quick-access-arrow,
+  .quick-access-card:focus-visible .quick-access-arrow,
+  .sidebar-link:hover,
+  .sidebar-link:hover .nav-icon,
+  .timeline-card:hover,
+  .timeline-row-item:hover .timeline-node,
+  .chip-interactive:hover,
+  .chip-interactive:active,
+  .chip-sugerencia:hover,
+  .chip-sugerencia:active,
+  .btn-filtro-periodo:hover,
+  .btn-filtro-periodo:active,
+  .visor-filter-btn:active,
+  .modal.fade .modal-dialog,
+  .modal.show .modal-dialog,
+  .accordion-button::after,
+  .brand-logo-icon,
+  .user-avatar:hover,
+  #gridSignosVitales .rounded:hover,
+  #panelReporteControl .bg-light.border:hover,
+  .btn-close:hover {
+    transform: none !important;
+  }
+
+  .sidebar,
+  .collapsing,
+  .modal-backdrop.fade,
+  .modal.fade .modal-dialog,
+  .alert.fade {
+    transition: none !important;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   09. REFINAMIENTOS RESPONSIVOS PARA ESTACIONES DE ENFERMERÍA Y TABLETS
+   -------------------------------------------------------------------------- */
+@media (max-width: 991.98px) and (prefers-reduced-motion: no-preference) {
+  /* Transición táctil optimizada para pantallas móviles */
+  .sidebar {
+    transition: transform 0.22s var(--hiscare-ease-clinical, cubic-bezier(0.16, 1, 0.3, 1)) !important;
+  }
+}
+
+@media (max-width: 991.98px) {
+  /* Touch Targets Ergonómicos Mínimos (44px) */
+  .sidebar-link,
+  #btnCampana,
+  #btnToggleSidebar,
+  #btnCerrarSidebar,
+  .btn-filtro-periodo {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .user-avatar {
+    width: 36px;
+    height: 36px;
+  }
+}
+
+@media (max-width: 575.98px) {
+  /* Reducción de elevación para pantallas pequeñas */
+  .card-interactive:hover,
+  .card-hover:hover,
+  .card.clickable-card:hover,
+  .kpi-card:hover,
+  .quick-access-card:hover {
+    transform: none;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   10. NEUTRALIZACIÓN EN IMPRESIÓN (@media print)
+   -------------------------------------------------------------------------- */
+@media print {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  body,
+  main#contenidoPrincipal,
+  .card,
+  .kpi-card,
+  .quick-access-panel,
+  .table-responsive,
+  .alert,
+  .tab-pane.active {
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+}

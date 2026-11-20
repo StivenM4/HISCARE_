@@ -1,0 +1,635 @@
+<%- include('../partials/_inicio', { titulo: paciente ? (paciente.nombres + ' ' + paciente.apellidos) : 'Ficha de paciente' }) %>
+<!-- Ficha única del paciente -->
+
+<%
+  // Funciones auxiliares para formato y cálculo de edad
+  function calcularEdad(fechaStr) {
+    if (!fechaStr) return null;
+    const nac = new Date(fechaStr);
+    if (isNaN(nac.getTime())) return null;
+    const hoy = new Date();
+    let edad = hoy.getFullYear() - nac.getFullYear();
+    const m = hoy.getMonth() - nac.getMonth();
+    if (m < 0 || (m === 0 && hoy.getDate() < nac.getDate())) {
+      edad--;
+    }
+    return edad >= 0 ? edad : null;
+  }
+
+  function formatearFecha(fechaStr) {
+    if (!fechaStr) return 'No especificada';
+    if (typeof fechaStr === 'string' && /^\d{4}-\d{2}-\d{2}/.test(fechaStr)) {
+      const partes = fechaStr.substring(0, 10).split('-');
+      return `${partes[2]}/${partes[1]}/${partes[0]}`;
+    }
+    const d = new Date(fechaStr);
+    if (isNaN(d.getTime())) return String(fechaStr);
+    const dia = String(d.getDate()).padStart(2, '0');
+    const mes = String(d.getMonth() + 1).padStart(2, '0');
+    const anio = d.getFullYear();
+    return `${dia}/${mes}/${anio}`;
+  }
+
+  const p = typeof paciente !== 'undefined' && paciente ? paciente : null;
+  const nombreCompleto = p ? `${p.nombres || ''} ${p.apellidos || ''}`.trim() : 'Paciente no especificado';
+  const documentoCompleto = p ? `${p.tipo_documento || ''} ${p.numero_documento || ''}`.trim() : '';
+  const edadCalculada = p ? (p.edad !== undefined && p.edad !== null ? p.edad : calcularEdad(p.fecha_nacimiento)) : null;
+
+  let sexoLegible = 'No registrado';
+  if (p && p.sexo) {
+    if (p.sexo === 'M' || p.sexo === 'Masculino') sexoLegible = 'Masculino (M)';
+    else if (p.sexo === 'F' || p.sexo === 'Femenino') sexoLegible = 'Femenino (F)';
+    else sexoLegible = p.sexo;
+  }
+
+  // Datos de afiliación
+  const af = p && p.afiliacion ? p.afiliacion : null;
+  const epsNombre = af 
+    ? (af.eps || af.aseguradora_nombre || af.nombre || 'Sin afiliación registrada')
+    : (p && p.eps ? p.eps : 'Sin afiliación registrada');
+  const tipoPlan = af 
+    ? (af.tipo_plan || af.plan || '')
+    : (p && p.tipo_plan ? p.tipo_plan : '');
+  const tipoUsuario = af 
+    ? (af.tipo_usuario || 'Particular')
+    : (p && p.tipo_usuario ? p.tipo_usuario : 'Particular');
+  const numeroContrato = af 
+    ? (af.numero_contrato || 'Sin contrato')
+    : (p && p.numero_contrato ? p.numero_contrato : 'Sin contrato');
+
+  // Estado y badge de vigencia
+  let estaVigente = false;
+  let badgeVigenciaTexto = 'SIN AFILIACIÓN';
+  let badgeVigenciaColor = '#6c757d';
+
+  if (af) {
+    const hoyISO = new Date().toISOString().substring(0, 10);
+    const inicioOk = !af.fecha_inicio || String(af.fecha_inicio).substring(0, 10) <= hoyISO;
+    const finOk = !af.fecha_fin || String(af.fecha_fin).substring(0, 10) >= hoyISO;
+    const esActivo = af.activo !== false;
+    estaVigente = af.vigente !== undefined ? af.vigente : (esActivo && inicioOk && finOk);
+
+    if (estaVigente) {
+      badgeVigenciaTexto = 'VIGENTE';
+      badgeVigenciaColor = '#198754';
+    } else {
+      badgeVigenciaTexto = 'VENCIDA';
+      badgeVigenciaColor = '#dc3545';
+    }
+  }
+
+  // Contactos de emergencia
+  const contactos = (p && p.contactos && Array.isArray(p.contactos)) ? p.contactos : [];
+
+  // Alergias
+  const listaAlergias = [];
+  if (p && p.alergias) {
+    if (Array.isArray(p.alergias)) {
+      p.alergias.forEach(a => {
+        if (typeof a === 'string' && a.trim()) listaAlergias.push(a.trim());
+        else if (a && a.descripcion) listaAlergias.push(String(a.descripcion).trim());
+      });
+    } else if (typeof p.alergias === 'string' && p.alergias.trim()) {
+      listaAlergias.push(p.alergias.trim());
+    }
+  }
+
+  // Historia clínica
+  let codigoHC = p ? ('HC-' + (p.numero_documento || (p.id ? p.id.slice(0, 8).toUpperCase() : '0000'))) : 'HC-0000';
+  let fechaAperturaHC = 'No especificada';
+  if (p && p.historia_clinica && p.historia_clinica.numero) {
+    codigoHC = p.historia_clinica.numero;
+  }
+  if (p && p.historia_clinica && p.historia_clinica.fecha_apertura) {
+    fechaAperturaHC = formatearFecha(p.historia_clinica.fecha_apertura);
+  } else if (p && p.fecha_creacion) {
+    fechaAperturaHC = formatearFecha(p.fecha_creacion);
+  } else {
+    fechaAperturaHC = formatearFecha(new Date());
+  }
+
+  // Movimientos
+  const movimientos = (p && p.movimientos && Array.isArray(p.movimientos)) ? p.movimientos : [];
+
+  // Banderas de alertas (duplicado y recién guardado)
+  const esDuplicado = (typeof duplicado !== 'undefined' && duplicado);
+  const mostrarBannerExito = (typeof recienGuardado !== 'undefined' && recienGuardado) ||
+                             (typeof mensajeExito !== 'undefined' && mensajeExito) ||
+                             (typeof exito !== 'undefined' && exito) ||
+                             (typeof guardado !== 'undefined' && guardado);
+
+  const puedeEditarContactos = typeof usuario !== 'undefined' && usuario && (usuario.rol === 'RECEPCIONISTA' || usuario.rol === 'ADMINISTRADOR');
+%>
+
+<div class="container-fluid px-0" id="fichaPacienteContainer" data-paciente-id="<%= p ? p.id : '' %>">
+  <!-- Banner de duplicado [15.21] o de éxito -->
+  <% if (esDuplicado && p) { %>
+    <div class="alert alert-danger d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4 shadow-sm border-0 rounded-3 py-3 px-4" role="alert" data-trace="C15-21" id="alertaDuplicado">
+      <div class="d-flex align-items-center gap-2">
+        <svg width="20" height="20" fill="currentColor" class="bi bi-exclamation-triangle-fill text-danger flex-shrink-0" viewBox="0 0 16 16">
+          <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+        </svg>
+        <span class="fw-semibold">
+          Ya existe un paciente con <%= p.tipo_documento %> <%= p.numero_documento %>. No se puede crear un registro duplicado.
+        </span>
+      </div>
+      <a href="/pacientes/<%= p.id %>" class="btn btn-sm btn-outline-danger ms-auto">Abrir ficha existente</a>
+    </div>
+  <% } else if (mostrarBannerExito) { %>
+    <div class="alert alert-success alert-dismissible fade show d-flex align-items-center mb-4 shadow-sm border-0 rounded-3 py-3 px-4" role="alert" data-trace="C15-21" id="alertaRecienGuardado">
+      <div class="fw-semibold fs-6">
+        ✓ Paciente registrado exitosamente con su afiliación y contactos.
+      </div>
+      <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+    </div>
+  <% } %>
+
+  <!-- Banner de fallback para duplicado detectado en cliente -->
+  <div id="alertaDuplicadoCliente" class="alert alert-danger d-none flex-wrap align-items-center justify-content-between gap-3 mb-4 shadow-sm border-0 rounded-3 py-3 px-4" role="alert" data-trace="C15-21-client-dup">
+    <div class="d-flex align-items-center gap-2">
+      <svg width="20" height="20" fill="currentColor" class="bi bi-exclamation-triangle-fill text-danger flex-shrink-0" viewBox="0 0 16 16">
+        <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+      </svg>
+      <span class="fw-semibold">
+        Ya existe un paciente con <%= p ? (p.tipo_documento + ' ' + p.numero_documento) : 'este documento' %>. No se puede crear un registro duplicado.
+      </span>
+    </div>
+    <a href="<%= p ? ('/pacientes/' + p.id) : '#' %>" class="btn btn-sm btn-outline-danger ms-auto">Abrir ficha existente</a>
+  </div>
+
+  <!-- Banner de fallback si la redirección fue directa desde cliente -->
+  <div id="bannerRecienGuardadoCliente" class="alert alert-success alert-dismissible fade show d-none align-items-center mb-4 shadow-sm border-0 rounded-3 py-3 px-4" role="alert" data-trace="C15-21-client">
+    <div class="fw-semibold fs-6">
+      ✓ Paciente registrado exitosamente con su afiliación y contactos.
+    </div>
+    <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+  </div>
+
+  <% if (!p) { %>
+    <!-- Estado: Paciente no encontrado -->
+    <div class="card border-0 shadow-sm rounded-3 p-5 text-center my-4" data-trace="C15-no-encontrado">
+      <div class="text-secondary opacity-50 mb-3">
+        <svg width="48" height="48" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z"/>
+        </svg>
+      </div>
+      <h2 class="h5 fw-bold text-dark">Paciente no encontrado</h2>
+      <p class="text-muted">No se encontró la información del paciente solicitado o no existe en el sistema.</p>
+      <div class="d-flex justify-content-center gap-2 mt-2">
+        <a href="javascript:history.back()" class="btn btn-outline-secondary">Volver</a>
+        <a href="/pacientes/nuevo" class="btn btn-primary">+ Registrar paciente</a>
+      </div>
+    </div>
+  <% } else { %>
+
+    <!-- Encabezado superior con título [15.22] y botones -->
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4 pb-2 border-bottom">
+      <div class="d-flex align-items-center gap-2">
+        <h1 class="h4 fw-bold text-dark mb-0" data-trace="C15-22">Ficha única del paciente</h1>
+      </div>
+      <div class="d-flex align-items-center gap-2">
+        <a href="javascript:history.back()" class="btn btn-outline-secondary px-3 py-2 d-inline-flex align-items-center gap-1 shadow-sm" data-trace="C15-volver" id="btnVolver">
+          <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16" class="me-1">
+            <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
+          </svg>
+          Volver
+        </a>
+        <a href="/pacientes/nuevo" class="btn btn-primary px-3 py-2 d-inline-flex align-items-center gap-1 shadow-sm" data-trace="C15-20" id="btnRegistrarOtro">
+          <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16" class="me-1">
+            <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+          </svg>
+          Registrar otro paciente
+        </a>
+      </div>
+    </div>
+
+    <!-- 1. Tarjeta principal: Identificación del paciente [15.22 - 15.28] -->
+    <div class="card border-0 shadow-sm rounded-3 mb-4" data-trace="C15-22" id="cardPacienteDemografia">
+      <div class="card-body p-4">
+        <div class="d-flex flex-column flex-md-row align-items-start gap-4">
+          <!-- [15.23] Icono/avatar de paciente -->
+          <div class="p-3 rounded-circle bg-primary-subtle text-primary d-inline-flex align-items-center justify-content-center flex-shrink-0" data-trace="C15-23" style="width: 64px; height: 64px;">
+            <svg width="32" height="32" fill="currentColor" class="bi bi-person-fill" viewBox="0 0 16 16">
+              <path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6"/>
+            </svg>
+          </div>
+
+          <div class="flex-grow-1">
+            <div class="d-flex flex-wrap align-items-center gap-3 mb-1">
+              <!-- [15.24] Nombre completo del paciente en grande -->
+              <h2 class="h3 fw-bold text-dark mb-0" data-trace="C15-24" id="pacienteNombreCompleto">
+                <%= nombreCompleto %>
+              </h2>
+              <span class="badge bg-secondary-subtle text-secondary-emphasis border px-3 py-2 fs-6 fw-normal font-monospace" id="pacienteDocumento">
+                <%= documentoCompleto %>
+              </span>
+            </div>
+
+            <!-- [15.25] Subtítulo con formato: [Tipo] [Número] · Nacido [DD/MM/AAAA] ([X] años) · [Sexo] · Tel. [Teléfono] · [Dirección] -->
+            <div class="text-secondary small mb-3" data-trace="C15-25" id="pacienteSubtitulo">
+              <%= documentoCompleto %> · Nacido <%= formatearFecha(p.fecha_nacimiento) %> (<%= edadCalculada !== null ? edadCalculada + ' años' : 'Edad no registrada' %>) · <%= sexoLegible %> · Tel. <%= p.telefono || 'No registrado' %> · <%= p.direccion || 'No registrada' %>
+            </div>
+
+            <!-- Badges: Alergias [15.26, 15.27] e Historia clínica [15.28] -->
+            <div class="d-flex flex-wrap align-items-center gap-2">
+              <!-- [15.26, 15.27] Alergias -->
+              <% if (listaAlergias.length > 0) { %>
+                <div class="d-inline-flex flex-wrap gap-2" data-trace="C15-26" id="contenedorAlergias">
+                  <% listaAlergias.forEach(al => { %>
+                    <span class="badge bg-danger text-uppercase px-3 py-2 fw-bold d-inline-flex align-items-center gap-1 shadow-sm" data-trace="C15-27">
+                      <svg width="12" height="12" fill="currentColor" viewBox="0 0 16 16"><path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/></svg>
+                      ALERGIA: <%= al.toUpperCase() %>
+                    </span>
+                  <% }) %>
+                </div>
+              <% } %>
+
+              <!-- [15.28] Historia clínica: Pill gris con texto "HISTORIA CLÍNICA HC-... · abierta [Fecha]" -->
+              <span class="badge bg-secondary-subtle text-secondary-emphasis border px-3 py-2 fw-semibold" data-trace="C15-28" id="pillHistoriaClinica">
+                HISTORIA CLÍNICA <%= codigoHC %> · abierta <%= fechaAperturaHC %>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Cuícula de desglose de datos demográficos -->
+        <div class="row g-3 pt-3 border-top mt-3" data-trace="C15-23-detalles">
+          <div class="col-6 col-md-3">
+            <span class="text-muted small d-block">Nombres</span>
+            <span class="fw-semibold text-dark fs-6" id="txtNombres"><%= p.nombres || '-' %></span>
+          </div>
+          <div class="col-6 col-md-3">
+            <span class="text-muted small d-block">Apellidos</span>
+            <span class="fw-semibold text-dark fs-6" id="txtApellidos"><%= p.apellidos || '-' %></span>
+          </div>
+          <div class="col-6 col-md-3">
+            <span class="text-muted small d-block">Documento</span>
+            <span class="fw-semibold text-dark fs-6 font-monospace" id="txtDocumento"><%= documentoCompleto || '-' %></span>
+          </div>
+          <div class="col-6 col-md-3">
+            <span class="text-muted small d-block">Fecha de nacimiento</span>
+            <span class="fw-semibold text-dark" id="txtFechaNacimiento"><%= formatearFecha(p.fecha_nacimiento) %></span>
+          </div>
+          <div class="col-6 col-md-3">
+            <span class="text-muted small d-block">Edad (calculada)</span>
+            <span class="fw-semibold text-dark" id="txtEdad"><%= edadCalculada !== null ? edadCalculada + ' años' : 'No registrada' %></span>
+          </div>
+          <div class="col-6 col-md-3">
+            <span class="text-muted small d-block">Sexo</span>
+            <span class="fw-semibold text-dark" id="txtSexo"><%= sexoLegible %></span>
+          </div>
+          <div class="col-6 col-md-3">
+            <span class="text-muted small d-block">Teléfono</span>
+            <span class="fw-semibold text-dark font-monospace" id="txtTelefono">
+              <% if (p.telefono) { %>
+                <a href="tel:<%= p.telefono %>" class="text-decoration-none text-primary"><%= p.telefono %></a>
+              <% } else { %>
+                <span class="text-muted fst-italic">No registrado</span>
+              <% } %>
+            </span>
+          </div>
+          <div class="col-6 col-md-3">
+            <span class="text-muted small d-block">Dirección</span>
+            <span class="fw-semibold text-dark" id="txtDireccion"><%= p.direccion || 'No registrada' %></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Fila 1: Afiliación en salud (Izquierda) y Accesos rápidos (Derecha) -->
+    <div class="row g-4 mb-4">
+      <!-- Columna izquierda: Card Afiliación en salud [15.29 - 15.39] -->
+      <div class="col-12 col-lg-7 col-xl-8">
+        <div class="card border-0 shadow-sm rounded-3 h-100" data-trace="C15-29" id="cardAfiliacion">
+          <div class="card-header bg-white border-0 pt-4 px-4 pb-0 d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-2">
+              <div class="p-2 rounded-2 bg-success-subtle text-success">
+                <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                  <path d="M1.5 2A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2h-13zm0 1h13a.5.5 0 0 1 .5.5v1.5H0V3.5a.5.5 0 0 1 .5-.5zM0 6h16v6.5a.5.5 0 0 1-.5.5h-13a.5.5 0 0 1-.5-.5V6z"/>
+                  <path d="M3 10.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 0 1h-3a.5.5 0 0 1-.5-.5zm0-2a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5z"/>
+                </svg>
+              </div>
+              <h2 class="h6 fw-bold text-dark mb-0">Afiliación en salud</h2>
+            </div>
+            <!-- [15.38, 15.39] Badge VIGENTE en verde (#198754) o VENCIDA en rojo (#dc3545) -->
+            <span class="badge px-3 py-2 fw-bold text-white shadow-sm" style="background-color: <%= badgeVigenciaColor %>;" data-trace="C15-38" id="badgeVigencia">
+              <span data-trace="C15-39"><%= badgeVigenciaTexto %></span>
+            </span>
+          </div>
+
+          <div class="card-body p-4">
+            <div class="row g-3">
+              <!-- [15.30] Entidad -> [15.31] EPS Nombre · [Tipo Plan] [15.32] -->
+              <div class="col-12 col-sm-6 col-md-4">
+                <span class="text-muted small d-block" data-trace="C15-30">Entidad</span>
+                <div class="d-flex align-items-center flex-wrap gap-1">
+                  <span class="fw-bold text-dark fs-6" data-trace="C15-31" id="txtEps"><%= epsNombre %></span>
+                  <% if (tipoPlan) { %>
+                    <span class="text-secondary small fw-medium" data-trace="C15-32">· <%= tipoPlan %></span>
+                  <% } %>
+                </div>
+              </div>
+
+              <!-- [15.33] Tipo de usuario -> [15.34] Cotizante/Beneficiario/Particular -->
+              <div class="col-12 col-sm-6 col-md-4">
+                <span class="text-muted small d-block" data-trace="C15-33">Tipo de usuario</span>
+                <span class="fw-semibold text-dark" data-trace="C15-34" id="txtTipoUsuario">
+                  <%= tipoUsuario %>
+                </span>
+              </div>
+
+              <!-- [15.35] N.º de contrato -> [15.36] Número -->
+              <div class="col-12 col-sm-6 col-md-4">
+                <span class="text-muted small d-block" data-trace="C15-35">N.º de contrato</span>
+                <span class="fw-semibold text-dark font-monospace" data-trace="C15-36" id="txtNumeroContrato">
+                  <%= numeroContrato %>
+                </span>
+              </div>
+
+              <!-- [15.37] Vigencia -> [DD/MM/AAAA - DD/MM/AAAA] -->
+              <div class="col-12">
+                <div data-trace="C15-37" id="txtRangoVigencia">
+                  <span class="text-muted small d-block">Vigencia</span>
+                  <span class="fw-semibold text-dark">
+                    <% if (af && (af.fecha_inicio || af.fecha_fin)) { %>
+                      <%= formatearFecha(af.fecha_inicio) %> - <%= af.fecha_fin ? formatearFecha(af.fecha_fin) : 'Indefinida' %>
+                    <% } else { %>
+                      <span class="text-muted fst-italic">Sin rango de vigencia registrado</span>
+                    <% } %>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Columna derecha: Card Accesos rápidos [15.45 - 15.49] -->
+      <div class="col-12 col-lg-5 col-xl-4">
+        <div class="card border-0 shadow-sm rounded-3 h-100" data-trace="C15-45">
+          <div class="card-header bg-white border-0 pt-4 px-4 pb-0">
+            <h2 class="h6 fw-bold text-dark mb-0">Accesos rápidos</h2>
+            <p class="text-muted small mb-0 mt-1">Acciones clínicas inmediatas</p>
+          </div>
+          <div class="card-body p-4 d-flex flex-column gap-2 justify-content-center">
+            <!-- [15.46] Botón destacado oscuro "Agendar cita" -->
+            <a href="/citas/nueva?paciente=<%= p.id %>" class="btn btn-primary d-flex align-items-center justify-content-between p-3 rounded-3 text-decoration-none shadow-sm" data-trace="C15-46" id="btnAccesoAgendarCita">
+              <div class="d-flex align-items-center gap-3">
+                <div class="p-2 bg-white bg-opacity-25 rounded-2 text-white">
+                  <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z"/>
+                  </svg>
+                </div>
+                <div class="text-start">
+                  <div class="fw-bold">Agendar cita</div>
+                  <div class="small text-white-50">Programar en la agenda médica</div>
+                </div>
+              </div>
+              <span class="fs-5">→</span>
+            </a>
+
+            <!-- [15.47] Botón outline "Ver historia clínica" -->
+            <a href="/historias/<%= p.id %>" class="btn btn-outline-secondary d-flex align-items-center justify-content-between p-3 rounded-3 text-decoration-none shadow-sm" data-trace="C15-47" id="btnAccesoHistoriaClinica">
+              <div class="d-flex align-items-center gap-3">
+                <div class="p-2 bg-secondary-subtle rounded-2 text-secondary">
+                  <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M14 0H2a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2zM1 3.857C1 3.384 1.448 3 2 3h12c.552 0 1 .384 1 .857v10.286c0 .473-.448.857-1 .857H2c-.552 0-1-.384-1-.857V3.857z"/>
+                    <path d="M6.5 7a.5.5 0 0 0 0 1h3a.5.5 0 0 0 0-1h-3zm0 2.5a.5.5 0 0 0 0 1h3a.5.5 0 0 0 0-1h-3zm0 2.5a.5.5 0 0 0 0 1h3a.5.5 0 0 0 0-1h-3z"/>
+                  </svg>
+                </div>
+                <div class="text-start">
+                  <div class="fw-semibold text-dark">Historia clínica</div>
+                  <div class="small text-muted">Consultar antecedentes y evoluciones</div>
+                </div>
+              </div>
+              <span class="fs-5 text-muted">→</span>
+            </a>
+
+            <!-- [15.48] Botón outline "Órdenes del paciente" -->
+            <a href="/ordenes?paciente=<%= p.id %>" class="btn btn-outline-secondary d-flex align-items-center justify-content-between p-3 rounded-3 text-decoration-none shadow-sm" data-trace="C15-48" id="btnAccesoOrdenes">
+              <div class="d-flex align-items-center gap-3">
+                <div class="p-2 bg-secondary-subtle rounded-2 text-secondary">
+                  <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2zM9.5 3A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5v2z"/>
+                    <path d="M4.5 10.5a.5.5 0 0 0 0 1h7a.5.5 0 0 0 0-1h-7zm0-2a.5.5 0 0 0 0 1h7a.5.5 0 0 0 0-1h-7z"/>
+                  </svg>
+                </div>
+                <div class="text-start">
+                  <div class="fw-semibold text-dark">Órdenes del paciente</div>
+                  <div class="small text-muted">Laboratorio y radiología</div>
+                </div>
+              </div>
+              <span class="fs-5 text-muted">→</span>
+            </a>
+
+            <!-- [15.49] Botón outline "Resultados" -->
+            <a href="/pacientes/<%= p.id %>/resultados" class="btn btn-outline-secondary d-flex align-items-center justify-content-between p-3 rounded-3 text-decoration-none shadow-sm" data-trace="C15-49" id="btnAccesoResultados">
+              <div class="d-flex align-items-center gap-3">
+                <div class="p-2 bg-secondary-subtle rounded-2 text-secondary">
+                  <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M6 2a.5.5 0 0 1 .47.33L10 12.036l1.53-4.208A.5.5 0 0 1 12 7.5h3.5a.5.5 0 0 1 0 1h-3.15l-1.88 5.17a.5.5 0 0 1-.94 0L6 3.964 4.47 8.171A.5.5 0 0 1 4 8.5H.5a.5.5 0 0 1 0-1h3.15l1.88-5.17A.5.5 0 0 1 6 2z"/>
+                  </svg>
+                </div>
+                <div class="text-start">
+                  <div class="fw-semibold text-dark">Resultados</div>
+                  <div class="small text-muted">Informes y paraclínicos</div>
+                </div>
+              </div>
+              <span class="fs-5 text-muted">→</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Fila 2: Contactos de emergencia (Izquierda) y Últimos movimientos (Derecha) -->
+    <div class="row g-4 mb-4">
+      <!-- Columna izquierda: Card Contactos de emergencia [15.40 - 15.44] -->
+      <div class="col-12 col-lg-6">
+        <div class="card border-0 shadow-sm rounded-3 h-100" data-trace="C15-40" id="cardContactos">
+          <div class="card-header bg-white border-0 pt-4 px-4 pb-0 d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-2">
+              <div class="p-2 rounded-2 bg-warning-subtle text-warning-emphasis">
+                <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                  <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/>
+                  <path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z"/>
+                </svg>
+              </div>
+              <h2 class="h6 fw-bold text-dark mb-0">Contactos de emergencia</h2>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+              <span class="badge bg-light text-secondary border" id="badgeTotalContactos"><%= contactos.length %> registrado<%= contactos.length === 1 ? '' : 's' %></span>
+              <% if (puedeEditarContactos) { %>
+                <button type="button" class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1 shadow-sm" id="btnAbrirModalContacto" data-bs-toggle="modal" data-bs-target="#modalNuevoContacto" data-trace="C15-btn-agregar-contacto">
+                  <svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/></svg>
+                  Agregar contacto
+                </button>
+              <% } %>
+            </div>
+          </div>
+
+          <div class="card-body p-4">
+            <div class="table-responsive">
+              <!-- [15.41] Tabla con columnas Nombre [15.42], Parentesco [15.43], Teléfono [15.44] -->
+              <table class="table table-hover align-middle mb-0" data-trace="C15-41" id="tablaContactos">
+                <thead class="table-light">
+                  <tr>
+                    <th scope="col" class="text-secondary small fw-semibold" data-trace="C15-42">Nombre</th>
+                    <th scope="col" class="text-secondary small fw-semibold" data-trace="C15-43">Parentesco</th>
+                    <th scope="col" class="text-secondary small fw-semibold" data-trace="C15-44">Teléfono</th>
+                  </tr>
+                </thead>
+                <tbody id="tbodyContactos">
+                  <% if (contactos && contactos.length > 0) { %>
+                    <% contactos.forEach((c) => { %>
+                      <tr data-contacto-id="<%= c.id || '' %>">
+                        <td class="fw-semibold text-dark"><%= c.nombre %></td>
+                        <td>
+                          <span class="badge bg-secondary-subtle text-secondary-emphasis">
+                            <%= c.parentesco || 'Familiar' %>
+                          </span>
+                        </td>
+                        <td>
+                          <a href="tel:<%= c.telefono %>" class="text-decoration-none text-primary fw-medium font-monospace">
+                            <%= c.telefono %>
+                          </a>
+                        </td>
+                      </tr>
+                    <% }); %>
+                  <% } %>
+                </tbody>
+              </table>
+            </div>
+            <div id="emptyContactos" class="text-center py-4 text-muted <%= (contactos && contactos.length > 0) ? 'd-none' : '' %>">
+              <svg width="32" height="32" fill="currentColor" class="bi bi-person-x mb-2 text-secondary opacity-50" viewBox="0 0 16 16">
+                <path d="M6 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0zm4 8c0 1-1 1-1 1H1s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C9.516 10.68 8.289 10 6 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z"/>
+                <path fill-rule="evenodd" d="M12.146 5.146a.5.5 0 0 1 .708 0L14 6.293l1.146-1.147a.5.5 0 0 1 .708.708L14.707 7l1.147 1.146a.5.5 0 0 1-.708.708L14 7.707l-1.146 1.147a.5.5 0 0 1-.708-.708L13.293 7l-1.147-1.146a.5.5 0 0 1 0-.708z"/>
+              </svg>
+              <p class="mb-0 small">No se registraron contactos de emergencia para este paciente.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Columna derecha: Card Últimos movimientos [15.50 - 15.54] -->
+      <div class="col-12 col-lg-6">
+        <div class="card border-0 shadow-sm rounded-3 h-100" data-trace="C15-50" id="cardMovimientos">
+          <div class="card-header bg-white border-0 pt-4 px-4 pb-0 d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-2">
+              <div class="p-2 rounded-2 bg-info-subtle text-info-emphasis">
+                <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                  <path d="M8.515 1.019A7 7 0 0 0 8 1V0a8 8 0 0 1 .589.022l-.074.997zm2.004.45a7.003 7.003 0 0 0-.985-.299l.219-.976c.383.086.76.2 1.126.342l-.36.933zm1.37.71a7.01 7.01 0 0 0-.439-.27l.493-.87a8.025 8.025 0 0 1 .979.602l-.533.854zM16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-1 0a7 7 0 1 0-14 0 7 7 0 0 0 14 0z"/>
+                  <path d="M8.5 4.5a.5.5 0 0 0-1 0v4.207l2.146 2.147a.5.5 0 0 0 .708-.708L8.5 8.293V4.5z"/>
+                </svg>
+              </div>
+              <h2 class="h6 fw-bold text-dark mb-0">Últimos movimientos</h2>
+            </div>
+            <span class="badge bg-light text-secondary border">Actividad clínica</span>
+          </div>
+          <div class="card-body p-4">
+            <div class="table-responsive" style="max-height: 280px; overflow-y: auto;">
+              <!-- [15.51] Tabla con Fecha [15.52], Evento [15.53], Código [15.54] -->
+              <table class="table table-hover align-middle mb-0" data-trace="C15-51" id="tablaMovimientos">
+                <thead class="table-light sticky-top">
+                  <tr>
+                    <th scope="col" class="text-secondary small fw-semibold" data-trace="C15-52" style="width: 25%;">Fecha</th>
+                    <th scope="col" class="text-secondary small fw-semibold" data-trace="C15-53" style="width: 50%;">Evento / Descripción clínica</th>
+                    <th scope="col" class="text-secondary small fw-semibold text-end" data-trace="C15-54" style="width: 25%;">Código / Estado</th>
+                  </tr>
+                </thead>
+                <tbody id="tbodyMovimientos">
+                  <% if (movimientos && movimientos.length > 0) { %>
+                    <% movimientos.forEach((m) => { %>
+                      <tr>
+                        <td class="small text-muted font-monospace text-nowrap"><%= m.fecha ? formatearFecha(m.fecha) : '—' %></td>
+                        <td class="fw-semibold small text-dark"><%= m.descripcion || m.tipo || m.evento %></td>
+                        <td class="font-monospace small text-end">
+                          <span class="badge bg-light text-secondary border"><%= m.codigo || m.id || m.estado || '—' %></span>
+                        </td>
+                      </tr>
+                    <% }); %>
+                  <% } %>
+                </tbody>
+              </table>
+            </div>
+            <div id="emptyMovimientos" class="text-center py-3 text-muted <%= (movimientos && movimientos.length > 0) ? 'd-none' : '' %>">
+              <svg width="28" height="28" fill="currentColor" class="bi bi-clock-history mb-2 text-secondary opacity-50" viewBox="0 0 16 16">
+                <path d="M8.515 1.019A7 7 0 0 0 8 1V0a8 8 0 0 1 .589.022l-.074.997zm2.004.45a7.003 7.003 0 0 0-.985-.299l.219-.976c.383.086.76.2 1.126.342l-.36.933zm1.37.71a7.01 7.01 0 0 0-.439-.27l.493-.87a8.025 8.025 0 0 1 .979.602l-.533.854zM16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zm-1 0a7 7 0 1 0-14 0 7 7 0 0 0 14 0z"/>
+                <path d="M8.5 4.5a.5.5 0 0 0-1 0v4.207l2.146 2.147a.5.5 0 0 0 .708-.708L8.5 8.293V4.5z"/>
+              </svg>
+              <p class="mb-0 small">Sin citas ni atenciones registradas previamente.</p>
+              <div class="mt-2">
+                <a href="/citas/nueva?paciente=<%= p.id %>" class="btn btn-sm btn-outline-primary">
+                  + Agendar primera cita
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal para agregar contacto de emergencia -->
+    <div class="modal fade" id="modalNuevoContacto" tabindex="-1" aria-labelledby="modalNuevoContactoLabel" aria-hidden="true" data-trace="C15-modal-contacto">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+          <div class="modal-header border-bottom">
+            <h5 class="modal-title fw-bold" id="modalNuevoContactoLabel">Agregar contacto de emergencia</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+          </div>
+          <form id="formNuevoContacto" novalidate>
+            <div class="modal-body p-4">
+              <div id="alertaModalContacto" class="alert d-none py-2 px-3 small mb-3" role="alert"></div>
+
+              <div class="mb-3">
+                <label for="contactoNombre" class="form-label small fw-semibold text-secondary">
+                  Nombre completo <span class="text-danger">*</span>
+                </label>
+                <input type="text" class="form-control" id="contactoNombre" name="nombre" placeholder="Ej. Marta Rodríguez" required maxlength="150">
+                <div class="invalid-feedback">El nombre del contacto es obligatorio.</div>
+              </div>
+
+              <div class="mb-3">
+                <label for="contactoParentesco" class="form-label small fw-semibold text-secondary">
+                  Parentesco
+                </label>
+                <select class="form-select" id="contactoParentesco" name="parentesco">
+                  <option value="Familiar" selected>Familiar</option>
+                  <option value="Esposa">Esposa</option>
+                  <option value="Esposo">Esposo</option>
+                  <option value="Cónyuge / Pareja">Cónyuge / Pareja</option>
+                  <option value="Madre">Madre</option>
+                  <option value="Padre">Padre</option>
+                  <option value="Hijo(a)">Hijo(a)</option>
+                  <option value="Hermano(a)">Hermano(a)</option>
+                  <option value="Amigo(a)">Amigo(a)</option>
+                  <option value="Tutor / Responsable">Tutor / Responsable</option>
+                  <option value="Otro">Otro</option>
+                </select>
+              </div>
+
+              <div class="mb-3">
+                <label for="contactoTelefono" class="form-label small fw-semibold text-secondary">
+                  Teléfono de contacto <span class="text-danger">*</span>
+                </label>
+                <input type="tel" class="form-control font-monospace" id="contactoTelefono" name="telefono" placeholder="Ej. 3001234567 o +573001234567" required maxlength="20">
+                <div class="invalid-feedback">Ingrese un número telefónico válido (ej. 3001234567 o +573001234567).</div>
+                <div class="form-text small text-muted">Prefijo colombiano (+57) para celular de 10 dígitos o teléfono fijo.</div>
+              </div>
+            </div>
+            <div class="modal-footer bg-light border-top">
+              <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+              <button type="submit" class="btn btn-primary" id="btnGuardarContacto">
+                <span id="spinnerContacto" class="spinner-border spinner-border-sm d-none me-1" role="status" aria-hidden="true"></span>
+                <span id="textoBtnGuardarContacto">Guardar contacto</span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  <% } %>
+</div>
+
+<script src="/public/js/paciente_detalle.js"></script>
+<%- include('../partials/_fin') %>

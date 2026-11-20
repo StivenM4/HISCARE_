@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="csrf-token" content="<%= typeof csrfToken !== 'undefined' ? csrfToken : '' %>">
+  <title><%= typeof titulo !== 'undefined' && titulo ? titulo + ' · ' : '' %>HISCARE</title>
+  <script>
+    (function () {
+      try {
+        var theme = localStorage.getItem('hiscare-theme') === 'dark' ? 'dark' : 'light';
+        document.documentElement.setAttribute('data-bs-theme', theme);
+      } catch (e) {
+        document.documentElement.setAttribute('data-bs-theme', 'light');
+      }
+    })();
+  </script>
+  <link rel="stylesheet" href="/vendor/bootstrap/css/bootstrap.min.css">
+  <link rel="stylesheet" href="/vendor/select2/css/select2.min.css">
+  <link rel="stylesheet" href="/vendor/select2-bootstrap-5-theme/select2-bootstrap-5-theme.min.css">
+  <link rel="stylesheet" href="/vendor/datatables.net-bs5/css/dataTables.bootstrap5.min.css">
+  <link rel="stylesheet" href="/vendor/sweetalert2/sweetalert2.min.css">
+  <link rel="stylesheet" href="/css/hiscare.css">
+  <link rel="stylesheet" href="/css/print.css" media="print">
+</head>
+<body class="bg-light">
+<div class="d-flex min-vh-100">
+  <%- include('_sidebar') %>
+  <div class="flex-grow-1 d-flex flex-column min-vh-100 main-wrapper">
+    <%- include('_topbar') %>
+    <%- include('_alertas') %>
+    <main class="flex-grow-1 p-4" id="contenidoPrincipal">

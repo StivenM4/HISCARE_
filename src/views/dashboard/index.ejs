@@ -1,0 +1,104 @@
+<%- include('../partials/_inicio', { titulo: 'Dashboard' }) %>
+<%
+  const rolActual = (typeof usuario !== 'undefined' && usuario && usuario.rol) ? String(usuario.rol).toUpperCase() : '';
+  const matrizPermisosFallback = {
+    agenda: { MEDICO: ['L', 'E'], RECEPCIONISTA: ['L', 'E'], ENFERMERO: ['L', 'E'], ADMINISTRADOR: ['L', 'E'] },
+    pacientes: { RECEPCIONISTA: ['L', 'E'], MEDICO: ['L'], ENFERMERO: ['L'], ADMINISTRADOR: ['L', 'E'] },
+    atenciones: { MEDICO: ['L', 'E'], ENFERMERO: ['L', 'E'], ADMINISTRADOR: ['L', 'E'] },
+    ordenes: { MEDICO: ['L', 'E'], RECEPCIONISTA: ['L'], ENFERMERO: ['L'], ADMINISTRADOR: ['L', 'E'] },
+    resultados: { MEDICO: ['L', 'E'], ENFERMERO: ['L', 'E'], AUDITOR: ['L'], ADMINISTRADOR: ['L', 'E'] },
+    auditoria: { AUDITOR: ['L', 'E'], ADMINISTRADOR: ['L', 'E'] },
+    admin: { ADMINISTRADOR: ['L', 'E'] }
+  };
+  const puedeAccesoFallback = (rol, modulo, accion) => {
+    if (!rol) return false;
+    if (rol === 'ADMINISTRADOR') return true;
+    const mod = matrizPermisosFallback[modulo];
+    if (!mod) return false;
+    return Array.isArray(mod[rol]) && mod[rol].includes(accion);
+  };
+  const catalogoAccesosFallback = [
+    { clave: 'nueva_cita', titulo: 'Nueva cita', descripcion: 'Agendar una nueva cita médica', ruta: '/pacientes?accion=nueva-cita', modulo: 'agenda', accion: 'E', variante: 'primary' },
+    { clave: 'agenda', titulo: 'Agenda médica', descripcion: 'Consultar citas y sala de espera del día', ruta: '/agenda', modulo: 'agenda', accion: 'L', variante: 'info' },
+    { clave: 'registrar_paciente', titulo: 'Registrar paciente', descripcion: 'Crear ficha de ingreso de paciente', ruta: '/pacientes/nuevo', modulo: 'pacientes', accion: 'E', variante: 'success' },
+    { clave: 'pacientes', titulo: 'Buscar pacientes', descripcion: 'Consultar listado e historia de pacientes', ruta: '/pacientes', modulo: 'pacientes', accion: 'L', variante: 'secondary' },
+    { clave: 'atenciones', titulo: 'Atención clínica', descripcion: 'Gestionar consultas y evoluciones en curso', ruta: '/atenciones', modulo: 'atenciones', accion: 'L', variante: 'primary' },
+    { clave: 'ordenes', titulo: 'Órdenes médicas', descripcion: 'Seguimiento de órdenes diagnósticas', ruta: '/ordenes', modulo: 'ordenes', accion: 'L', variante: 'warning' },
+    { clave: 'resultados', titulo: 'Resultados', descripcion: 'Consultar resultados de exámenes y estudios', ruta: '/resultados', modulo: 'resultados', accion: 'L', variante: 'info' },
+    { clave: 'auditoria', titulo: 'Auditoría', descripcion: 'Revisar trazabilidad y eventos del sistema', ruta: '/auditoria', modulo: 'auditoria', accion: 'L', variante: 'dark' },
+    { clave: 'admin', titulo: 'Administración', descripcion: 'Gestionar usuarios, roles y catálogos', ruta: '/admin/usuarios', modulo: 'admin', accion: 'L', variante: 'secondary' }
+  ];
+  const accesosRapidosRender = (typeof accesosRapidos !== 'undefined' && Array.isArray(accesosRapidos))
+    ? accesosRapidos
+    : catalogoAccesosFallback.filter((item) => puedeAccesoFallback(rolActual, item.modulo, item.accion));
+
+  const iconosAccesos = {
+    nueva_cita: '<svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>',
+    agenda: '<svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>',
+    registrar_paciente: '<svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>',
+    pacientes: '<svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>',
+    atenciones: '<svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-3-3v6m-9 5h18a2 2 0 002-2V6a2 2 0 00-2-2H3a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>',
+    ordenes: '<svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>',
+    resultados: '<svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>',
+    auditoria: '<svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>',
+    admin: '<svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>'
+  };
+%>
+<!-- Vista principal de Dashboard con accesos rápidos -->
+<div class="container-fluid px-0" id="vistaDashboard">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <div>
+      <h1 class="h3 fw-bold text-dark mb-1">Dashboard</h1>
+      <p class="text-muted mb-0">
+        Bienvenido(a), <%= (typeof usuario !== 'undefined' && usuario && usuario.nombre) ? usuario.nombre : 'Usuario' %>
+      </p>
+    </div>
+    <div class="d-flex flex-wrap align-items-center gap-2">
+      <span class="badge bg-light text-dark border px-3 py-2 fs-6">
+        Rol: <strong><%= (typeof usuario !== 'undefined' && usuario && usuario.rol) ? usuario.rol : '' %></strong>
+      </span>
+      <a href="/inicio" class="btn btn-sm btn-outline-primary">Ver resumen de jornada</a>
+    </div>
+  </div>
+
+  <section id="panelAccesosRapidos" class="quick-access-panel mb-4" aria-labelledby="tituloAccesosRapidos">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+      <div>
+        <h2 id="tituloAccesosRapidos" class="h5 fw-bold text-dark mb-0">Accesos rápidos</h2>
+        <p class="text-muted small mb-0">Atajos operativos habilitados para su perfil</p>
+      </div>
+    </div>
+    <% if (accesosRapidosRender.length > 0) { %>
+      <div class="quick-access-grid">
+        <% accesosRapidosRender.forEach(function(item) { %>
+          <a href="<%= item.ruta %>"
+             class="quick-access-card"
+             data-acceso-clave="<%= item.clave %>"
+             aria-label="<%= item.titulo %>: <%= item.descripcion %>">
+            <span class="quick-access-icon quick-access-icon--<%= item.variante || 'primary' %>" aria-hidden="true">
+              <%- Object.prototype.hasOwnProperty.call(iconosAccesos, item.clave) ? iconosAccesos[item.clave] : iconosAccesos.agenda %>
+            </span>
+            <div>
+              <span class="quick-access-title"><%= item.titulo %></span>
+              <span class="quick-access-desc"><%= item.descripcion %></span>
+            </div>
+            <span class="quick-access-arrow" aria-hidden="true">
+              <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+              </svg>
+            </span>
+          </a>
+        <% }); %>
+      </div>
+    <% } else { %>
+      <div id="sinAccesosRapidos" class="alert alert-light border text-muted d-flex align-items-center gap-2 mb-0" role="status">
+        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" class="flex-shrink-0 text-info">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        <span>No hay accesos rápidos disponibles para su perfil en este momento. Puede consultar el resumen de jornada o utilizar el menú lateral para navegar.</span>
+      </div>
+    <% } %>
+  </section>
+</div>
+
+<%- include('../partials/_fin') %>

@@ -1,0 +1,48 @@
+{
+  "name": "hiscare",
+  "version": "1.0.0",
+  "description": "HISCARE - Sistema de Información Hospitalaria e Historia Clínica Electrónica",
+  "main": "src/app.js",
+  "engines": {
+    "node": ">=22.0.0 <23.0.0",
+    "npm": ">=10.0.0"
+  },
+  "scripts": {
+    "start": "node -r dotenv/config src/app.js",
+    "dev": "nodemon -e js,ejs,json -r dotenv/config src/app.js",
+    "test": "node --test -r dotenv/config tests/auth/login.test.js tests/auth/c1_auditoria.test.js tests/c2_views.test.js tests/inicio/sistema_diseno_css.test.js tests/inicio/integracion_ui_plugins.test.js tests/inicio/c2_backend.test.js tests/inicio/c2_acceptance.test.js tests/pacientes/registro.test.js tests/pacientes/c15_busqueda_detalle.test.js tests/pacientes/paciente_detalle_view.test.js tests/atenciones/c4_consulta.test.js tests/atenciones/listar_atenciones.test.js tests/atenciones/c5_antecedentes.test.js tests/atencion/antecedentes_view.test.js tests/atencion/antecedentes_client.test.js tests/atenciones/c6_evolucion.test.js tests/atencion/evolucion_soap_view.test.js tests/atencion/orden_nueva_view.test.js tests/atencion/orden_nueva_client.test.js tests/atenciones/c7_ordenes.test.js tests/atenciones/c7_ordenes_usuarios_permisos.test.js tests/ordenes_lista_view.test.js tests/atenciones/c10_ordenes_lista_endpoint.test.js tests/atencion/orden_impresion_view.test.js tests/atenciones/c9_historia_timeline.test.js tests/notificaciones/c11_notificaciones.test.js tests/notificaciones/c11_usuarios_permisos_aceptacion.test.js tests/notificaciones_view.test.js tests/seguridad/autorizacion.test.js tests/seguridad/c27_backend.test.js tests/especialidades_view.test.js tests/admin/especialidades_backend.test.js tests/admin/aseguradoras_backend.test.js tests/admin/c14_aseguradoras_frontend.test.js tests/admin/c14_usuarios_roles_matriz.test.js tests/auditoria/auditoria_backend.test.js tests/auditoria/c26_view.test.js tests/auditoria/c26_usuarios_permisos_e2e.test.js",
+    "setup": "npm run db:setup",
+    "db:setup": "node -r dotenv/config -e \"const fs=require('fs'),{pool}=require('./src/db');(async()=>{try{await pool.query(fs.readFileSync('bd/01_esquema_y_reglas.sql','utf8'));console.log('Esquema y reglas aplicados correctamente.');}finally{await pool.end();}})().catch(e=>{console.error(e.message);process.exit(1);});\"",
+    "db:seed": "node -r dotenv/config -e \"const fs=require('fs'),{pool}=require('./src/db');(async()=>{try{await pool.query(fs.readFileSync('bd/02_seed_datos_prueba.sql','utf8'));console.log('Datos de prueba sembrados correctamente.');}finally{await pool.end();}})().catch(e=>{console.error(e.message);process.exit(1);});\"",
+    "db:catalogos": "node -r dotenv/config src/db/seeds/cargar_catalogos.js",
+    "db:setup:seed": "npm run db:setup && npm run db:seed && npm run db:catalogos",
+    "db:reset": "npm run db:seed && npm run db:catalogos"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "bootstrap": "^5.3.8",
+    "connect-pg-simple": "^10.0.0",
+    "datatables.net": "^2.2.2",
+    "datatables.net-bs5": "^2.2.2",
+    "dotenv": "^16.4.5",
+    "ejs": "^7.0.1",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.7.1",
+    "express-session": "^1.19.0",
+    "express-validator": "^7.3.2",
+    "helmet": "^8.3.0",
+    "jquery": "^3.7.1",
+    "multer": "^2.4.0",
+    "node-cron": "^4.6.0",
+    "pg": "^8.23.1",
+    "select2": "^4.1.0-rc.0",
+    "select2-bootstrap-5-theme": "^1.3.0",
+    "sweetalert2": "^11.26.25"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}

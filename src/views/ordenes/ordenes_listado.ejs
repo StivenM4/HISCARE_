@@ -1,0 +1,505 @@
+<%- include('../partials/_inicio', { titulo: 'Gestión de órdenes médicas', figuraTrace: 'C10' }) %>
+
+<%
+  const listaOrdenes = (typeof filas !== 'undefined' && Array.isArray(filas))
+    ? filas
+    : ((typeof ordenes !== 'undefined' && Array.isArray(ordenes)) ? ordenes : []);
+
+  const resumenData = (typeof resumen !== 'undefined' && resumen) ? resumen : {};
+
+  const atencionVal = (typeof atencion !== 'undefined' && atencion)
+    ? atencion
+    : ((typeof filtroAtencion !== 'undefined' && filtroAtencion) ? filtroAtencion : '');
+
+  const pacienteVal = (typeof paciente !== 'undefined' && paciente)
+    ? paciente
+    : ((typeof filtroPaciente !== 'undefined' && filtroPaciente) ? filtroPaciente : '');
+
+  const totalCalculado = listaOrdenes.length;
+  const cantPendientesCalc = listaOrdenes.filter(o => o.estado === 'PENDIENTE').length;
+  const cantEnProcesoCalc = listaOrdenes.filter(o => o.estado === 'EN_PROCESO').length;
+  const cantCompletadasCalc = listaOrdenes.filter(o => o.estado === 'COMPLETADA').length;
+  const cantCanceladasCalc = listaOrdenes.filter(o => o.estado === 'CANCELADA').length;
+
+  const totalOrdenes = (typeof total !== 'undefined' && total !== null)
+    ? Number(total)
+    : (resumenData.total != null
+        ? Number(resumenData.total)
+        : (resumenData.PENDIENTE != null || resumenData.EN_PROCESO != null || resumenData.COMPLETADA != null
+            ? (Number(resumenData.PENDIENTE || 0) + Number(resumenData.EN_PROCESO || 0) + Number(resumenData.COMPLETADA || 0) + Number(resumenData.CANCELADA || 0))
+            : totalCalculado));
+
+  const totalPendientes = resumenData.PENDIENTE != null ? Number(resumenData.PENDIENTE) : cantPendientesCalc;
+  const totalEnProceso = resumenData.EN_PROCESO != null ? Number(resumenData.EN_PROCESO) : cantEnProcesoCalc;
+  const totalCompletadas = resumenData.COMPLETADA != null ? Number(resumenData.COMPLETADA) : cantCompletadasCalc;
+
+  // Fechas por defecto: ayer y hoy en hora local
+  const hoyObj = new Date();
+  const ayerObj = new Date();
+  ayerObj.setDate(hoyObj.getDate() - 1);
+  const pad2 = (n) => String(n).padStart(2, '0');
+  const formatIsoDate = (d) => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+
+  const defaultDesde = formatIsoDate(ayerObj);
+  const defaultHasta = formatIsoDate(hoyObj);
+
+  const desdeVal = (typeof desde !== 'undefined' && desde)
+    ? desde
+    : ((typeof filtroDesde !== 'undefined' && filtroDesde) ? filtroDesde : defaultDesde);
+
+  const hastaVal = (typeof hasta !== 'undefined' && hasta)
+    ? hasta
+    : ((typeof filtroHasta !== 'undefined' && filtroHasta) ? filtroHasta : defaultHasta);
+
+  const tipoVal = (typeof tipo !== 'undefined' && tipo)
+    ? tipo
+    : ((typeof filtroTipo !== 'undefined' && filtroTipo) ? filtroTipo : '');
+
+  const estadoVal = (typeof estado !== 'undefined' && estado)
+    ? estado
+    : ((typeof filtroEstado !== 'undefined' && filtroEstado) ? filtroEstado : '');
+
+  const paginaActual = (typeof page !== 'undefined' && page)
+    ? parseInt(page, 10)
+    : ((typeof pagina !== 'undefined' && pagina) ? parseInt(pagina, 10) : 1);
+
+  const limitePorPagina = (typeof limite !== 'undefined' && limite) ? parseInt(limite, 10) : 20;
+  const totalPaginas = Math.max(1, Math.ceil(totalOrdenes / limitePorPagina));
+  const hayFiltros = Boolean(tipoVal || estadoVal || atencionVal || pacienteVal || (desdeVal !== defaultDesde) || (hastaVal !== defaultHasta));
+
+  function formatearFechaDDMMYYYY(val) {
+    if (!val) return '—';
+    if (typeof val === 'string' && val.includes('/') && val.length >= 10) {
+      return val.split(' ')[0];
+    }
+    const d = new Date(val);
+    if (isNaN(d.getTime())) return String(val);
+    return `${pad2(d.getDate())}/${pad2(d.getMonth() + 1)}/${d.getFullYear()}`;
+  }
+
+  function capitalizarTipo(t) {
+    if (!t) return '—';
+    const s = String(t).toUpperCase();
+    if (s === 'LABORATORIO') return 'Laboratorio';
+    if (s === 'RADIOLOGIA') return 'Radiología';
+    return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
+  }
+%>
+
+<div class="container-fluid px-0">
+  <!-- Encabezado de la pantalla [10.15] -->
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+    <div>
+      <h1 class="h3 fw-bold text-dark mb-1" data-trace="C10-15">Gestión de órdenes médicas</h1>
+      <p class="text-muted small mb-0" data-trace="C7-LISTA-TITULO">Órdenes diagnósticas — Gestión y seguimiento de órdenes diagnósticas</p>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+      <a href="/atenciones" class="btn btn-outline-secondary d-inline-flex align-items-center gap-1 shadow-sm" data-trace="C7-LISTA-ATENCIONES-LINK">
+        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M9.5 0a.5.5 0 0 1 .5.5.5.5 0 0 0 .5.5.5.5 0 0 1 .5.5V2a.5.5 0 0 1-.5.5h-5A.5.5 0 0 1 5 2v-.5a.5.5 0 0 1 .5-.5.5.5 0 0 0 .5-.5.5.5 0 0 1 .5-.5z"/>
+          <path d="M3 2.5a.5.5 0 0 1 .5-.5H4a1.5 1.5 0 0 0 1.4-1H6a.5.5 0 0 1 0 1h-.5a.5.5 0 0 0-.5.5V3h6v-.5a.5.5 0 0 0-.5-.5H10a.5.5 0 0 1 0-1h.6a1.5 1.5 0 0 0 1.4 1h.5a.5.5 0 0 1 .5.5v12a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5z"/>
+        </svg>
+        <span>Ver atenciones</span>
+      </a>
+      <% if (atencionVal) { %>
+        <a href="/atenciones/<%= atencionVal %>/ordenes" class="btn btn-primary d-inline-flex align-items-center gap-1 shadow-sm">
+          <span>+</span>
+          <span>Emitir orden en esta atención</span>
+        </a>
+      <% } %>
+    </div>
+  </div>
+
+  <!-- Pestañas de navegación (Menú Órdenes) -->
+  <ul class="nav nav-tabs mb-4">
+    <li class="nav-item">
+      <a class="nav-link active fw-semibold" aria-current="page" href="/ordenes">
+        Órdenes diagnósticas
+      </a>
+    </li>
+  </ul>
+
+  <!-- Banner de filtro por atención clínica si aplica -->
+  <% if (atencionVal) { %>
+    <div class="alert alert-info border-0 shadow-sm d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4 p-3 rounded-3">
+      <div class="d-flex align-items-center gap-3">
+        <div class="p-2 rounded-circle bg-info bg-opacity-25 text-info-emphasis d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+          <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2zM9.5 3A1.5 1.5 0 0 1 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5v2z"/>
+          </svg>
+        </div>
+        <div>
+          <div class="fw-bold text-dark fs-6">Filtro activo por atención clínica</div>
+          <div class="small text-secondary">
+            Mostrando órdenes emitidas para la atención <code><%= atencionVal %></code>.
+          </div>
+        </div>
+      </div>
+      <div class="d-flex align-items-center gap-2">
+        <a href="/ordenes" class="btn btn-sm btn-outline-secondary">
+          Ver todas las órdenes
+        </a>
+        <a href="/atenciones/<%= atencionVal %>/ordenes" class="btn btn-sm btn-primary">
+          Gestionar en atención &rarr;
+        </a>
+      </div>
+    </div>
+  <% } %>
+
+  <!-- [10.16] Cinta de totales con 4 contadores por estado (clic filtra) -->
+  <div class="card border-0 shadow-sm rounded-3 mb-4 cinta-totales" data-trace="C10-16">
+    <div class="card-body p-2 p-md-3">
+      <div class="row g-2 text-center align-items-center">
+        <!-- Item 1: Todas las órdenes [10.17, 10.18] -->
+        <div class="col-6 col-md-3">
+          <div class="cinta-item p-2 px-3 rounded-3 border <%= (!estadoVal) ? 'border-primary bg-primary bg-opacity-10 shadow-sm' : 'bg-light' %> d-flex align-items-center justify-content-center gap-2"
+               data-filtro-estado=""
+               role="button"
+               tabindex="0"
+               style="cursor: pointer; transition: all 0.2s ease;">
+            <span class="text-secondary fw-semibold small" data-trace="C10-17">Órdenes:</span>
+            <span class="fw-bold fs-5 text-dark" data-trace="C10-18" id="contadorTotal"><%= totalOrdenes %></span>
+          </div>
+        </div>
+        <!-- Item 2: Pendientes [10.19, 10.20] -->
+        <div class="col-6 col-md-3">
+          <div class="cinta-item p-2 px-3 rounded-3 border <%= (estadoVal === 'PENDIENTE') ? 'border-secondary bg-secondary bg-opacity-10 shadow-sm' : 'bg-light' %> d-flex align-items-center justify-content-center gap-2"
+               data-filtro-estado="PENDIENTE"
+               role="button"
+               tabindex="0"
+               style="cursor: pointer; transition: all 0.2s ease;">
+            <span class="text-secondary fw-semibold small" data-trace="C10-19">Pendientes:</span>
+            <span class="fw-bold fs-5 text-secondary" data-trace="C10-20" id="contadorPendientes"><%= totalPendientes %></span>
+          </div>
+        </div>
+        <!-- Item 3: En proceso [10.21, 10.22] -->
+        <div class="col-6 col-md-3">
+          <div class="cinta-item p-2 px-3 rounded-3 border <%= (estadoVal === 'EN_PROCESO') ? 'border-primary bg-primary bg-opacity-10 shadow-sm' : 'bg-light' %> d-flex align-items-center justify-content-center gap-2"
+               data-filtro-estado="EN_PROCESO"
+               role="button"
+               tabindex="0"
+               style="cursor: pointer; transition: all 0.2s ease;">
+            <span class="text-secondary fw-semibold small" data-trace="C10-21">En proceso:</span>
+            <span class="fw-bold fs-5 text-primary" data-trace="C10-22" id="contadorEnProceso"><%= totalEnProceso %></span>
+          </div>
+        </div>
+        <!-- Item 4: Completadas [10.23, 10.24] -->
+        <div class="col-6 col-md-3">
+          <div class="cinta-item p-2 px-3 rounded-3 border <%= (estadoVal === 'COMPLETADA') ? 'border-success bg-success bg-opacity-10 shadow-sm' : 'bg-light' %> d-flex align-items-center justify-content-center gap-2"
+               data-filtro-estado="COMPLETADA"
+               role="button"
+               tabindex="0"
+               style="cursor: pointer; transition: all 0.2s ease;">
+            <span class="text-secondary fw-semibold small" data-trace="C10-23">Completadas:</span>
+            <span class="fw-bold fs-5 text-success" data-trace="C10-24" id="contadorCompletadas"><%= totalCompletadas %></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- [10.25–10.30] Controles de filtros -->
+  <div class="card border-0 shadow-sm rounded-3 mb-4" data-trace="C7-LISTA-FILTRO">
+    <div class="card-body p-3 p-md-4">
+      <!-- Alerta dinámica Bootstrap para validación de fechas (desde <= hasta, max 92 días) -->
+      <div id="alertaValidacionFechas" class="alert alert-danger alert-dismissible d-none mb-3" role="alert">
+        <div class="d-flex align-items-center gap-2">
+          <svg width="18" height="18" fill="currentColor" class="flex-shrink-0" viewBox="0 0 16 16">
+            <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+          </svg>
+          <span id="textoAlertaValidacion"></span>
+        </div>
+        <button type="button" class="btn-close" aria-label="Cerrar" id="btnCerrarAlerta"></button>
+      </div>
+
+      <form id="formFiltrosOrdenes" action="/ordenes" method="GET" class="row g-3 align-items-end">
+        <input type="hidden" name="page" id="filtroPage" value="<%= paginaActual %>">
+        <% if (atencionVal) { %>
+          <input type="hidden" name="atencion" value="<%= atencionVal %>">
+        <% } %>
+        <% if (pacienteVal) { %>
+          <input type="hidden" name="paciente" value="<%= pacienteVal %>">
+        <% } %>
+
+        <!-- [10.25, 10.26] Rango de fechas (desde y hasta) -->
+        <div class="col-12 col-md-5">
+          <label class="form-label small fw-semibold text-secondary" data-trace="C10-25">Rango de fechas</label>
+          <div class="input-group" data-trace="C10-26" id="contenedorRangoFechas">
+            <span class="input-group-text bg-white small text-muted">Desde</span>
+            <input type="date"
+                   name="desde"
+                   id="inputDesde"
+                   class="form-control"
+                   data-trace="C10-26"
+                   value="<%= desdeVal %>"
+                   required>
+            <span class="input-group-text bg-white small text-muted">Hasta</span>
+            <input type="date"
+                   name="hasta"
+                   id="inputHasta"
+                   class="form-control"
+                   data-trace="C10-26"
+                   value="<%= hastaVal %>"
+                   required>
+          </div>
+        </div>
+
+        <!-- [10.27, 10.28] Tipo -->
+        <div class="col-12 col-sm-6 col-md-3">
+          <label class="form-label small fw-semibold text-secondary" data-trace="C10-27">Tipo</label>
+          <select name="tipo" id="selectTipo" class="form-select" data-trace="C10-28">
+            <option value="" <%= (!tipoVal) ? 'selected' : '' %>>Todos</option>
+            <option value="LABORATORIO" <%= (tipoVal === 'LABORATORIO') ? 'selected' : '' %>>Laboratorio</option>
+            <option value="RADIOLOGIA" <%= (tipoVal === 'RADIOLOGIA') ? 'selected' : '' %>>Radiología</option>
+          </select>
+        </div>
+
+        <!-- [10.29, 10.30] Estado -->
+        <div class="col-12 col-sm-6 col-md-2">
+          <label class="form-label small fw-semibold text-secondary" data-trace="C10-29">Estado</label>
+          <select name="estado" id="selectEstado" class="form-select" data-trace="C10-30">
+            <option value="" <%= (!estadoVal) ? 'selected' : '' %>>Todos</option>
+            <option value="PENDIENTE" <%= (estadoVal === 'PENDIENTE') ? 'selected' : '' %>>PENDIENTE</option>
+            <option value="EN_PROCESO" <%= (estadoVal === 'EN_PROCESO') ? 'selected' : '' %>>EN_PROCESO</option>
+            <option value="COMPLETADA" <%= (estadoVal === 'COMPLETADA') ? 'selected' : '' %>>COMPLETADA</option>
+            <option value="CANCELADA" <%= (estadoVal === 'CANCELADA') ? 'selected' : '' %>>CANCELADA</option>
+          </select>
+        </div>
+
+        <!-- Botón Aplicar / Filtrar [10.30-BTN] -->
+        <div class="col-12 col-md-2 d-flex gap-2">
+          <button type="submit" class="btn btn-primary flex-grow-1 shadow-sm" data-trace="C10-30-BTN" id="btnAplicarFiltros">
+            Aplicar
+          </button>
+          <% if (hayFiltros) { %>
+            <a href="/ordenes" class="btn btn-outline-secondary" id="btnLimpiarFiltros" data-trace="C7-LISTA-BTN-LIMPIAR" title="Limpiar filtros">
+              Limpiar
+            </a>
+          <% } %>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Indicador visual de carga AJAX -->
+  <div id="indicadorCargando" class="d-none text-center my-4 py-3">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Cargando órdenes...</span>
+    </div>
+    <div class="small text-muted mt-2">Consultando órdenes médicas...</div>
+  </div>
+
+  <!-- [10.31] Tabla de órdenes -->
+  <div class="card border-0 shadow-sm rounded-3 overflow-hidden hc-tabla-card hc-resultados-panel <%= (listaOrdenes.length === 0) ? 'd-none' : '' %>" id="contenedorTablaOrdenes">
+    <div class="card-body p-0 hc-tabla-body">
+      <div class="hc-tabla-contenedor">
+        <div class="table-responsive">
+          <table class="table align-middle table-hover mb-0" data-trace="C10-31" id="tablaOrdenes">
+            <thead class="table-light">
+              <tr>
+                <th class="ps-4 py-3 text-secondary text-uppercase small fw-semibold" style="letter-spacing: 0.5px;" data-trace="C10-32">Orden</th>
+                <th class="py-3 text-secondary text-uppercase small fw-semibold" style="letter-spacing: 0.5px;" data-trace="C10-33">Paciente</th>
+                <th class="py-3 text-secondary text-uppercase small fw-semibold" style="letter-spacing: 0.5px;" data-trace="C10-34">Fecha</th>
+                <th class="py-3 text-secondary text-uppercase small fw-semibold" style="letter-spacing: 0.5px;" data-trace="C10-35">Tipo</th>
+                <th class="py-3 text-secondary text-uppercase small fw-semibold" style="letter-spacing: 0.5px;" data-trace="C10-36">Estado orden</th>
+                <th class="py-3 text-secondary text-uppercase small fw-semibold" style="letter-spacing: 0.5px;" data-trace="C10-37">Resultado clínico</th>
+                <th class="pe-4 py-3 text-end text-secondary text-uppercase small fw-semibold" style="letter-spacing: 0.5px;" data-trace="C10-38" data-orderable="false">Acción</th>
+              </tr>
+            </thead>
+        <tbody id="tablaOrdenesBody">
+          <% listaOrdenes.forEach(function(o) { %>
+            <%
+              const fechaTexto = o.fecha_formateada || formatearFechaDDMMYYYY(o.fecha);
+              const nombrePaciente = o.paciente || o.paciente_nombre || '—';
+              const tipoTexto = capitalizarTipo(o.tipo);
+              const resultadoId = o.resultado_id || null;
+              const tieneEnvioPendienteOError = (!resultadoId && o.estado_envio && (o.estado_envio === 'PENDIENTE' || o.estado_envio === 'ERROR' || o.estado_envio === 'REINTENTO'));
+            %>
+            <tr>
+              <!-- Orden [10.32]: código con enlace a /ordenes/:id/imprimir en nueva pestaña -->
+              <td class="ps-4 py-3 text-nowrap">
+                <a href="/ordenes/<%= o.id %>/imprimir"
+                   target="_blank"
+                   class="fw-bold font-monospace text-primary text-decoration-none"
+                   data-trace="C7-LISTA-CODIGO"
+                   title="Imprimir volante oficial <%= o.codigo %>">
+                  <%= o.codigo %>
+                </a>
+              </td>
+
+              <!-- Paciente [10.33]: nombre completo -->
+              <td class="py-3" data-trace="C7-LISTA-PACIENTE">
+                <span class="fw-semibold text-dark"><%= nombrePaciente %></span>
+                <% if (o.tipo_documento && o.numero_documento) { %>
+                  <div class="small text-muted"><%= o.tipo_documento %> <%= o.numero_documento %></div>
+                <% } else if (o.documento) { %>
+                  <div class="small text-muted"><%= o.documento %></div>
+                <% } %>
+              </td>
+
+              <!-- Fecha [10.34]: DD/MM/YYYY -->
+              <td class="py-3 text-nowrap" data-trace="C7-LISTA-FECHA">
+                <span class="text-secondary"><%= fechaTexto %></span>
+              </td>
+
+              <!-- Tipo [10.35]: Capitalizado -->
+              <td class="py-3 text-nowrap" data-trace="C7-LISTA-TIPO">
+                <% if (String(o.tipo).toUpperCase() === 'LABORATORIO') { %>
+                  <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1">
+                    <%= tipoTexto %>
+                  </span>
+                <% } else { %>
+                  <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle px-2 py-1">
+                    <%= tipoTexto %>
+                  </span>
+                <% } %>
+                <%
+                  const procs = (Array.isArray(o.procedimientos) && o.procedimientos.length > 0)
+                    ? o.procedimientos
+                    : ((Array.isArray(o.items) && o.items.length > 0) ? o.items : []);
+                %>
+                <% if (procs.length > 0) { %>
+                  <div class="small text-muted mt-1 text-truncate" data-trace="C7-LISTA-CUPS" style="max-width: 220px;">
+                    <%= procs.map(p => (p.codigo ? p.codigo + ' - ' : '') + (p.descripcion || '')).slice(0, 2).join(', ') %>
+                  </div>
+                <% } %>
+              </td>
+
+              <!-- Estado orden [10.36, 10.39] -->
+              <td class="py-3 text-nowrap" data-trace="C7-LISTA-ESTADO">
+                <% if (o.estado === 'PENDIENTE') { %>
+                  <span class="badge bg-secondary text-white px-2 py-1" data-trace="C10-39">PENDIENTE</span>
+                <% } else if (o.estado === 'EN_PROCESO') { %>
+                  <span class="badge bg-primary text-white px-2 py-1" data-trace="C10-39">EN_PROCESO</span>
+                <% } else if (o.estado === 'COMPLETADA') { %>
+                  <span class="badge bg-success text-white px-2 py-1" data-trace="C10-39">COMPLETADA</span>
+                <% } else if (o.estado === 'CANCELADA') { %>
+                  <span class="badge bg-danger text-white px-2 py-1" data-trace="C10-39">CANCELADA</span>
+                <% } else { %>
+                  <span class="badge bg-secondary text-white px-2 py-1" data-trace="C10-39"><%= o.estado %></span>
+                <% } %>
+              </td>
+
+              <!-- Resultado clínico [10.37, 10.40] -->
+              <td class="py-3 text-nowrap">
+                <% if (resultadoId || o.estado === 'COMPLETADA') { %>
+                  <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1" data-trace="C10-40">REALIZADO</span>
+                <% } else if (o.estado === 'EN_PROCESO') { %>
+                  <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1" data-trace="C10-40">EN TOMA / PROCESO</span>
+                <% } else if (o.estado === 'PENDIENTE') { %>
+                  <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle px-2 py-1" data-trace="C10-40">PENDIENTE</span>
+                <% } else if (o.estado === 'CANCELADA') { %>
+                  <span class="text-muted" data-trace="C10-40">—</span>
+                <% } else { %>
+                  <span class="text-muted" data-trace="C10-40">—</span>
+                <% } %>
+              </td>
+
+              <!-- Acción [10.38, 10.41] -->
+              <td class="pe-4 py-3 text-end text-nowrap">
+                <div class="d-inline-flex align-items-center gap-1">
+                  <% if (resultadoId) { %>
+                    <a href="/resultados/<%= resultadoId %>"
+                       class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1 shadow-sm"
+                       data-trace="C10-41"
+                       title="Ver resultado de examen">
+                      <svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8zM1.173 8a13.133 13.133 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.133 13.133 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5c-2.12 0-3.879-1.168-5.168-2.457A13.134 13.134 0 0 1 1.172 8z"/>
+                        <path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0z"/>
+                      </svg>
+                      <span>Ver resultado</span>
+                    </a>
+                  <% } else if (!resultadoId && (o.estado === 'PENDIENTE' || o.estado === 'EN_PROCESO')) { %>
+                    <a href="/resultados/carga?orden=<%= encodeURIComponent(o.codigo) %>"
+                       class="btn btn-sm btn-outline-success d-inline-flex align-items-center gap-1 shadow-sm"
+                       data-trace="C10-41-DESPACHO"
+                       title="Cargar resultado de examen">
+                      <svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
+                        <path d="M7.646 1.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 2.707V11.5a.5.5 0 0 1-1 0V2.707L5.354 4.854a.5.5 0 1 1-.708-.708l3-3z"/>
+                      </svg>
+                      <span>Cargar resultado</span>
+                    </a>
+                  <% } %>
+
+                  <!-- Botón oficial de impresión -->
+                  <a href="/ordenes/<%= o.id %>/imprimir"
+                     target="_blank"
+                     class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1 shadow-sm"
+                     data-trace="C7-LISTA-BTN-IMPRIMIR"
+                     title="Imprimir volante oficial">
+                    <svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                      <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1"/>
+                      <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1"/>
+                    </svg>
+                    <span>Imprimir</span>
+                  </a>
+
+                  <!-- Enlace a la atención clínica si está asociada -->
+                  <% if (o.atencion_id) { %>
+                    <a href="/atenciones/<%= o.atencion_id %>/ordenes"
+                       class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1 shadow-sm"
+                       data-trace="C7-LISTA-BTN-VER-ATENCION"
+                       title="Ver en la atención clínica">
+                      <svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2zM9.5 3A1.5 1.5 0 0 1 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5v2z"/>
+                      </svg>
+                      <span>Ver atención</span>
+                    </a>
+                  <% } %>
+                </div>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Estado vacío si no hay órdenes -->
+  <div class="card border-0 shadow-sm rounded-3 overflow-hidden hc-tabla-card hc-resultados-panel <%= (listaOrdenes.length > 0) ? 'd-none' : '' %>" id="estadoVacio" data-trace="C7-LISTA-EMPTY">
+    <div class="card-body p-0 hc-tabla-body">
+      <div class="hc-estado-vacio p-5 text-center">
+        <div class="mb-3">
+          <svg width="48" height="48" fill="currentColor" class="text-secondary opacity-50" viewBox="0 0 16 16" aria-hidden="true">
+            <path d="M14 4.5V14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2h5.5zm-3 0A1.5 1.5 0 0 1 9.5 3V1H4a1 1 0 0 0-1 1v12a1 1 0 0 1 1 1h8a1 1 0 0 0 1-1V4.5z"/>
+          </svg>
+        </div>
+        <h3 class="h5 fw-bold text-dark mb-1">No se encontraron órdenes médicas</h3>
+        <p class="text-muted small mb-3">No existen registros que coincidan con el rango de fechas y los filtros seleccionados.</p>
+        <% if (hayFiltros) { %>
+          <div>
+            <a href="/ordenes" class="btn btn-outline-secondary btn-sm shadow-sm">Limpiar filtros de búsqueda</a>
+          </div>
+        <% } %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Paginación interactiva (cuando hay más de 20 registros) -->
+  <div id="contenedorPaginacion" class="mt-4 <%= (totalPaginas <= 1) ? 'd-none' : '' %>">
+    <nav aria-label="Navegación de páginas">
+      <ul class="pagination justify-content-center mb-0" id="listaPaginacion">
+        <li class="page-item <%= (paginaActual <= 1) ? 'disabled' : '' %>" id="paginacionPrev">
+          <a class="page-link" href="#" data-page="<%= paginaActual - 1 %>" aria-label="Anterior">
+            &laquo; Anterior
+          </a>
+        </li>
+        <% for (let p = 1; p <= totalPaginas; p++) { %>
+          <li class="page-item <%= (p === paginaActual) ? 'active' : '' %>" data-page-item="<%= p %>">
+            <a class="page-link" href="#" data-page="<%= p %>"><%= p %></a>
+          </li>
+        <% } %>
+        <li class="page-item <%= (paginaActual >= totalPaginas) ? 'disabled' : '' %>" id="paginacionNext">
+          <a class="page-link" href="#" data-page="<%= paginaActual + 1 %>" aria-label="Siguiente">
+            Siguiente &raquo;
+          </a>
+        </li>
+      </ul>
+    </nav>
+  </div>
+</div>
+
+<%- include('../partials/_fin', { scripts: ['/js/ordenes_listado.js'] }) %>

@@ -1,0 +1,247 @@
+<%- include('../partials/_inicio', { titulo: typeof titulo !== 'undefined' ? titulo : 'Bitácora de auditoría forense y reportes de control' }) %>
+
+<div class="container-fluid px-0">
+  <!-- Fila superior: Encabezado [26.15] -->
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-3">
+    <div>
+      <h1 class="h3 fw-bold text-dark mb-1" data-trace="C26-15">Bitácora de auditoría forense y reportes de control</h1>
+      <p class="text-muted small mb-0">Trazabilidad inmutable de eventos clínicos, accesos confidenciales y operaciones del sistema.</p>
+    </div>
+  </div>
+
+  <!-- Panel Superior: Tarjetas "Reporte de control" [26.37] Full Width -->
+  <div class="card shadow-sm border-0 mb-4" data-trace="C26-37" id="panelReporteControl">
+    <div class="card-header py-3 border-bottom">
+      <h2 class="h6 fw-bold text-white mb-0 d-flex align-items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-graph-up text-info" viewBox="0 0 16 16">
+          <path fill-rule="evenodd" d="M0 0h1v15h15v1H0zm14.817 3.113a.5.5 0 0 1 .07.704l-4.5 5.5a.5.5 0 0 1-.74.037L7.06 6.767l-3.656 5.027a.5.5 0 0 1-.808-.588l4-5.5a.5.5 0 0 1 .758-.06l2.609 2.61 4.15-5.073a.5.5 0 0 1 .704-.07"/>
+        </svg>
+        <span>Reporte de control</span>
+      </h2>
+    </div>
+    <div class="card-body p-3">
+      <!-- 4 métricas en fila -->
+      <div class="row g-3 mb-3">
+        <!-- Métrica: Eventos en el periodo [26.40] & [26.38] -->
+        <div class="col-12 col-sm-6 col-xl-3">
+          <div class="p-3 rounded-3 bg-light border border-light-subtle h-100">
+            <div class="text-secondary small fw-semibold text-uppercase" style="letter-spacing: 0.04em;" data-trace="C26-40">Eventos en el periodo</div>
+            <div class="h3 fw-bold text-dark mb-0 mt-1 font-monospace" data-trace="C26-38" id="metricaEventos">0</div>
+          </div>
+        </div>
+
+        <!-- Métrica: Accesos a HC [26.41] & [26.39] -->
+        <div class="col-12 col-sm-6 col-xl-3">
+          <div class="p-3 rounded-3 bg-light border border-light-subtle h-100">
+            <div class="text-secondary small fw-semibold text-uppercase" style="letter-spacing: 0.04em;" data-trace="C26-41">Accesos a HC</div>
+            <div class="h3 fw-bold text-primary mb-0 mt-1 font-monospace" data-trace="C26-39" id="metricaAccesosHC">0</div>
+          </div>
+        </div>
+
+        <!-- Métrica: Consultas confidenciales [26.42] & [26.43] -->
+        <div class="col-12 col-sm-6 col-xl-3">
+          <div class="p-3 rounded-3 bg-light border border-light-subtle h-100">
+            <div class="text-secondary small fw-semibold text-uppercase" style="letter-spacing: 0.04em;" data-trace="C26-42">Consultas confidenciales</div>
+            <div class="h3 fw-bold text-warning mb-0 mt-1 font-monospace" data-trace="C26-43" id="metricaConfidenciales">0</div>
+          </div>
+        </div>
+
+        <!-- Métrica: Usuarios distintos [26.44] & [26.45] -->
+        <div class="col-12 col-sm-6 col-xl-3">
+          <div class="p-3 rounded-3 bg-light border border-light-subtle h-100">
+            <div class="text-secondary small fw-semibold text-uppercase" style="letter-spacing: 0.04em;" data-trace="C26-44">Usuarios distintos</div>
+            <div class="h3 fw-bold text-success mb-0 mt-1 font-monospace" data-trace="C26-45" id="metricaUsuarios">0</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2 notas de seguridad e inmutabilidad abajo en fila de dos columnas -->
+      <div class="row g-3">
+        <!-- [26.46] Nota informativa azul -->
+        <div class="col-12 col-lg-6">
+          <div class="alert alert-info border-info-subtle d-flex align-items-start gap-2 p-2 small mb-0 h-100" data-trace="C26-46" role="note">
+            <span class="fs-6 lh-1">ℹ</span>
+            <span>La tabla auditoria es de solo inserción: trg_auditoria_inmutable bloquea UPDATE y DELETE</span>
+          </div>
+        </div>
+
+        <!-- [26.47] Alerta de seguridad ámbar -->
+        <div class="col-12 col-lg-6">
+          <div class="alert alert-warning border-warning-subtle d-flex align-items-start gap-2 p-2 small mb-0 h-100" data-trace="C26-47" role="alert">
+            <span class="fs-6 lh-1">⚠</span>
+            <span>Falla segura: si el evento de auditoría no se puede escribir, la operación sensible se revierte</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fila filtros: Barra de filtros [26.22] -->
+  <div class="card shadow-sm border-0 mb-4" data-trace="C26-22" id="barraFiltrosAuditoria">
+    <div class="card-body p-3">
+      <div class="row g-3 align-items-end">
+        <!-- [26.16] Label Usuario & [26.17] Select Usuario -->
+        <div class="col-12 col-sm-6 col-md-4 col-xl-2">
+          <label for="filtroUsuario" class="form-label fw-semibold text-secondary small mb-1" data-trace="C26-16">Usuario</label>
+          <select id="filtroUsuario" class="form-select form-select-sm" data-trace="C26-17">
+            <option value="">Todos</option>
+            <% if (typeof usuarios !== 'undefined' && usuarios && usuarios.length) { %>
+              <% usuarios.forEach(u => { %>
+                <option value="<%= u.id %>"><%= u.nombre || u.email %></option>
+              <% }) %>
+            <% } %>
+          </select>
+        </div>
+
+        <!-- [26.18] Label Acción & [26.19] Select Acción -->
+        <div class="col-12 col-sm-6 col-md-4 col-xl-2">
+          <label for="filtroAccion" class="form-label fw-semibold text-secondary small mb-1" data-trace="C26-18">Acción</label>
+          <select id="filtroAccion" class="form-select form-select-sm" data-trace="C26-19">
+            <option value="">Todas</option>
+            <option value="INSERT">INSERT</option>
+            <option value="UPDATE">UPDATE</option>
+            <option value="DELETE">DELETE</option>
+            <option value="SELECT_CONFIDENTIAL">SELECT_CONFIDENTIAL</option>
+            <option value="LOGIN">LOGIN</option>
+            <option value="LOGIN_FALLIDO">LOGIN_FALLIDO</option>
+            <option value="LOGOUT">LOGOUT</option>
+            <option value="ACCESO_DENEGADO">ACCESO_DENEGADO</option>
+          </select>
+        </div>
+
+        <!-- [26.20] Label Tabla afectada & [26.21] Select Tabla afectada -->
+        <div class="col-12 col-sm-6 col-md-4 col-xl-2">
+          <label for="filtroTabla" class="form-label fw-semibold text-secondary small mb-1" data-trace="C26-20">Tabla afectada</label>
+          <select id="filtroTabla" class="form-select form-select-sm" data-trace="C26-21">
+            <option value="">Todas</option>
+            <option value="atenciones">atenciones</option>
+            <option value="citas">citas</option>
+            <option value="historias_clinicas">historias_clinicas</option>
+            <option value="signos_vitales">signos_vitales</option>
+            <option value="antecedentes">antecedentes</option>
+            <option value="diagnosticos_atencion">diagnosticos_atencion</option>
+            <option value="ordenes_diagnosticas">ordenes_diagnosticas</option>
+            <option value="resultados_diagnosticos">resultados_diagnosticos</option>
+            <option value="adendas">adendas</option>
+            <option value="usuarios">usuarios</option>
+            <option value="pacientes">pacientes</option>
+            <option value="contactos_emergencia">contactos_emergencia</option>
+            <option value="paciente_aseguradora">paciente_aseguradora</option>
+            <option value="consentimientos_medicos">consentimientos_medicos</option>
+            <option value="evoluciones_medicas">evoluciones_medicas</option>
+            <option value="procedimientos_atencion">procedimientos_atencion</option>
+            <option value="notas_alta">notas_alta</option>
+            <option value="detalle_orden">detalle_orden</option>
+            <option value="auditoria">auditoria</option>
+          </select>
+        </div>
+
+        <!-- [26.23] Label Rango de fechas & [26.24] Inputs selector de rango de fechas -->
+        <div class="col-12 col-sm-6 col-md-6 col-xl-3">
+          <label class="form-label fw-semibold text-secondary small mb-1" data-trace="C26-23">Rango de fechas</label>
+          <div class="input-group input-group-sm" data-trace="C26-24" id="contenedorRangoFechas">
+            <input type="date" id="filtroDesde" class="form-control" data-trace="C26-24" aria-label="Fecha desde" title="Fecha inicio">
+            <span class="input-group-text bg-light text-muted">a</span>
+            <input type="date" id="filtroHasta" class="form-control" data-trace="C26-24" aria-label="Fecha hasta" title="Fecha fin">
+          </div>
+        </div>
+
+        <!-- [26.25] Label Código de registro & [26.26] Input Código de registro -->
+        <div class="col-12 col-sm-6 col-md-4 col-xl-2">
+          <label for="filtroRegistro" class="form-label fw-semibold text-secondary small mb-1" data-trace="C26-25">Código de registro</label>
+          <input type="text" id="filtroRegistro" class="form-control form-control-sm font-monospace" placeholder="Buscar UUID..." data-trace="C26-26" autocomplete="off">
+        </div>
+
+        <!-- [26.27] Botón Exportar CSV -->
+        <div class="col-12 col-sm-6 col-md-2 col-xl-1 d-flex align-items-end">
+          <button type="button" id="btnExportarCSV" class="btn btn-sm btn-outline-secondary w-100 d-flex align-items-center justify-content-center gap-1 shadow-sm" data-trace="C26-27" title="Exportar bitácora a archivo CSV">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-file-earmark-spreadsheet" viewBox="0 0 16 16">
+              <path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2M9.5 3A1.5 1.5 0 0 0 11 4.5h2V9H3V2a1 1 0 0 1 1-1h5.5zM3 12v-2h2v2zm0 1h2v2H4a1 1 0 0 1-1-1zm3 2v-2h3v2zm4 0v-2h3v1a1 1 0 0 1-1 1zm3-3h-3v-2h3zm-7 0v-2h3v2z"/>
+            </svg>
+            <span class="d-none d-xl-inline">Exportar CSV</span>
+            <span class="d-xl-none">CSV</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cuerpo principal: Tabla de auditoría en ancho completo [26.28] -->
+  <div class="card shadow-sm border-0 mb-4 hc-tabla-card">
+    <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+      <div class="d-flex align-items-center gap-2">
+        <span class="fw-bold text-dark">Registros de bitácora</span>
+        <span class="badge bg-secondary rounded-pill font-monospace" id="badgeTotalRegistros">0</span>
+      </div>
+      <div id="conteoRegistros" class="text-muted small">Cargando eventos...</div>
+    </div>
+    <div class="card-body p-0 hc-tabla-body">
+      <div class="hc-tabla-contenedor">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0" id="tablaAuditoria" data-trace="C26-28">
+            <thead class="table-light text-secondary small fw-semibold" data-trace="C26-29">
+              <tr>
+                <th scope="col" style="min-width: 155px;">Fecha y hora</th>
+                <th scope="col" style="min-width: 110px;">Usuario</th>
+                <th scope="col" style="min-width: 120px;">IP / equipo</th>
+                <th scope="col" style="min-width: 140px;">Acción</th>
+                <th scope="col" style="min-width: 150px;">Tabla</th>
+                <th scope="col" style="min-width: 220px;">Detalle</th>
+              </tr>
+            </thead>
+            <tbody id="tbodyAuditoria" class="font-sans-serif small">
+              <!-- Renderizado dinámico vía auditoria.js -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Estado vacío -->
+        <div id="sinRegistros" class="hc-estado-vacio text-center py-5" style="display: none;">
+          <div class="text-muted mb-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" fill="currentColor" class="bi bi-shield-x text-secondary opacity-50" viewBox="0 0 16 16">
+              <path d="M5.338 1.59a61 61 0 0 0-2.837.856.48.48 0 0 0-.328.39c-.554 4.157.726 7.19 2.253 9.188a10.7 10.7 0 0 0 2.287 2.233c.346.244.652.42.893.533q.18.085.293.134a.47.47 0 0 0 .197.042c.07 0 .138-.014.197-.042a4 4 0 0 0 .293-.134 11 11 0 0 0 .893-.533 10.7 10.7 0 0 0 2.287-2.233c1.527-1.997 2.807-5.031 2.253-9.188a.48.48 0 0 0-.328-.39c-.651-.213-1.75-.56-2.837-.855C9.552 1.29 8.531 1.067 8 1.067c-.53 0-1.552.223-2.662.524zM5.072.56C6.157.265 7.31 0 8 0s1.843.265 2.928.56c1.11.3 2.229.655 2.887.87a1.54 1.54 0 0 1 1.044 1.262c.596 4.477-.787 7.795-2.465 9.99a11.8 11.8 0 0 1-2.517 2.453 7 7 0 0 1-1.048.625c-.28.132-.581.24-.829.24s-.548-.108-.829-.24a7 7 0 0 1-1.048-.625 11.8 11.8 0 0 1-2.517-2.453C1.928 10.487.545 7.169 1.141 2.692A1.54 1.54 0 0 1 2.185 1.43 63 63 0 0 1 5.072.56"/>
+              <path d="M6.146 5.146a.5.5 0 0 1 .708 0L8 6.293l1.146-1.147a.5.5 0 1 1 .708.708L8.707 7l1.147 1.146a.5.5 0 0 1-.708.708L8 7.707l-1.146 1.147a.5.5 0 0 1-.708-.708L7.293 7 6.146 5.854a.5.5 0 0 1 0-.708"/>
+            </svg>
+          </div>
+          <p class="text-secondary mb-0">No se encontraron eventos de auditoría para los filtros seleccionados.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Paginación Keyset: Cargar más registros -->
+    <div class="card-footer bg-white border-top py-3 text-center" id="contenedorPaginacion">
+      <button type="button" class="btn btn-outline-primary btn-sm px-4 fw-semibold shadow-sm" id="btnCargarMas" style="display: none;">
+        Cargar más registros
+      </button>
+      <div id="estadoCarga" class="text-muted small py-1" style="display: none;">
+        <span class="spinner-border spinner-border-sm me-2 text-primary" role="status" aria-hidden="true"></span>Consultando bitácora forense...
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Detalle Forense (Antes / Después) -->
+<div class="modal fade" id="modalDetalleAuditoria" tabindex="-1" aria-labelledby="modalDetalleAuditoriaLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header bg-light py-2">
+        <div class="d-flex align-items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" class="bi bi-shield-check text-primary" viewBox="0 0 16 16">
+            <path d="M5.338 1.59a61 61 0 0 0-2.837.856.48.48 0 0 0-.328.39c-.554 4.157.726 7.19 2.253 9.188a10.7 10.7 0 0 0 2.287 2.233c.346.244.652.42.893.533q.18.085.293.134a.47.47 0 0 0 .197.042c.07 0 .138-.014.197-.042a4 4 0 0 0 .293-.134 11 11 0 0 0 .893-.533 10.7 10.7 0 0 0 2.287-2.233c1.527-1.997 2.807-5.031 2.253-9.188a.48.48 0 0 0-.328-.39c-.651-.213-1.75-.56-2.837-.855C9.552 1.29 8.531 1.067 8 1.067c-.53 0-1.552.223-2.662.524zM5.072.56C6.157.265 7.31 0 8 0s1.843.265 2.928.56c1.11.3 2.229.655 2.887.87a1.54 1.54 0 0 1 1.044 1.262c.596 4.477-.787 7.795-2.465 9.99a11.8 11.8 0 0 1-2.517 2.453 7 7 0 0 1-1.048.625c-.28.132-.581.24-.829.24s-.548-.108-.829-.24a7 7 0 0 1-1.048-.625 11.8 11.8 0 0 1-2.517-2.453C1.928 10.487.545 7.169 1.141 2.692A1.54 1.54 0 0 1 2.185 1.43 63 63 0 0 1 5.072.56"/>
+            <path d="M10.854 5.146a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 1 1 .708-.708L7.5 7.793l2.646-2.647a.5.5 0 0 1 .708 0"/>
+          </svg>
+          <h5 class="modal-title h6 fw-bold text-dark mb-0" id="modalDetalleAuditoriaLabel">Detalle forense de auditoría</h5>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body p-3" id="modalDetalleAuditoriaContenido">
+        <!-- Contenido estructurado inyectado vía auditoria.js -->
+      </div>
+      <div class="modal-footer py-2 bg-light">
+        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/_fin', { scripts: ['/js/auditoria.js'] }) %>

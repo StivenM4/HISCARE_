@@ -1,0 +1,173 @@
+<%- include('../partials/_inicio', { titulo: 'Inicio' }) %>
+<%
+  let jornadaTextoRender = '';
+  if (typeof fechaHoy !== 'undefined' && fechaHoy) {
+    const dias = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+    const fPartes = fechaHoy.split('-');
+    const dObj = new Date(parseInt(fPartes[0], 10), parseInt(fPartes[1], 10) - 1, parseInt(fPartes[2], 10));
+    const dNombre = dias[dObj.getDay()];
+    jornadaTextoRender = `Jornada del ${dNombre} ${fPartes[2]}/${fPartes[1]}/${fPartes[0]}`;
+  } else if (typeof jornadaTexto !== 'undefined' && jornadaTexto) {
+    jornadaTextoRender = jornadaTexto;
+  }
+
+  const rolActual = (typeof usuario !== 'undefined' && usuario && usuario.rol) ? String(usuario.rol).toUpperCase() : '';
+  const matrizPermisosFallback = {
+    agenda: { MEDICO: ['L', 'E'], RECEPCIONISTA: ['L', 'E'], ENFERMERO: ['L', 'E'], ADMINISTRADOR: ['L', 'E'] },
+    pacientes: { RECEPCIONISTA: ['L', 'E'], MEDICO: ['L'], ENFERMERO: ['L'], ADMINISTRADOR: ['L', 'E'] },
+    atenciones: { MEDICO: ['L', 'E'], ENFERMERO: ['L', 'E'], ADMINISTRADOR: ['L', 'E'] },
+    ordenes: { MEDICO: ['L', 'E'], RECEPCIONISTA: ['L'], ENFERMERO: ['L'], ADMINISTRADOR: ['L', 'E'] },
+    resultados: { MEDICO: ['L', 'E'], ENFERMERO: ['L', 'E'], AUDITOR: ['L'], ADMINISTRADOR: ['L', 'E'] },
+    auditoria: { AUDITOR: ['L', 'E'], ADMINISTRADOR: ['L', 'E'] },
+    admin: { ADMINISTRADOR: ['L', 'E'] }
+  };
+  const puedeAccesoFallback = (rol, modulo, accion) => {
+    if (!rol) return false;
+    if (rol === 'ADMINISTRADOR') return true;
+    const mod = matrizPermisosFallback[modulo];
+    if (!mod) return false;
+    return Array.isArray(mod[rol]) && mod[rol].includes(accion);
+  };
+  const puedeVerAgendaDashboard = rolActual ? puedeAccesoFallback(rolActual, 'agenda', 'L') : false;
+
+  const formatearEstadoCitaSSR = (estado) => {
+    if (estado === 'EN_SALA') return 'En sala de espera';
+    if (estado === 'NO_ASISTIO') return 'No asistió';
+    return estado || '';
+  };
+%>
+<!-- Dashboard general de la jornada -->
+<div class="container-fluid px-0" id="dashboardInicio" data-fecha-hoy="<%= typeof fechaHoy !== 'undefined' ? fechaHoy : '' %>">
+  <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+    <h1 class="h3 fw-bold text-dark mb-0" data-trace="C2-16" id="tituloJornada">
+      Inicio · <%= jornadaTextoRender %>
+    </h1>
+    <div class="d-flex align-items-center gap-3">
+      <form id="formFiltroFechaDashboard" class="d-flex align-items-center gap-2" method="GET" action="/inicio">
+        <label for="inputFechaDashboard" class="form-label small text-muted mb-0 visually-hidden">Fecha de la jornada:</label>
+        <input type="date" id="inputFechaDashboard" name="fecha" value="<%= typeof fechaHoy !== 'undefined' ? fechaHoy : '' %>" class="form-control form-control-sm" style="max-width: 160px;" aria-label="Seleccionar fecha de la jornada">
+        <button type="submit" class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1" id="btnFiltrarFechaDashboard" title="Consultar fecha">
+          <span>Filtrar</span>
+        </button>
+      </form>
+      <span class="badge bg-light text-dark border px-3 py-2 fs-6">
+        Rol: <strong><%= (typeof usuario !== 'undefined' && usuario) ? usuario.rol : '' %></strong>
+      </span>
+    </div>
+  </div>
+
+  <!-- Indicadores KPI [2.17–2.24] -->
+  <div class="row g-3 mb-4">
+    <div class="col-12 col-sm-6 col-xl-3">
+      <div class="card kpi-card shadow-sm border-0 h-100" data-trace="C2-17">
+        <div class="card-body">
+          <div class="text-muted small fw-semibold text-uppercase">Citas hoy</div>
+          <div class="h2 fw-bold text-primary mb-0 mt-2" id="kpiCitasHoy" data-trace="C2-18">
+            <%= (typeof metricas !== 'undefined' && metricas.citasHoy !== undefined) ? metricas.citasHoy : 0 %>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-sm-6 col-xl-3">
+      <div class="card kpi-card shadow-sm border-0 h-100" data-trace="C2-19">
+        <div class="card-body">
+          <div class="text-muted small fw-semibold text-uppercase">En sala de espera</div>
+          <div class="h2 fw-bold text-warning mb-0 mt-2" id="kpiEnSala" data-trace="C2-20">
+            <%= (typeof metricas !== 'undefined' && metricas.enSala !== undefined) ? metricas.enSala : 0 %>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-sm-6 col-xl-3">
+      <div class="card kpi-card shadow-sm border-0 h-100" data-trace="C2-21">
+        <div class="card-body">
+          <div class="text-muted small fw-semibold text-uppercase">Órdenes pendientes</div>
+          <div class="h2 fw-bold text-info mb-0 mt-2" id="kpiOrdenesPendientes" data-trace="C2-22">
+            <%= (typeof metricas !== 'undefined' && metricas.ordenesPendientes !== undefined) ? metricas.ordenesPendientes : 0 %>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-12 col-sm-6 col-xl-3">
+      <div class="card kpi-card shadow-sm border-0 h-100" data-trace="C2-23">
+        <div class="card-body">
+          <div class="text-muted small fw-semibold text-uppercase text-danger">Alertas no leídas</div>
+          <div class="h2 fw-bold text-danger mb-0 mt-2" id="kpiAlertas" data-trace="C2-24">
+            <%= (typeof metricas !== 'undefined' && metricas.alertas !== undefined) ? metricas.alertas : 0 %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <% if (puedeVerAgendaDashboard) { %>
+  <!-- Tabla de citas de la jornada [2.25–2.30] -->
+  <div class="card shadow-sm border-0 mb-4 hc-tabla-card" data-trace="C2-25">
+    <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+      <h2 class="h5 fw-bold mb-0">Citas programadas para la fecha</h2>
+      <div class="d-flex align-items-center gap-2">
+        <span class="badge bg-light text-secondary border" id="badgeTotalCitas"><%= (typeof citas !== 'undefined' && citas) ? citas.length : 0 %> citas</span>
+        <a href="/agenda<%= (typeof fechaHoy !== 'undefined' && fechaHoy) ? ('?fecha=' + encodeURIComponent(fechaHoy)) : '' %>" class="btn btn-sm btn-outline-primary" data-trace="C2-30">Ver agenda completa</a>
+      </div>
+    </div>
+    <div class="card-body p-0 hc-tabla-body hc-tabla-body--compact">
+      <div class="hc-tabla-contenedor">
+        <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0" id="tablaCitasDashboard">
+          <thead class="table-light">
+            <tr>
+              <th scope="col" style="width: 100px;" data-trace="C2-26">Hora</th>
+              <th scope="col" data-trace="C2-27">Paciente</th>
+              <th scope="col" data-trace="C2-28">Profesional</th>
+              <th scope="col" style="width: 140px;" data-trace="C2-29">Estado</th>
+            </tr>
+          </thead>
+          <tbody id="tbodyCitasDashboard">
+            <% if (typeof citas !== 'undefined' && citas.length > 0) { %>
+              <% citas.forEach(function(c) { %>
+                <% const estadoClase = (c.estado || '').toLowerCase().replace(/_/g, '-'); %>
+                <tr class="fila-cita clickable-row"
+                    data-cita="<%= c.id || c.cita_id %>"
+                    data-cita-id="<%= c.id || c.cita_id %>"
+                    data-medico-id="<%= c.medico_id || '' %>"
+                    data-fecha="<%= typeof fechaHoy !== 'undefined' ? fechaHoy : '' %>"
+                    style="cursor: pointer;">
+                  <td class="fw-semibold"><%= c.hora %></td>
+                  <td><%= c.paciente %></td>
+                  <td><%= c.medico %></td>
+                  <td>
+                    <span class="badge estado-<%= c.estado %> badge-estado-<%= estadoClase %> px-2 py-1">
+                      <%= formatearEstadoCitaSSR(c.estado) %>
+                    </span>
+                  </td>
+                </tr>
+              <% }); %>
+            <% } else { %>
+              <tr id="filaSinCitas">
+                <td colspan="4" class="text-center text-muted py-4">
+                  No hay citas registradas para la jornada de hoy.
+                </td>
+              </tr>
+            <% } %>
+          </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  <% } else { %>
+  <div class="card shadow-sm border-0 mb-4" id="panelAgendaSinPermiso">
+    <div class="card-body py-4 d-flex align-items-center gap-3 text-muted">
+      <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" class="flex-shrink-0 text-info">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+      </svg>
+      <div>
+        <h2 class="h6 fw-bold text-dark mb-1">Agenda clínica no habilitada para este perfil</h2>
+        <p class="small mb-0">Su perfil de auditoría no incluye acceso a la agenda de citas. Puede ir al <a href="/dashboard">panel de accesos rápidos</a> o usar el menú lateral para consultar resultados y registros de auditoría.</p>
+      </div>
+    </div>
+  </div>
+  <% } %>
+</div>
+
+<%- include('../partials/_fin', { scripts: ['/js/dashboard.js'] }) %>

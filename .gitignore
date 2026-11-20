@@ -1,0 +1,36 @@
+# Dependencias Node.js
+node_modules/
+
+# Variables de entorno locales (no subir credenciales a GitHub)
+.env
+.env.*
+!.env.example
+
+# Archivos adjuntos clínicos y generados durante pruebas
+uploads/resultados/*
+!uploads/resultados/.gitkeep
+
+# Carpetas de trabajo local, reportes y agentes
+reports/
+scratch/
+.agents/
+scripts/
+tmp_*/
+
+# Logs y archivos temporales
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDEs y editores
+.vscode/
+.idea/
+*.swp
+*.swo

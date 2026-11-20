@@ -1,0 +1,367 @@
+<%- include('../partials/_inicio', { titulo: 'Seguimiento de despacho a sistemas externos', figuraTrace: 'C23' }) %>
+
+<%
+  const usrSesion = (typeof usuario !== 'undefined' && usuario) ? usuario : null;
+  const esAdmin = Boolean(usrSesion && usrSesion.rol === 'ADMINISTRADOR');
+
+  const filtroEstadoVal = (typeof filtroEstado !== 'undefined' && filtroEstado) ? filtroEstado : '';
+  const filtroOrdenVal = (typeof filtroOrden !== 'undefined' && filtroOrden) ? filtroOrden : '';
+
+  const listaIntegraciones = (typeof integraciones !== 'undefined' && Array.isArray(integraciones))
+    ? integraciones
+    : ((typeof filas !== 'undefined' && Array.isArray(filas)) ? filas : []);
+
+  const resumenObj = (typeof resumen !== 'undefined' && resumen) ? resumen : {
+    PENDIENTE: 0,
+    REINTENTO: 0,
+    ERROR: 0,
+    ENVIADO: 0
+  };
+
+  function abreviarDespacho(id) {
+    if (!id) return '—';
+    const s = String(id).replace(/-/g, '');
+    if (s.length < 8) return `dsp-${s}`;
+    return `dsp-${s.slice(0, 4)}...${s.slice(-2)}`;
+  }
+
+  function formatearFecha(f) {
+    if (!f) return 'Pendiente de despacho';
+    try {
+      const d = new Date(f);
+      if (isNaN(d.getTime())) return String(f);
+      const pad = (n) => String(n).padStart(2, '0');
+      return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    } catch (e) {
+      return String(f);
+    }
+  }
+%>
+
+<div class="container-fluid px-0" id="contenedorIntegraciones" data-usuario-rol="<%= usrSesion ? usrSesion.rol : '' %>" data-es-admin="<%= esAdmin ? 'true' : 'false' %>">
+  <!-- Pestañas de navegación arriba (Menú Órdenes) -->
+  <ul class="nav nav-tabs mb-4">
+    <li class="nav-item">
+      <a class="nav-link text-secondary" href="/ordenes">
+        Órdenes diagnósticas
+      </a>
+    </li>
+    <li class="nav-item">
+      <a class="nav-link active fw-semibold" aria-current="page" href="/ordenes/integraciones">
+        Seguimiento e Integraciones
+      </a>
+    </li>
+  </ul>
+
+  <!-- Encabezado de la pantalla [23.15] -->
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+    <div>
+      <h1 class="h3 fw-bold text-dark mb-1" data-trace="C23-15">Seguimiento de despacho a sistemas externos</h1>
+      <p class="text-muted small mb-0">Control de despacho de órdenes a sistemas de apoyo diagnóstico (LIS / RIS), monitor de reintentos e interoperabilidad.</p>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+      <button type="button" class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-1 shadow-sm" id="btnRefrescar" title="Actualizar datos">
+        <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+        </svg>
+        <span>Refrescar</span>
+      </button>
+      <a href="/ordenes" class="btn btn-outline-primary btn-sm d-inline-flex align-items-center gap-1 shadow-sm">
+        <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+        </svg>
+        <span>Volver a Órdenes</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- [23.22] Cinta/indicadores por estado de envío -->
+  <div class="row g-3 mb-4" data-trace="C23-22" id="cintaIndicadores">
+    <!-- Card 1: Pendientes [23.16, 23.17] -->
+    <div class="col-12 col-sm-6 col-xl-3">
+      <div class="card h-100 border-0 shadow-sm rounded-3 card-filtro-estado cursor-pointer" data-filtro="PENDIENTE" style="border-left: 4px solid #0284c7 !important; transition: all 0.2s ease;">
+        <div class="card-body p-3 d-flex align-items-center justify-content-between">
+          <div>
+            <span class="text-uppercase text-muted fw-semibold small d-block" data-trace="C23-16">Pendientes</span>
+            <div class="h3 fw-bold text-dark mb-0 mt-1" id="cntPendientes" data-trace="C23-17"><%= resumenObj.PENDIENTE || 0 %></div>
+          </div>
+          <div class="rounded-3 p-2 bg-primary bg-opacity-10 text-primary">
+            <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 2: En reintento [23.18, 23.19] -->
+    <div class="col-12 col-sm-6 col-xl-3">
+      <div class="card h-100 border-0 shadow-sm rounded-3 card-filtro-estado cursor-pointer" data-filtro="REINTENTO" style="border-left: 4px solid #f59e0b !important; transition: all 0.2s ease;">
+        <div class="card-body p-3 d-flex align-items-center justify-content-between">
+          <div>
+            <span class="text-uppercase text-muted fw-semibold small d-block" data-trace="C23-18">En reintento</span>
+            <div class="h3 fw-bold text-dark mb-0 mt-1" id="cntReintentos" data-trace="C23-19"><%= resumenObj.REINTENTO || 0 %></div>
+          </div>
+          <div class="rounded-3 p-2 bg-warning bg-opacity-10 text-warning">
+            <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 3: Error / rechazo [23.20, 23.21] -->
+    <div class="col-12 col-sm-6 col-xl-3">
+      <div class="card h-100 border-0 shadow-sm rounded-3 card-filtro-estado cursor-pointer" data-filtro="ERROR" style="border-left: 4px solid #ef4444 !important; transition: all 0.2s ease;">
+        <div class="card-body p-3 d-flex align-items-center justify-content-between">
+          <div>
+            <span class="text-uppercase text-muted fw-semibold small d-block" data-trace="C23-20">Error / rechazo</span>
+            <div class="h3 fw-bold text-dark mb-0 mt-1" id="cntErrores" data-trace="C23-21"><%= resumenObj.ERROR || 0 %></div>
+          </div>
+          <div class="rounded-3 p-2 bg-danger bg-opacity-10 text-danger">
+            <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 4: Enviadas y recibidas [23.23, 23.24] -->
+    <div class="col-12 col-sm-6 col-xl-3">
+      <div class="card h-100 border-0 shadow-sm rounded-3 card-filtro-estado cursor-pointer" data-filtro="ENVIADO" style="border-left: 4px solid #10b981 !important; transition: all 0.2s ease;">
+        <div class="card-body p-3 d-flex align-items-center justify-content-between">
+          <div>
+            <span class="text-uppercase text-muted fw-semibold small d-block" data-trace="C23-23">Enviadas y recibidas</span>
+            <div class="h3 fw-bold text-dark mb-0 mt-1" id="cntEnviadas" data-trace="C23-24"><%= resumenObj.ENVIADO || 0 %></div>
+          </div>
+          <div class="rounded-3 p-2 bg-success bg-opacity-10 text-success">
+            <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Barra de estado de filtro activo si aplica -->
+  <div id="barraFiltroActivo" class="alert alert-light border shadow-sm d-none align-items-center justify-content-between py-2 px-3 mb-4 rounded-3">
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge bg-secondary">Filtro</span>
+      <span class="small" id="textoFiltroActivo">Mostrando todos los despachos</span>
+    </div>
+    <button type="button" class="btn btn-sm btn-link text-decoration-none p-0 text-muted" id="btnLimpiarFiltro">Quitar filtro</button>
+  </div>
+
+  <!-- Layout de 2 columnas -->
+  <div class="row g-4">
+    <!-- Columna izquierda: Tabla de despachos (col-xl-7 o col-lg-7) -->
+    <div class="col-12 col-xl-7 col-lg-7">
+      <div class="card border-0 shadow-sm rounded-3 overflow-hidden hc-tabla-card">
+        <div class="card-header bg-white py-3 border-bottom d-flex align-items-center justify-content-between">
+          <div class="d-flex align-items-center gap-2">
+            <h2 class="h6 fw-bold mb-0 text-dark">Despachos registrados</h2>
+            <span class="badge bg-light text-muted border" id="badgeTotalFilas"><%= listaIntegraciones.length %></span>
+          </div>
+          <div class="small text-muted" id="spinnerCarga" style="display: none;">
+            <span class="spinner-border spinner-border-sm text-primary me-1" role="status"></span>
+            <span>Cargando...</span>
+          </div>
+        </div>
+
+        <div class="card-body p-0 hc-tabla-body">
+          <div class="hc-tabla-contenedor">
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0" id="tablaIntegraciones">
+                <thead class="table-light">
+                  <tr>
+                    <th scope="col" class="py-3 ps-3" data-trace="C23-26">Orden</th>
+                    <th scope="col" class="py-3" data-trace="C23-27">Paciente</th>
+                    <th scope="col" class="py-3" data-trace="C23-28">Sistema destino</th>
+                    <th scope="col" class="py-3" data-trace="C23-29">Id de despacho</th>
+                    <th scope="col" class="py-3" data-trace="C23-30">Estado de envío</th>
+                    <th scope="col" class="py-3 text-center" data-trace="C23-31">Intentos</th>
+                    <th scope="col" class="py-3 pe-3 text-end" data-orderable="false">Acciones</th>
+                  </tr>
+                </thead>
+            <tbody id="tablaIntegracionesCuerpo" data-trace="C23-25">
+              <% if (listaIntegraciones.length === 0) { %>
+                <tr id="filaSinDatos">
+                  <td colspan="7" class="text-center py-5 text-muted">
+                    <svg width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24" class="mb-2 text-secondary opacity-50">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                    </svg>
+                    <div class="fw-semibold">No se encontraron despachos registrados</div>
+                    <small>Los envíos generados al emitir órdenes diagnósticas aparecerán en este listado.</small>
+                  </td>
+                </tr>
+              <% } else { %>
+                <% listaIntegraciones.forEach(item => { %>
+                  <%
+                    const st = String(item.estado_envio || 'PENDIENTE').toUpperCase();
+                    let badgeClass = 'bg-primary-subtle text-primary border border-primary-subtle';
+                    let labelEstado = 'PENDIENTE';
+                    let aclaracion = '';
+
+                    if (st === 'ENVIADO') {
+                      badgeClass = 'bg-success-subtle text-success border border-success-subtle';
+                      labelEstado = 'ENVIADO';
+                    } else if (st === 'REINTENTO') {
+                      badgeClass = 'bg-warning-subtle text-warning-emphasis border border-warning-subtle';
+                      labelEstado = 'REINTENTO';
+                      aclaracion = 'Pendiente de reenvío';
+                    } else if (st === 'ERROR') {
+                      badgeClass = 'bg-danger-subtle text-danger border border-danger-subtle';
+                      labelEstado = 'ERROR';
+                      aclaracion = item.respuesta ? 'Rechazada' : '';
+                    }
+
+                    const codOrden = item.orden_codigo || item.codigo || '—';
+                    const nomPaciente = item.paciente || item.paciente_nombre || '—';
+                    const nomSistema = item.sistema || item.sistema_destino || 'LIS';
+                    const uuidDespacho = item.id_despacho || '';
+                    const dspAbrev = abreviarDespacho(uuidDespacho);
+                    const numIntentos = (typeof item.intentos !== 'undefined') ? item.intentos : 0;
+                  %>
+                  <tr data-id="<%= item.id %>" data-orden-id="<%= item.orden_id || '' %>" data-estado="<%= st %>" class="fila-despacho">
+                    <td class="ps-3 fw-bold text-dark font-monospace small"><%= codOrden %></td>
+                    <td>
+                      <div class="fw-medium text-dark text-truncate" style="max-width: 140px;" title="<%= nomPaciente %>"><%= nomPaciente %></div>
+                    </td>
+                    <td>
+                      <span class="badge bg-secondary-subtle text-dark border"><%= nomSistema %></span>
+                    </td>
+                    <td>
+                      <code class="small text-muted" data-trace="C23-29" title="<%= uuidDespacho %>"><%= dspAbrev %></code>
+                    </td>
+                    <td>
+                      <span class="badge <%= badgeClass %>" data-trace="C23-32">
+                        <%= labelEstado %>
+                      </span>
+                      <% if (aclaracion) { %>
+                        <div class="small text-muted" style="font-size: 0.72rem;"><%= aclaracion %></div>
+                      <% } %>
+                    </td>
+                    <td class="text-center font-monospace small"><%= numIntentos %></td>
+                    <td class="pe-3 text-end text-nowrap">
+                      <button type="button"
+                              class="btn btn-sm btn-outline-primary btn-accion-detalle py-0 px-2"
+                              data-trace="C23-33"
+                              data-id="<%= item.id %>"
+                              title="Ver detalle del despacho">
+                        Detalle
+                      </button>
+                      <% if (st === 'ERROR' && esAdmin) { %>
+                        <button type="button"
+                                class="btn btn-sm btn-outline-danger btn-accion-reenviar py-0 px-2 ms-1"
+                                data-trace="C23-34"
+                                data-id="<%= item.id %>"
+                                title="Reintentar envío ahora">
+                          Reenviar
+                        </button>
+                      <% } %>
+                    </td>
+                  </tr>
+                <% }); %>
+              <% } %>
+            </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Columna derecha: Panel de Detalle [23.35] (col-xl-5 o col-lg-5) -->
+    <div class="col-12 col-xl-5 col-lg-5">
+      <div class="card border-0 shadow-sm rounded-3 sticky-top" style="top: 1rem; z-index: 10;" id="panelDetalle" data-trace="C23-35">
+        <div class="card-header bg-white py-3 border-bottom d-flex align-items-center justify-content-between">
+          <h2 class="h6 fw-bold mb-0 text-dark">
+            Detalle del envío <span id="detalleCodigoOrden" class="text-primary font-monospace ms-1">—</span>
+          </h2>
+          <span class="badge bg-light text-muted border small" id="detalleIndicadorSeleccion">Sin selección</span>
+        </div>
+
+        <div class="card-body p-4">
+          <!-- Campo 1: Sistema [23.36, 23.37] -->
+          <div class="d-flex align-items-center justify-content-between py-2 border-bottom" data-trace="C23-36">
+            <span class="text-secondary small fw-medium">Sistema destino:</span>
+            <span id="detalleSistema" data-trace="C23-37" class="fw-semibold text-dark">—</span>
+          </div>
+
+          <!-- Campo 2: Fecha de envío [23.38, 23.39] -->
+          <div class="d-flex align-items-center justify-content-between py-2 border-bottom" data-trace="C23-38">
+            <span class="text-secondary small fw-medium">Fecha de envío:</span>
+            <span id="detalleFechaEnvio" data-trace="C23-39" class="fw-semibold text-dark">—</span>
+          </div>
+
+          <!-- Campo 3: Estado [23.40, 23.41, 23.42] -->
+          <div class="d-flex align-items-center justify-content-between py-2 border-bottom" data-trace="C23-40">
+            <span class="text-secondary small fw-medium">Estado:</span>
+            <div class="d-flex align-items-center gap-1">
+              <span id="detalleBadgeEstado" class="badge bg-secondary" data-trace="C23-42">—</span>
+              <span id="detalleAclaracionEstado" class="text-muted ms-1 small" data-trace="C23-41"></span>
+            </div>
+          </div>
+
+          <!-- Campo complementario: Id de despacho completo e intentos -->
+          <div class="py-2 border-bottom small">
+            <div class="d-flex align-items-center justify-content-between mb-1">
+              <span class="text-secondary fw-medium">Id de despacho (Idempotente):</span>
+              <span id="detalleIntentos" class="text-muted font-monospace">Intentos: —</span>
+            </div>
+            <div class="bg-light p-2 rounded border font-monospace text-break small text-dark" id="detalleIdDespacho">
+              —
+            </div>
+          </div>
+
+          <!-- Campo 4: Respuesta recibida [23.43, 23.44] -->
+          <div class="mt-3">
+            <label class="form-label fw-medium small text-secondary d-flex align-items-center justify-content-between" data-trace="C23-43">
+              <span>Respuesta recibida:</span>
+              <span class="text-muted" style="font-size: 0.72rem;">Payload HTTP de confirmación / error</span>
+            </label>
+            <pre id="detalleRespuesta" class="bg-light p-3 rounded border font-monospace small mb-3 text-secondary" style="max-height: 200px; overflow-y: auto; white-space: pre-wrap;" data-trace="C23-44">Seleccione una orden para ver la respuesta del sistema externo...</pre>
+          </div>
+
+          <!-- Nota informativa [23.45] -->
+          <div class="alert alert-info border-0 rounded-3 small d-flex align-items-start gap-2 mb-3" data-trace="C23-45">
+            <svg class="text-info-emphasis flex-shrink-0 mt-1" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+              <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0"/>
+            </svg>
+            <div>Los reintentos automáticos reutilizan el mismo id de despacho, así el destino descarta duplicados y el reintento no crea otra orden</div>
+          </div>
+
+          <!-- Acciones en el panel de detalle -->
+          <div class="d-flex align-items-center justify-content-between gap-2 pt-2 border-top">
+            <a href="#" id="btnDetalleImprimir" class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-1 disabled" target="_blank">
+              <svg width="15" height="15" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/>
+                <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z"/>
+              </svg>
+              <span>Imprimir orden</span>
+            </a>
+
+            <button type="button"
+                    id="btnDetalleReenviar"
+                    class="btn btn-danger btn-sm d-inline-flex align-items-center gap-1 d-none"
+                    data-trace="C23-34">
+              <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+              </svg>
+              <span>Reenviar orden</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  window.__HISCARE_USUARIO__ = <%- JSON.stringify(usrSesion ? { id: usrSesion.id, nombre: usrSesion.nombre, rol: usrSesion.rol } : null).replace(/</g, '\\u003c') %>;
+</script>
+
+<%- include('../partials/_fin', { scripts: ['/js/integraciones.js'] }) %>

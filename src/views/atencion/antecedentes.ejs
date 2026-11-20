@@ -1,0 +1,554 @@
+<%- include('../partials/_inicio', { titulo: 'Antecedentes' }) %>
+<!-- Atención clínica · Antecedentes -->
+<%- include('../partials/_banner_paciente') %>
+<%- include('../partials/_tabs_atencion') %>
+
+<%
+  const idHistoria = (typeof historiaId !== 'undefined' && historiaId) ? historiaId : (atencion.historia_id || (typeof historia_id !== 'undefined' ? historia_id : ''));
+  const sexoPaciente = atencion.sexo || atencion.paciente_sexo || (typeof paciente !== 'undefined' && paciente && paciente.sexo) || 'M';
+  const esMujer = (sexoPaciente === 'F' || sexoPaciente === 'Femenino');
+  const puedeModificar = (typeof soloLectura !== 'undefined' ? !soloLectura : true) && (typeof puedeEditar !== 'undefined' ? puedeEditar : true);
+
+  // Agrupación flexible de antecedentes (acepta antecedentesAgrupados u objeto/array plano antecedentes)
+  const agrupados = {
+    Patologico: [],
+    Quirurgico: [],
+    Alergico: [],
+    Farmacologico: [],
+    Familiar: [],
+    Ginecologico: []
+  };
+
+  const fuente = (typeof antecedentesAgrupados !== 'undefined' && antecedentesAgrupados)
+    ? antecedentesAgrupados
+    : ((typeof antecedentes !== 'undefined' && antecedentes) ? antecedentes : null);
+
+  if (fuente) {
+    if (Array.isArray(fuente)) {
+      fuente.forEach(a => {
+        if (a && a.tipo && Array.isArray(agrupados[a.tipo])) {
+          agrupados[a.tipo].push(a);
+        }
+      });
+    } else if (typeof fuente === 'object') {
+      Object.keys(agrupados).forEach(tipo => {
+        if (Array.isArray(fuente[tipo])) {
+          agrupados[tipo] = fuente[tipo];
+        }
+      });
+    }
+  }
+
+  function formatearFecha(f) {
+    if (!f) return '';
+    if (typeof f === 'string' && f.includes('/')) return f;
+    try {
+      const d = new Date(f);
+      if (isNaN(d.getTime())) return String(f);
+      const dia = String(d.getDate()).padStart(2, '0');
+      const mes = String(d.getMonth() + 1).padStart(2, '0');
+      const anio = d.getFullYear();
+      return `${dia}/${mes}/${anio}`;
+    } catch (e) {
+      return String(f);
+    }
+  }
+
+  function parsearAntecedenteAlergico(desc) {
+    if (!desc) return { sustancia: '', reaccion: '', anio: '', tieneFormato: false };
+    const raw = String(desc).trim();
+    const sepMatch = raw.match(/\s*[-–—]\s*/);
+    if (!sepMatch) {
+      return { sustancia: raw, reaccion: '', anio: '', tieneFormato: false };
+    }
+    const sustancia = raw.substring(0, sepMatch.index).trim();
+    const resto = raw.substring(sepMatch.index + sepMatch[0].length).trim();
+    const anioMatch = resto.match(/\s*\(([^)]+)\)$/);
+    let reaccion = resto;
+    let anio = '';
+    if (anioMatch) {
+      anio = anioMatch[1].trim();
+      reaccion = resto.substring(0, anioMatch.index).trim();
+    }
+    return { sustancia, reaccion, anio, tieneFormato: Boolean(reaccion) };
+  }
+%>
+
+<!-- [C5-48] Alerta informativa fija de advertencia sobre alergias en el encabezado -->
+<div class="alert alert-warning d-flex align-items-center gap-2 mb-3 py-2 px-3 small border-0 shadow-sm" data-trace="C5-48">
+  <svg width="16" height="16" fill="currentColor" class="bi bi-exclamation-triangle-fill text-warning flex-shrink-0" viewBox="0 0 16 16">
+    <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+  </svg>
+  <span><strong>Las alergias registradas aquí se muestran en el encabezado de todas las pantallas de la atención.</strong></span>
+</div>
+
+<!-- Contenedor principal de la pestaña de antecedentes -->
+<div id="antecedentesContainer"
+     class="antecedentes-vista mb-4"
+     data-atencion="<%= atencion.id %>"
+     data-historia="<%= idHistoria %>"
+     data-solo-lectura="<%= !puedeModificar ? 'true' : 'false' %>">
+
+  <!-- Cuadrícula de tarjetas responsiva -->
+  <div class="row g-3">
+
+    <!-- [C5-28 a C5-31] Tarjeta Patológicos -->
+    <div class="col-12 col-md-6 col-lg-4">
+      <div class="card h-100 shadow-sm border-0 bg-white" style="border-radius: 0.5rem;">
+        <div class="card-header bg-transparent border-0 pt-3 px-3 pb-2 d-flex align-items-center justify-content-between">
+          <h6 class="fw-bold mb-0 text-dark" data-trace="C5-28">Patológicos</h6>
+          <% if (puedeModificar) { %>
+            <button type="button"
+                    class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1 btn-agregar-antecedente"
+                    data-tipo="Patologico"
+                    data-tipo-label="Patológico"
+                    data-trace="C5-31">
+              <svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+              </svg>
+              <span>Agregar antecedente</span>
+            </button>
+          <% } %>
+        </div>
+        <div class="card-body px-3 py-2 antecedentes-scroll-body">
+          <ul class="list-unstyled mb-0 lista-antecedentes" id="lista-Patologico" style="max-height: 220px; overflow-y: auto;">
+            <% if (agrupados.Patologico.length > 0) { %>
+              <% agrupados.Patologico.forEach((a, idx) => { %>
+                <li class="mb-2 d-flex align-items-start gap-2" <%- idx === 0 ? 'data-trace="C5-29"' : (idx === 1 ? 'data-trace="C5-30"' : '') %>>
+                  <span class="text-primary mt-1">•</span>
+                  <div>
+                    <span class="fw-medium text-dark"><%= a.descripcion %></span>
+                    <% if (a.fecha_creacion || a.fecha) { %>
+                      <span class="text-muted small ms-1">(<%= formatearFecha(a.fecha_creacion || a.fecha) %>)</span>
+                    <% } %>
+                  </div>
+                </li>
+              <% }) %>
+              <% if (agrupados.Patologico.length === 1) { %>
+                <span class="d-none" data-trace="C5-30"></span>
+              <% } %>
+            <% } else { %>
+              <li class="text-muted small fst-italic sin-antecedentes" data-trace="C5-29">
+                <span>Sin antecedentes registrados</span>
+                <span class="d-none" data-trace="C5-30"></span>
+              </li>
+            <% } %>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- [C5-32 a C5-35] Tarjeta Quirúrgicos -->
+    <div class="col-12 col-md-6 col-lg-4">
+      <div class="card h-100 shadow-sm border-0 bg-white" style="border-radius: 0.5rem;">
+        <div class="card-header bg-transparent border-0 pt-3 px-3 pb-2 d-flex align-items-center justify-content-between">
+          <h6 class="fw-bold mb-0 text-dark" data-trace="C5-32">Quirúrgicos</h6>
+          <% if (puedeModificar) { %>
+            <button type="button"
+                    class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1 btn-agregar-antecedente"
+                    data-tipo="Quirurgico"
+                    data-tipo-label="Quirúrgico"
+                    data-trace="C5-35">
+              <svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+              </svg>
+              <span>Agregar antecedente</span>
+            </button>
+          <% } %>
+        </div>
+        <div class="card-body px-3 py-2 antecedentes-scroll-body">
+          <ul class="list-unstyled mb-0 lista-antecedentes" id="lista-Quirurgico" style="max-height: 220px; overflow-y: auto;">
+            <% if (agrupados.Quirurgico.length > 0) { %>
+              <% agrupados.Quirurgico.forEach((a, idx) => { %>
+                <li class="mb-2 d-flex align-items-start gap-2" <%- idx === 0 ? 'data-trace="C5-33"' : (idx === 1 ? 'data-trace="C5-34"' : '') %>>
+                  <span class="text-primary mt-1">•</span>
+                  <div>
+                    <span class="fw-medium text-dark"><%= a.descripcion %></span>
+                    <% if (a.fecha_creacion || a.fecha) { %>
+                      <span class="text-muted small ms-1">(<%= formatearFecha(a.fecha_creacion || a.fecha) %>)</span>
+                    <% } %>
+                  </div>
+                </li>
+              <% }) %>
+              <% if (agrupados.Quirurgico.length === 1) { %>
+                <span class="d-none" data-trace="C5-34"></span>
+              <% } %>
+            <% } else { %>
+              <li class="text-muted small fst-italic sin-antecedentes" data-trace="C5-33">
+                <span>Sin antecedentes registrados</span>
+                <span class="d-none" data-trace="C5-34"></span>
+              </li>
+            <% } %>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- [C5-36 a C5-39] Tarjeta Alérgicos (DESTACADA: borde rojo y encabezado rojizo) -->
+    <div class="col-12 col-md-6 col-lg-4">
+      <div class="card h-100 shadow-sm border border-danger border-opacity-50" style="border-radius: 0.5rem;">
+        <div class="card-header bg-danger bg-opacity-10 text-danger py-2 px-3 d-flex align-items-center justify-content-between">
+          <h6 class="fw-bold mb-0 text-danger d-flex align-items-center gap-2" data-trace="C5-36">
+            <svg width="16" height="16" fill="currentColor" class="bi bi-exclamation-triangle-fill flex-shrink-0" viewBox="0 0 16 16">
+              <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+            </svg>
+            <span>Alérgicos</span>
+          </h6>
+          <% if (puedeModificar) { %>
+            <button type="button"
+                    class="btn btn-sm btn-outline-danger d-inline-flex align-items-center gap-1 btn-agregar-antecedente"
+                    data-tipo="Alergico"
+                    data-tipo-label="Alérgico"
+                    data-trace="C5-39">
+              <svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+              </svg>
+              <span>Agregar antecedente</span>
+            </button>
+          <% } %>
+        </div>
+        <div class="card-body px-3 py-2 antecedentes-scroll-body">
+          <ul class="list-unstyled mb-0 lista-antecedentes" id="lista-Alergico" style="max-height: 220px; overflow-y: auto;">
+            <% if (agrupados.Alergico.length > 0) { %>
+              <% agrupados.Alergico.forEach((a, idx) => { 
+                   const infoAl = parsearAntecedenteAlergico(a.descripcion);
+                   const fechaFmt = formatearFecha(a.fecha_creacion || a.fecha);
+              %>
+                <li class="mb-2 p-2 rounded bg-danger bg-opacity-10 border border-danger border-opacity-25 d-flex align-items-start gap-2 shadow-sm" <%- idx === 0 ? 'data-trace="C5-37"' : (idx === 1 ? 'data-trace="C5-38"' : '') %>>
+                  <svg width="15" height="15" fill="currentColor" class="bi bi-exclamation-octagon-fill text-danger flex-shrink-0 mt-1" viewBox="0 0 16 16" aria-hidden="true">
+                    <path d="M11.46.146A.5.5 0 0 0 11.107 0H4.893a.5.5 0 0 0-.353.146L.146 4.54A.5.5 0 0 0 0 4.893v6.214a.5.5 0 0 0 .146.353l4.394 4.394a.5.5 0 0 0 .353.146h6.214a.5.5 0 0 0 .353-.146l4.394-4.394a.5.5 0 0 0 .146-.353V4.893a.5.5 0 0 0-.146-.353L11.46.146zM8 4c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 4.995A.905.905 0 0 1 8 4zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+                  </svg>
+                  <div class="w-100">
+                    <% if (infoAl.tieneFormato) { %>
+                      <div class="d-flex flex-wrap align-items-center gap-1">
+                        <span class="badge bg-danger text-white fw-bold text-uppercase py-1 px-2" style="font-size: 0.75rem;"><%= infoAl.sustancia %></span>
+                        <span class="text-danger fw-semibold small">•</span>
+                        <span class="text-dark fw-medium"><%= infoAl.reaccion %></span>
+                        <% if (infoAl.anio) { %>
+                          <span class="badge bg-white text-danger border border-danger border-opacity-25 small ms-auto fw-medium">(<%= infoAl.anio %>)</span>
+                        <% } else if (fechaFmt) { %>
+                          <span class="text-muted small ms-auto">(<%= fechaFmt %>)</span>
+                        <% } %>
+                      </div>
+                    <% } else { %>
+                      <div class="d-flex flex-wrap align-items-center gap-1">
+                        <strong class="text-danger fw-bold text-uppercase"><%= infoAl.sustancia %></strong>
+                        <% if (fechaFmt) { %>
+                          <span class="text-muted small ms-auto">(<%= fechaFmt %>)</span>
+                        <% } %>
+                      </div>
+                    <% } %>
+                    <span class="d-none raw-descripcion"><%= a.descripcion %></span>
+                  </div>
+                </li>
+              <% }) %>
+              <% if (agrupados.Alergico.length === 1) { %>
+                <span class="d-none" data-trace="C5-38"></span>
+              <% } %>
+            <% } else { %>
+              <li class="text-muted small fst-italic sin-antecedentes" data-trace="C5-37">
+                <span>Sin antecedentes registrados</span>
+                <span class="d-none" data-trace="C5-38"></span>
+              </li>
+            <% } %>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- [C5-40 a C5-43] Tarjeta Farmacológicos -->
+    <div class="col-12 col-md-6 col-lg-4">
+      <div class="card h-100 shadow-sm border-0 bg-white" style="border-radius: 0.5rem;">
+        <div class="card-header bg-transparent border-0 pt-3 px-3 pb-2 d-flex align-items-center justify-content-between">
+          <h6 class="fw-bold mb-0 text-dark" data-trace="C5-40">Farmacológicos</h6>
+          <% if (puedeModificar) { %>
+            <button type="button"
+                    class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1 btn-agregar-antecedente"
+                    data-tipo="Farmacologico"
+                    data-tipo-label="Farmacológico"
+                    data-trace="C5-43">
+              <svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+              </svg>
+              <span>Agregar antecedente</span>
+            </button>
+          <% } %>
+        </div>
+        <div class="card-body px-3 py-2 antecedentes-scroll-body">
+          <ul class="list-unstyled mb-0 lista-antecedentes" id="lista-Farmacologico" style="max-height: 220px; overflow-y: auto;">
+            <% if (agrupados.Farmacologico.length > 0) { %>
+              <% agrupados.Farmacologico.forEach((a, idx) => { %>
+                <li class="mb-2 d-flex align-items-start gap-2" <%- idx === 0 ? 'data-trace="C5-41"' : (idx === 1 ? 'data-trace="C5-42"' : '') %>>
+                  <span class="text-primary mt-1">•</span>
+                  <div>
+                    <span class="fw-medium text-dark"><%= a.descripcion %></span>
+                    <% if (a.fecha_creacion || a.fecha) { %>
+                      <span class="text-muted small ms-1">(<%= formatearFecha(a.fecha_creacion || a.fecha) %>)</span>
+                    <% } %>
+                  </div>
+                </li>
+              <% }) %>
+              <% if (agrupados.Farmacologico.length === 1) { %>
+                <span class="d-none" data-trace="C5-42"></span>
+              <% } %>
+            <% } else { %>
+              <li class="text-muted small fst-italic sin-antecedentes" data-trace="C5-41">
+                <span>Sin antecedentes registrados</span>
+                <span class="d-none" data-trace="C5-42"></span>
+              </li>
+            <% } %>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- [C5-44 a C5-47] Tarjeta Familiares -->
+    <div class="col-12 col-md-6 col-lg-4">
+      <div class="card h-100 shadow-sm border-0 bg-white" style="border-radius: 0.5rem;">
+        <div class="card-header bg-transparent border-0 pt-3 px-3 pb-2 d-flex align-items-center justify-content-between">
+          <h6 class="fw-bold mb-0 text-dark" data-trace="C5-44">Familiares</h6>
+          <% if (puedeModificar) { %>
+            <button type="button"
+                    class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1 btn-agregar-antecedente"
+                    data-tipo="Familiar"
+                    data-tipo-label="Familiar"
+                    data-trace="C5-47">
+              <svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+              </svg>
+              <span>Agregar antecedente</span>
+            </button>
+          <% } %>
+        </div>
+        <div class="card-body px-3 py-2 antecedentes-scroll-body">
+          <ul class="list-unstyled mb-0 lista-antecedentes" id="lista-Familiar" style="max-height: 220px; overflow-y: auto;">
+            <% if (agrupados.Familiar.length > 0) { %>
+              <% agrupados.Familiar.forEach((a, idx) => { %>
+                <li class="mb-2 d-flex align-items-start gap-2" <%- idx === 0 ? 'data-trace="C5-45"' : (idx === 1 ? 'data-trace="C5-46"' : '') %>>
+                  <span class="text-primary mt-1">•</span>
+                  <div>
+                    <span class="fw-medium text-dark"><%= a.descripcion %></span>
+                    <% if (a.fecha_creacion || a.fecha) { %>
+                      <span class="text-muted small ms-1">(<%= formatearFecha(a.fecha_creacion || a.fecha) %>)</span>
+                    <% } %>
+                  </div>
+                </li>
+              <% }) %>
+              <% if (agrupados.Familiar.length === 1) { %>
+                <span class="d-none" data-trace="C5-46"></span>
+              <% } %>
+            <% } else { %>
+              <li class="text-muted small fst-italic sin-antecedentes" data-trace="C5-45">
+                <span>Sin antecedentes registrados</span>
+                <span class="d-none" data-trace="C5-46"></span>
+              </li>
+            <% } %>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tarjeta Ginecológicos (SOLO para pacientes de sexo 'F') -->
+    <% if (esMujer) { %>
+      <div class="col-12 col-md-6 col-lg-4" id="tarjetaGinecologicos">
+        <div class="card h-100 shadow-sm border-0 bg-white" style="border-radius: 0.5rem;">
+          <div class="card-header bg-transparent border-0 pt-3 px-3 pb-2 d-flex align-items-center justify-content-between">
+            <h6 class="fw-bold mb-0 text-dark">Ginecológicos</h6>
+            <% if (puedeModificar) { %>
+              <button type="button"
+                      class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1 btn-agregar-antecedente"
+                      data-tipo="Ginecologico"
+                      data-tipo-label="Ginecológico">
+                <svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
+                  <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/>
+                </svg>
+                <span>Agregar antecedente</span>
+              </button>
+            <% } %>
+          </div>
+          <div class="card-body px-3 py-2 antecedentes-scroll-body">
+            <ul class="list-unstyled mb-0 lista-antecedentes" id="lista-Ginecologico" style="max-height: 220px; overflow-y: auto;">
+              <% if (agrupados.Ginecologico.length > 0) { %>
+                <% agrupados.Ginecologico.forEach(a => { %>
+                  <li class="mb-2 d-flex align-items-start gap-2">
+                    <span class="text-primary mt-1">•</span>
+                    <div>
+                      <span class="fw-medium text-dark"><%= a.descripcion %></span>
+                      <% if (a.fecha_creacion || a.fecha) { %>
+                        <span class="text-muted small ms-1">(<%= formatearFecha(a.fecha_creacion || a.fecha) %>)</span>
+                      <% } %>
+                    </div>
+                  </li>
+                <% }) %>
+              <% } else { %>
+                <li class="text-muted small fst-italic sin-antecedentes">
+                  Sin antecedentes registrados
+                </li>
+              <% } %>
+            </ul>
+          </div>
+        </div>
+      </div>
+    <% } else { %>
+      <!-- Tarjeta informativa Gineco-obstétricos (No aplica para paciente masculino) -->
+      <div class="col-12 col-md-6 col-lg-4" id="tarjetaNoAplicaGinecologico">
+        <div class="card h-100 shadow-sm border-0 bg-white" style="border-radius: 0.5rem;">
+          <div class="card-header bg-transparent border-0 pt-3 px-3 pb-2 d-flex align-items-center justify-content-between">
+            <h6 class="fw-bold mb-0 text-muted">Gineco-obstétricos</h6>
+            <span class="badge bg-light text-secondary border small">No aplica</span>
+          </div>
+          <div class="card-body px-3 py-2 d-flex flex-column align-items-center justify-content-center text-center antecedentes-scroll-body" style="min-height: 140px;">
+            <p class="text-muted small fst-italic mb-0">No aplica para paciente masculino</p>
+          </div>
+        </div>
+      </div>
+    <% } %>
+
+  </div>
+</div>
+
+<!-- Modal Bootstrap para registrar antecedente -->
+<div class="modal fade" id="modalAgregarAntecedente" tabindex="-1" aria-labelledby="modalAgregarAntecedenteLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header bg-light py-3 px-4 border-0">
+        <h5 class="modal-title fs-6 fw-bold text-dark mb-0" id="modalAgregarAntecedenteLabel">
+          Agregar antecedente
+        </h5>
+        <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <form id="formAgregarAntecedente" novalidate>
+        <div class="modal-body px-4 py-3">
+          <!-- Alerta de validación o error -->
+          <div class="alert alert-danger d-none py-2 px-3 small border-0 mb-3" id="modalAntecedenteError" role="alert">
+            <span id="modalAntecedenteErrorTexto"></span>
+          </div>
+
+          <!-- Campo Tipo: informativo / badge no editable con valor oculto -->
+          <div class="mb-3">
+            <label class="form-label text-secondary small fw-semibold d-block mb-1">Tipo de antecedente</label>
+            <div class="d-flex align-items-center">
+              <span class="badge bg-light text-primary border border-primary-subtle px-3 py-2 fs-6 fw-medium" id="modalAntecedenteTipoBadge">
+                Patológico
+              </span>
+              <input type="hidden" name="tipo" id="modalAntecedenteTipoInput" value="Patologico">
+            </div>
+          </div>
+
+          <!-- Chips de autocompletado rápido según tipo de antecedente -->
+          <div id="modalSugerenciasContainer" class="mb-3">
+            <!-- Sugerencias para Alérgico -->
+            <div id="sugerenciasAlergico" class="d-none">
+              <div class="d-flex align-items-center justify-content-between mb-1">
+                <span class="text-danger small fw-semibold d-flex align-items-center gap-1">
+                  <svg width="12" height="12" fill="currentColor" viewBox="0 0 16 16"><path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/></svg>
+                  Plantillas rápidas de alérgenos:
+                </span>
+                <span class="text-muted small fst-italic" style="font-size: 0.72rem;">Clic para insertar</span>
+              </div>
+              <div class="d-flex flex-wrap gap-1">
+                <button type="button" class="btn btn-sm btn-outline-danger py-0 px-2 chip-sugerencia rounded-pill" data-plantilla="PENICILINA – reacción anafiláctica">Penicilina</button>
+                <button type="button" class="btn btn-sm btn-outline-danger py-0 px-2 chip-sugerencia rounded-pill" data-plantilla="AINES – reacción cutánea">AINES</button>
+                <button type="button" class="btn btn-sm btn-outline-danger py-0 px-2 chip-sugerencia rounded-pill" data-plantilla="SULFAS – erupción cutánea">Sulfas</button>
+                <button type="button" class="btn btn-sm btn-outline-danger py-0 px-2 chip-sugerencia rounded-pill" data-plantilla="LÁTEX – dermatitis de contacto">Látex</button>
+                <button type="button" class="btn btn-sm btn-outline-danger py-0 px-2 chip-sugerencia rounded-pill" data-plantilla="DIPIRONA – broncoespasmo">Dipirona</button>
+                <button type="button" class="btn btn-sm btn-outline-danger py-0 px-2 chip-sugerencia rounded-pill" data-plantilla="MEDIO DE CONTRASTE – urticaria">Medio de contraste</button>
+              </div>
+            </div>
+
+            <!-- Sugerencias para Patológico -->
+            <div id="sugerenciasPatologico" class="d-none">
+              <div class="d-flex align-items-center justify-content-between mb-1">
+                <span class="text-secondary small fw-semibold">Patologías comunes:</span>
+                <span class="text-muted small fst-italic" style="font-size: 0.72rem;">Clic para insertar</span>
+              </div>
+              <div class="d-flex flex-wrap gap-1">
+                <button type="button" class="btn btn-sm btn-outline-primary py-0 px-2 chip-sugerencia rounded-pill" data-plantilla="Hipertensión arterial (2019)">Hipertensión</button>
+                <button type="button" class="btn btn-sm btn-outline-primary py-0 px-2 chip-sugerencia rounded-pill" data-plantilla="Diabetes mellitus tipo 2 (2020)">Diabetes tipo 2</button>
+                <button type="button" class="btn btn-sm btn-outline-primary py-0 px-2 chip-sugerencia rounded-pill" data-plantilla="Hipotiroidismo primario (2018)">Hipotiroidismo</button>
+                <button type="button" class="btn btn-sm btn-outline-primary py-0 px-2 chip-sugerencia rounded-pill" data-plantilla="Asma bronquial">Asma</button>
+                <button type="button" class="btn btn-sm btn-outline-primary py-0 px-2 chip-sugerencia rounded-pill" data-plantilla="Dislipidemia mixta (2021)">Dislipidemia</button>
+              </div>
+            </div>
+
+            <!-- Sugerencias para Quirúrgico -->
+            <div id="sugerenciasQuirurgico" class="d-none">
+              <div class="d-flex align-items-center justify-content-between mb-1">
+                <span class="text-secondary small fw-semibold">Procedimientos frecuentes:</span>
+                <span class="text-muted small fst-italic" style="font-size: 0.72rem;">Clic para insertar</span>
+              </div>
+              <div class="d-flex flex-wrap gap-1">
+                <button type="button" class="btn btn-sm btn-outline-primary py-0 px-2 chip-sugerencia rounded-pill" data-plantilla="Apendicectomía laparoscópica (2015)">Apendicectomía</button>
+                <button type="button" class="btn btn-sm btn-outline-primary py-0 px-2 chip-sugerencia rounded-pill" data-plantilla="Colecistectomía laparoscópica (2018)">Colecistectomía</button>
+                <button type="button" class="btn btn-sm btn-outline-primary py-0 px-2 chip-sugerencia rounded-pill" data-plantilla="Cesárea segmentaria (2020)">Cesárea</button>
+                <button type="button" class="btn btn-sm btn-outline-primary py-0 px-2 chip-sugerencia rounded-pill" data-plantilla="Herniorrafia inguinal (2017)">Herniorrafia</button>
+              </div>
+            </div>
+
+            <!-- Sugerencias para Farmacológico -->
+            <div id="sugerenciasFarmacologico" class="d-none">
+              <div class="d-flex align-items-center justify-content-between mb-1">
+                <span class="text-secondary small fw-semibold">Medicamentos crónicos:</span>
+                <span class="text-muted small fst-italic" style="font-size: 0.72rem;">Clic para insertar</span>
+              </div>
+              <div class="d-flex flex-wrap gap-1">
+                <button type="button" class="btn btn-sm btn-outline-primary py-0 px-2 chip-sugerencia rounded-pill" data-plantilla="Losartán 50mg cada 12 horas">Losartán</button>
+                <button type="button" class="btn btn-sm btn-outline-primary py-0 px-2 chip-sugerencia rounded-pill" data-plantilla="Metformina 850mg con desayuno">Metformina</button>
+                <button type="button" class="btn btn-sm btn-outline-primary py-0 px-2 chip-sugerencia rounded-pill" data-plantilla="Levotiroxina 50mcg en ayunas">Levotiroxina</button>
+                <button type="button" class="btn btn-sm btn-outline-primary py-0 px-2 chip-sugerencia rounded-pill" data-plantilla="Atorvastatina 20mg noche">Atorvastatina</button>
+                <button type="button" class="btn btn-sm btn-outline-primary py-0 px-2 chip-sugerencia rounded-pill" data-plantilla="Amlodipino 5mg cada 24 horas">Amlodipino</button>
+              </div>
+            </div>
+
+            <!-- Sugerencias para Familiar -->
+            <div id="sugerenciasFamiliar" class="d-none">
+              <div class="d-flex align-items-center justify-content-between mb-1">
+                <span class="text-secondary small fw-semibold">Antecedentes familiares comunes:</span>
+                <span class="text-muted small fst-italic" style="font-size: 0.72rem;">Clic para insertar</span>
+              </div>
+              <div class="d-flex flex-wrap gap-1">
+                <button type="button" class="btn btn-sm btn-outline-primary py-0 px-2 chip-sugerencia rounded-pill" data-plantilla="Madre: Diabetes mellitus tipo 2">Madre: Diabetes</button>
+                <button type="button" class="btn btn-sm btn-outline-primary py-0 px-2 chip-sugerencia rounded-pill" data-plantilla="Padre: Infarto agudo de miocardio a los 55 años">Padre: IAM</button>
+                <button type="button" class="btn btn-sm btn-outline-primary py-0 px-2 chip-sugerencia rounded-pill" data-plantilla="Madre: Hipertensión arterial esencial">Madre: HTA</button>
+                <button type="button" class="btn btn-sm btn-outline-primary py-0 px-2 chip-sugerencia rounded-pill" data-plantilla="Hermano: Asma bronquial">Hermano: Asma</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Campo Descripción: textarea (3 a 1000 caracteres) -->
+          <div class="mb-2">
+            <label for="modalAntecedenteDescripcion" class="form-label text-secondary small fw-semibold mb-1">
+              Descripción <span class="text-danger">*</span>
+            </label>
+            <textarea class="form-control shadow-none"
+                      id="modalAntecedenteDescripcion"
+                      name="descripcion"
+                      rows="4"
+                      maxlength="1000"
+                      placeholder="Ej: Hipertensión arterial (2019)"
+                      required></textarea>
+            <div class="d-flex justify-content-between align-items-center mt-1">
+              <div class="invalid-feedback d-none small text-danger" id="modalAntecedenteDescripcionFeedback">
+                La descripción debe tener entre 3 y 1000 caracteres.
+              </div>
+              <div class="text-muted small ms-auto" id="modalAntecedenteContador">
+                <span id="caracteresActuales">0</span>/1000
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer bg-light py-2 px-4 border-0">
+          <button type="button" class="btn btn-sm btn-outline-secondary px-3" data-bs-dismiss="modal" id="btnCancelarModal">
+            Cancelar
+          </button>
+          <button type="submit" class="btn btn-sm btn-primary px-3 d-inline-flex align-items-center gap-2" id="btnGuardarAntecedente">
+            <span class="spinner-border spinner-border-sm d-none" id="spinnerGuardarAntecedente" role="status" aria-hidden="true"></span>
+            <span>Guardar antecedente</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/_fin', { scripts: ['/js/antecedentes.js'] }) %>

@@ -1,0 +1,290 @@
+<%- include('../partials/_inicio', { titulo: 'Historia clínica longitudinal' }) %>
+
+<!-- Historia clínica longitudinal (línea de tiempo) -->
+<%- include('../partials/_banner_paciente', { atencion, figuraTrace: 'C9' }) %>
+
+<div id="timelineApp"
+     class="timeline-container-root pb-5"
+     data-historia-id="<%= historia.id %>"
+     data-paciente-id="<%= paciente.id %>"
+     data-evento-id="<%= eventoId || '' %>"
+     data-evento-inicial="<%= eventoId || '' %>"
+     data-evento="<%= eventoId || '' %>"
+     data-periodo="<%= periodo || 'todo' %>">
+
+  <!-- Fila de título y filtros [C9-21 a C9-24] -->
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4 bg-white p-3 rounded shadow-sm border" data-trace="C9-25">
+    <div class="d-flex align-items-center gap-2">
+      <div class="bg-primary bg-opacity-10 text-primary p-2 rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+        <svg width="22" height="22" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
+          <path d="M8.5 4.5a.5.5 0 0 0-1 0v3.793L6.354 9.447a.5.5 0 1 0 .708.708l1.792-1.793A.5.5 0 0 0 8.5 8.073V4.5z"/>
+          <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0z"/>
+        </svg>
+      </div>
+      <div>
+        <h1 class="h5 fw-bold mb-0 text-dark" data-trace="C9-21">Historia clínica longitudinal · <%= atencion.codigo || ('HC-' + historia.id.slice(0, 8).toUpperCase()) %></h1>
+        <small class="text-muted">Registro cronológico continuo de atenciones, órdenes y resultados</small>
+      </div>
+    </div>
+
+    <!-- Chips / botones de filtro de periodo con clases Bootstrap (btn-sm, rounded-pill) [C9-22 a C9-24] -->
+    <div class="d-flex align-items-center gap-2" role="group" aria-label="Filtro de periodo de tiempo">
+      <span class="text-secondary small fw-semibold me-1">Ventana:</span>
+      <button type="button"
+              id="btnFiltro1a"
+              class="btn btn-sm <%= periodo === '1a' ? 'btn-primary' : 'btn-outline-primary' %> rounded-pill px-3 shadow-sm btn-filtro-periodo"
+              data-periodo="1a"
+              data-trace="C9-22">
+        1 año
+      </button>
+      <button type="button"
+              id="btnFiltro5a"
+              class="btn btn-sm <%= periodo === '5a' ? 'btn-primary' : 'btn-outline-primary' %> rounded-pill px-3 shadow-sm btn-filtro-periodo"
+              data-periodo="5a"
+              data-trace="C9-23">
+        5 años
+      </button>
+      <button type="button"
+              id="btnFiltroTodo"
+              class="btn btn-sm <%= periodo === 'todo' || !periodo ? 'btn-primary' : 'btn-outline-primary' %> rounded-pill px-3 shadow-sm btn-filtro-periodo"
+              data-periodo="todo"
+              data-trace="C9-24">
+        Todo
+      </button>
+    </div>
+  </div>
+
+  <!-- Layout de 2 columnas responsive (Row responsive con g-4) -->
+  <div class="row g-4">
+    <!-- COLUMNA IZQUIERDA (col-12 col-lg-7): Contenedor de la línea de tiempo vertical [C9-27] -->
+    <div class="col-12 col-lg-7" data-trace="C9-27">
+      <div class="card border-0 shadow-sm bg-white p-3 p-md-4 rounded-3 h-100" data-trace="C9-28">
+        <div class="d-flex align-items-center justify-content-between pb-3 mb-3 border-bottom">
+          <div class="fw-bold text-dark d-flex align-items-center gap-2">
+            <svg width="18" height="18" fill="currentColor" class="text-primary" viewBox="0 0 16 16" aria-hidden="true">
+              <path fill-rule="evenodd" d="M6 2a.5.5 0 0 1 .47.33L10 12.036l1.53-4.193A.5.5 0 0 1 12 7.5h3.5a.5.5 0 0 1 0 1H12.33l-1.8 4.933a.5.5 0 0 1-.94 0L6 3.036l-1.53 4.193A.5.5 0 0 1 4 7.5H.5a.5.5 0 0 1 0-1H3.67l1.8-4.933A.5.5 0 0 1 6 2z"/>
+            </svg>
+            <span>Hitos cronológicos del paciente</span>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <!-- Leyenda de colores e hitos [C9-31, C9-32, C9-33] -->
+            <span class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle small" data-trace="C9-31">● Atención</span>
+            <span class="badge text-white small" style="background-color: #6f42c1;" data-trace="C9-32">● Orden</span>
+            <span class="badge text-white small" style="background-color: #d63384;" data-trace="C9-33">● Resultado</span>
+            <div id="timelineContador" class="badge bg-light text-secondary border px-2 py-1" data-trace="C9-26">
+              Cargando...
+            </div>
+          </div>
+        </div>
+
+        <!-- Contenedor de la línea de tiempo vertical [C9-29] -->
+        <div id="timelineContenedor" class="timeline-stream-wrapper position-relative" data-trace="C9-29">
+          <!-- Spinner de carga -->
+          <div id="timelineSpinner" class="text-center py-5">
+            <div class="spinner-border text-primary" role="status" style="width: 2.5rem; height: 2.5rem;">
+              <span class="visually-hidden">Cargando línea de tiempo...</span>
+            </div>
+            <p class="text-muted small mt-2">Cargando eventos clínicos...</p>
+          </div>
+
+          <!-- Empty State -->
+          <div id="timelineEmpty" class="text-center py-5 d-none">
+            <div class="text-muted mb-3">
+              <svg width="48" height="48" fill="currentColor" class="opacity-50" viewBox="0 0 16 16" aria-hidden="true">
+                <path d="M14 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h12zM2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2z"/>
+                <path d="M4 4h8v2H4V4zm0 4h8v2H4V8zm0 4h5v2H4v-2z"/>
+              </svg>
+            </div>
+            <h6 class="fw-semibold text-secondary">No se encontraron eventos clínicos</h6>
+            <p class="text-muted small">No hay atenciones, órdenes ni resultados registrados para el período seleccionado.</p>
+          </div>
+
+          <!-- Error State -->
+          <div id="timelineError" class="alert alert-danger py-3 px-4 d-none" role="alert">
+            <div class="d-flex align-items-center gap-2">
+              <svg width="20" height="20" fill="currentColor" class="flex-shrink-0" viewBox="0 0 16 16" aria-hidden="true">
+                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                <path d="M7.002 11a1 1 0 1 1 2 0 1 1 0 0 1-2 0zM7.1 4.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 4.995z"/>
+              </svg>
+              <span id="timelineErrorMensaje">Ocurrió un error al obtener la línea de tiempo.</span>
+            </div>
+            <button id="btnReintentarTimeline" type="button" class="btn btn-sm btn-outline-danger mt-2">Reintentar</button>
+          </div>
+
+          <!-- Lista de hitos clínicos interactivos renderizada dinámicamente [C9-30] con estructura de hito [C9-34 a C9-39] -->
+          <div id="timelineLista" class="timeline-items-list" data-trace="C9-30">
+            <!-- Placeholder para indexación y trazabilidad inmediata del servidor -->
+            <div class="d-none" data-trace="C9-34">
+              <span data-trace="C9-35">Título de hito</span>
+              <span data-trace="C9-36">Fecha</span>
+              <span data-trace="C9-37">Subtítulo</span>
+              <span data-trace="C9-38">Estado</span>
+              <button type="button" data-trace="C9-39">Ver detalle</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COLUMNA DERECHA (col-12 col-lg-5): Panel de detalle lateral [C9-40 a C9-52] -->
+    <div class="col-12 col-lg-5">
+      <div id="panelDetalleLateral"
+           class="panel-detalle-sticky"
+           data-trace="C9-40"
+           style="position: sticky; top: 20px;">
+        
+        <!-- Estado sin selección -->
+        <div id="panelPlaceholder" class="card border-0 shadow-sm bg-white p-4 text-center rounded-3">
+          <div class="text-muted my-4">
+            <div class="bg-light p-3 rounded-circle d-inline-flex mb-3">
+              <svg width="40" height="40" fill="currentColor" class="text-primary opacity-75" viewBox="0 0 16 16" aria-hidden="true">
+                <path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0zM4.5 7.5a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 0 1H5a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 0 1H5a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 0 1H5a.5.5 0 0 1-.5-.5z"/>
+              </svg>
+            </div>
+            <h6 class="fw-bold text-dark">Detalle del evento clínico</h6>
+            <p class="text-muted small px-3">Haga clic en cualquiera de los hitos de la línea de tiempo para ver la información detallada de la consulta, médico tratante, diagnósticos CIE-10, procedimientos CUPS y órdenes asociadas.</p>
+          </div>
+        </div>
+
+        <!-- Spinner de carga del panel lateral -->
+        <div id="panelSpinner" class="card border-0 shadow-sm bg-white p-4 text-center rounded-3 d-none">
+          <div class="spinner-border text-primary my-4" role="status">
+            <span class="visually-hidden">Cargando detalles...</span>
+          </div>
+          <p class="text-muted small">Cargando resumen clínico...</p>
+        </div>
+
+        <!-- Contenido activo del detalle de la atención seleccionada -->
+        <div id="panelContenido" class="d-none d-flex flex-column gap-3">
+          
+          <!-- Encabezado de la atención -->
+          <div class="card border-0 shadow-sm bg-white rounded-3 p-3">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+              <span id="panelAtencionCodigoBadge" class="badge bg-primary bg-opacity-10 text-primary border border-primary-subtle px-2 py-1 font-monospace fw-bold">
+                ATE-0000
+              </span>
+              <span id="panelAtencionEstadoBadge" class="badge bg-success">
+                ABIERTA
+              </span>
+            </div>
+            <div class="d-flex align-items-baseline gap-2">
+              <svg width="15" height="15" fill="currentColor" class="text-secondary flex-shrink-0" viewBox="0 0 16 16" aria-hidden="true">
+                <path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71V3.5z"/>
+                <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0z"/>
+              </svg>
+              <span id="panelAtencionFecha" class="text-secondary small fw-medium">--/--/---- --:--</span>
+            </div>
+            <div id="panelAtencionMotivoContenedor" class="mt-2 pt-2 border-top">
+              <small class="text-uppercase text-muted fw-bold" style="font-size: 0.7rem;">Motivo de consulta:</small>
+              <p id="panelAtencionMotivo" class="text-dark small mb-0 fw-medium"></p>
+            </div>
+          </div>
+
+          <!-- Card 1: Médico tratante [C9-41 a C9-43] -->
+          <div class="card border-0 shadow-sm bg-white rounded-3 p-3" data-trace="C9-41">
+            <div class="d-flex align-items-center gap-3">
+              <div id="panelMedicoAvatar"
+                   class="user-avatar text-white fw-bold rounded-circle d-flex align-items-center justify-content-center flex-shrink-0 shadow-sm"
+                   style="width: 48px; height: 48px; font-size: 1.1rem; background: linear-gradient(135deg, #0d6efd, #0b5ed7);">
+                MD
+              </div>
+              <div class="overflow-hidden">
+                <small class="text-uppercase text-secondary fw-semibold" style="font-size: 0.72rem;">Médico tratante</small>
+                <h6 id="panelMedicoNombre" class="fw-bold text-dark mb-0 text-truncate" data-trace="C9-42">--</h6>
+                <div id="panelMedicoEspecialidad" class="text-primary small text-truncate" data-trace="C9-43">--</div>
+                <div id="panelMedicoEmail" class="text-muted" style="font-size: 0.78rem;">--</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 2: Diagnóstico principal (CIE-10) [C9-44 a C9-47] -->
+          <div class="card border-0 shadow-sm bg-white rounded-3 p-3" data-trace="C9-44">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+              <h6 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2" style="font-size: 0.9rem;" data-trace="C9-45">
+                <svg width="16" height="16" fill="currentColor" class="text-danger" viewBox="0 0 16 16" aria-hidden="true">
+                  <path fill-rule="evenodd" d="M8 1.314C12.438-3.248 23.534 4.735 8 15-7.534 4.736 3.562-3.248 8 1.314z"/>
+                </svg>
+                <span>Diagnóstico principal (CIE-10)</span>
+              </h6>
+            </div>
+
+            <!-- Diagnóstico Principal destacado [C9-46] -->
+            <div class="mb-2">
+              <small class="text-muted fw-semibold" style="font-size: 0.72rem;">DIAGNÓSTICO PRINCIPAL:</small>
+              <div id="panelDiagPrincipal" class="p-2 mt-1 rounded bg-danger bg-opacity-10 border border-danger-subtle" data-trace="C9-46">
+                <div class="d-flex align-items-start gap-2">
+                  <span id="panelDiagPrincipalCodigo" class="badge bg-danger text-white font-monospace">--</span>
+                  <span id="panelDiagPrincipalDesc" class="text-dark small fw-semibold">Sin diagnóstico principal registrado</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Diagnósticos Secundarios [C9-47] -->
+            <div>
+              <small class="text-muted fw-semibold" style="font-size: 0.72rem;">DIAGNÓSTICOS SECUNDARIOS:</small>
+              <div id="panelDiagSecundarios" class="mt-1 d-flex flex-column gap-1" data-trace="C9-47">
+                <span class="text-muted small italic">Sin diagnósticos secundarios</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 3: Procedimientos (CUPS) [C9-48 a C9-51] -->
+          <div class="card border-0 shadow-sm bg-white rounded-3 p-3" data-trace="C9-48">
+            <h6 class="fw-bold text-dark mb-2 d-flex align-items-center gap-2" style="font-size: 0.9rem;" data-trace="C9-49">
+              <svg width="16" height="16" fill="currentColor" class="text-info" viewBox="0 0 16 16" aria-hidden="true">
+                <path d="M8.186 1.113a.5.5 0 0 0-.372 0L1.846 3.5 8 5.961 14.154 3.5 8.186 1.113zM15 4.239l-6.5 2.6v7.922l6.5-2.6V4.24zM7.5 14.761V6.838L1 4.239v7.922l6.5 2.6z"/>
+              </svg>
+              <span>Procedimientos (CUPS)</span>
+            </h6>
+            <div id="panelProcedimientosLista" class="d-flex flex-column gap-2" data-trace="C9-50">
+              <span class="text-muted small" data-trace="C9-51">Sin procedimientos registrados</span>
+            </div>
+          </div>
+
+          <!-- Card 4: Órdenes y Resultados vinculados -->
+          <div class="card border-0 shadow-sm bg-white rounded-3 p-3">
+            <h6 class="fw-bold text-dark mb-2 d-flex align-items-center gap-2" style="font-size: 0.9rem;">
+              <svg width="16" height="16" fill="currentColor" class="text-warning" viewBox="0 0 16 16" aria-hidden="true">
+                <path d="M14 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h12zM2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2H2z"/>
+                <path d="M4 4.5a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5zm0 2a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 0 1h-4a.5.5 0 0 1-.5-.5z"/>
+              </svg>
+              <span>Órdenes y Resultados vinculados</span>
+            </h6>
+            
+            <!-- Órdenes diagnósticas vinculadas -->
+            <div class="mb-2">
+              <small class="text-muted fw-semibold" style="font-size: 0.72rem;">ÓRDENES EMITIDAS:</small>
+              <div id="panelOrdenesLista" class="mt-1 d-flex flex-column gap-2">
+                <span class="text-muted small">No se emitieron órdenes en esta atención</span>
+              </div>
+            </div>
+
+            <!-- Resultados diagnósticos vinculados -->
+            <div>
+              <small class="text-muted fw-semibold" style="font-size: 0.72rem;">RESULTADOS DE APOYO:</small>
+              <div id="panelResultadosLista" class="mt-1 d-flex flex-column gap-2">
+                <span class="text-muted small">Sin resultados registrados</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pie del panel: Enlace de acción "Ver consulta completa" [C9-52] -->
+          <div class="card border-0 shadow-sm bg-white rounded-3 p-3 text-center" data-trace="C9-52">
+            <a id="btnVerConsultaCompleta"
+               href="#"
+               class="btn btn-primary d-inline-flex align-items-center justify-content-center gap-2 w-100 shadow-sm fw-semibold">
+              <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
+                <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8zM1.173 8a13.133 13.133 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5c2.12 0 3.879 1.168 5.168 2.457A13.133 13.133 0 0 1 14.828 8c-.058.087-.122.183-.195.288-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5c-2.12 0-3.879-1.168-5.168-2.457A13.134 13.134 0 0 1 1.172 8z"/>
+                <path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5zM4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0z"/>
+              </svg>
+              <span>Ver consulta completa</span>
+            </a>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/_fin', { scripts: ['/js/timeline.js'] }) %>

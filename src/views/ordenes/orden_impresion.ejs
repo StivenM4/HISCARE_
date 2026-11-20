@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Orden Médica <%= typeof orden !== 'undefined' && orden.codigo ? orden.codigo : 'ORD-89001' %> · HISCARE</title>
+  <link rel="stylesheet" href="/vendor/bootstrap/css/bootstrap.min.css">
+  <link rel="stylesheet" href="/css/print.css">
+</head>
+<body>
+
+<%
+  const ord = (typeof orden !== 'undefined' && orden) ? orden : {};
+  const pac = (typeof paciente !== 'undefined' && paciente) ? paciente : {};
+  const med = (typeof medico !== 'undefined' && medico) ? medico : {};
+
+  const codigoOrden = ord.codigo || 'ORD-89001';
+  const tipoOrden = ord.tipo || 'LABORATORIO';
+
+  // Fecha y vigencia (soporta vigenciaDias y fechaVigenciaTexto del controller o 30 días por defecto)
+  let fechaOrden = ord.fecha ? new Date(ord.fecha) : new Date();
+  if (isNaN(fechaOrden.getTime())) fechaOrden = new Date();
+  const diaF = String(fechaOrden.getDate()).padStart(2, '0');
+  const mesF = String(fechaOrden.getMonth() + 1).padStart(2, '0');
+  const anioF = fechaOrden.getFullYear();
+  const fechaTexto = `${diaF}/${mesF}/${anioF}`;
+
+  const diasVigencia = (typeof vigenciaDias !== 'undefined' && vigenciaDias)
+    ? Number(vigenciaDias)
+    : (ord.vigenciaDias ? Number(ord.vigenciaDias) : 30);
+
+  let fechaVigenciaCalc = (typeof fechaVigencia !== 'undefined' && fechaVigencia) ? new Date(fechaVigencia) : null;
+  if (!fechaVigenciaCalc || isNaN(fechaVigenciaCalc.getTime())) {
+    fechaVigenciaCalc = new Date(fechaOrden);
+    if (!isNaN(fechaVigenciaCalc.getTime())) {
+      fechaVigenciaCalc.setDate(fechaVigenciaCalc.getDate() + diasVigencia);
+    }
+  }
+  const diaV = String(fechaVigenciaCalc.getDate()).padStart(2, '0');
+  const mesV = String(fechaVigenciaCalc.getMonth() + 1).padStart(2, '0');
+  const anioV = fechaVigenciaCalc.getFullYear();
+  const vigenciaCalculada = `${diaV}/${mesV}/${anioV}`;
+  const vigenciaTexto = (typeof fechaVigenciaTexto !== 'undefined' && fechaVigenciaTexto)
+    ? fechaVigenciaTexto
+    : (ord.fechaVigenciaTexto || vigenciaCalculada);
+
+  // Datos paciente
+  const rawNombre = pac.nombres ? `${pac.nombres} ${pac.apellidos || ''}`.trim() : (ord.paciente_nombre || 'Juan Diego Pérez García');
+  const nombrePaciente = rawNombre.replace(/\bPerez\b/g, 'Pérez');
+
+  const tipoDoc = pac.tipo_documento || 'CC';
+  const numDoc = pac.numero_documento || '1234567890';
+  const docPaciente = `${tipoDoc} ${numDoc}`;
+  const edadPaciente = pac.edad != null ? `${pac.edad} años` : (ord.edad ? `${ord.edad} años` : '41 años');
+  const sexoPaciente = pac.sexo || ord.sexo || 'M';
+
+  // Aseguradora (EPS)
+  const epsPaciente = pac.eps || ord.eps || 'EPS Sanitas';
+  const planPaciente = pac.tipo_plan || ord.tipo_plan || 'Contributivo';
+  const tipoUsuarioPaciente = pac.tipo_usuario || ord.tipo_usuario || 'Cotizante';
+  const epsCompleta = (epsPaciente.toUpperCase().includes('CONTRIBUTIVO') || epsPaciente.toUpperCase().includes('COTIZANTE'))
+    ? epsPaciente
+    : `${epsPaciente} - ${planPaciente} - ${tipoUsuarioPaciente}`;
+  const contratoPaciente = pac.numero_contrato || ord.numero_contrato || 'SAN-2026-004512';
+
+  // Diagnóstico
+  const cie10Codigo = ord.cie10 || (ord.diagnostico && ord.diagnostico.codigo) || 'I10X';
+  const cie10Desc = ord.cie10_desc || (ord.diagnostico && ord.diagnostico.descripcion) || 'Hipertensión esencial (primaria)';
+  const diagCompleto = `${cie10Codigo} - ${cie10Desc}`;
+
+  // Médico tratante
+  const nombreMedico = med.nombre || ord.medico || 'Dra. Ana Pérez';
+  const regMedico = med.registro_medico || ord.medico_registro || 'RM 52.418';
+
+  // Procedimientos / exámenes
+  const items = Array.isArray(ord.items) && ord.items.length > 0
+    ? ord.items
+    : (Array.isArray(detalle) && detalle.length > 0 ? detalle : [
+        { codigo: '902210', descripcion: 'Hemograma IV (automatizado)', cantidad: 1 },
+        { codigo: '903841', descripcion: 'Glucosa en suero u otro fluido diferente a orina', cantidad: 1 }
+      ]);
+
+  // Hash de seguridad
+  const hashSeguridad = ord.hash_seguridad || (ord.id ? ('SEC-' + String(ord.id).replace(/-/g, '').slice(0, 16).toUpperCase()) : 'SEC-9F8A7B6C5D4E3F2A');
+%>
+
+<!-- Barra superior no imprimible con botón Volver y botón Imprimir -->
+<div class="no-print print-toolbar d-flex align-items-center justify-content-between">
+  <div class="d-flex align-items-center gap-3">
+    <a href="javascript:void(0)" id="btnVolver" onclick="window.history.length > 1 ? window.history.back() : window.location.href='/ordenes'" class="btn btn-outline-light btn-sm d-inline-flex align-items-center gap-1" data-action="volver">
+      <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+      <span>Volver</span>
+    </a>
+    <span class="fw-semibold">Vista previa de impresión · <%= codigoOrden %></span>
+  </div>
+  <div class="d-flex align-items-center gap-2">
+    <button type="button" id="btnImprimir" onclick="window.print()" class="btn btn-success btn-sm d-inline-flex align-items-center gap-2 px-3 fw-bold" data-action="imprimir">
+      <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+      <span>Imprimir</span>
+    </button>
+  </div>
+</div>
+
+<main class="print-sheet">
+
+  <!-- [8.1], [8.2], [8.10], [8.11]: Encabezado institucional -->
+  <header class="ips-brand d-flex align-items-center justify-content-between mb-3 border-bottom pb-3" data-trace="C8-3">
+    <div>
+      <div class="d-flex align-items-center gap-2 mb-1" data-trace="C8-1">
+        <span class="text-primary me-1 d-inline-flex align-items-center" aria-hidden="true">
+          <svg width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M8 0a1 1 0 0 1 1 1v6h6a1 1 0 1 1 0 2H9v6a1 1 0 1 1-2 0V9H1a1 1 0 1 1 0-2h6V1a1 1 0 0 1 1-1z"/>
+          </svg>
+        </span>
+        <span class="fw-bold fs-4 tracking-tight text-primary">HISCARE</span>
+        <span class="ips-badge-circle badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 rounded-pill">IPS · Bogotá D.C.</span>
+      </div>
+      <div class="text-secondary lh-sm" style="font-size: 11px;">
+        <span class="fw-medium">NIT:</span> 901.234.567-8 · <span class="fw-medium">Código Habilitación:</span> 1100109876-01<br>
+        Bogotá D.C. · Teléfono: +57 (601) 745-9000 · contacto@hiscare.edu.co
+      </div>
+    </div>
+    <div class="text-end">
+      <span class="badge bg-light text-dark border fs-6 font-monospace mb-1" data-trace="C8-11">N.° de orden: <%= codigoOrden %></span>
+      <h2 class="h5 fw-bold text-dark text-uppercase mb-0 tracking-wide" data-trace="C8-2">ORDEN MÉDICA DE AYUDAS DIAGNÓSTICAS</h2>
+      <div class="text-muted small mt-1" data-trace="C8-10">Fecha: <strong><%= fechaTexto %></strong></div>
+    </div>
+  </header>
+
+  <!-- [8.3]: Recuadro principal contenedor de datos del paciente -->
+  <section class="order-box mb-3 border rounded-3 p-3 bg-light" data-trace="C8-3">
+    <div class="row g-3">
+      <!-- [8.4]: Paciente y [8.5]: Nombre en mayúsculas -->
+      <div class="col-6">
+        <span class="text-secondary fw-semibold text-uppercase d-block" style="font-size: 11px;" data-trace="C8-4">Paciente:</span>
+        <div class="fw-bold text-dark text-uppercase fs-6" data-trace="C8-5"><%= nombrePaciente %></div>
+      </div>
+      <!-- [8.5]: Documento y Edad -->
+      <div class="col-6" data-trace="C8-5">
+        <span class="text-secondary fw-semibold text-uppercase d-block" style="font-size: 11px;">Documento:</span>
+        <span class="fw-semibold text-dark"><%= docPaciente %></span>
+        <span class="mx-1 text-muted">·</span>
+        <span class="text-secondary fw-semibold text-uppercase" style="font-size: 11px;">Edad:</span>
+        <span class="text-dark"><%= edadPaciente %></span>
+        <span class="mx-1 text-muted">·</span>
+        <span class="text-secondary fw-semibold text-uppercase" style="font-size: 11px;">Sexo:</span>
+        <span class="text-dark"><%= sexoPaciente %></span>
+      </div>
+      <!-- [8.6]: Entidad (EPS) -->
+      <div class="col-6" data-trace="C8-6">
+        <span class="text-secondary fw-semibold text-uppercase d-block" style="font-size: 11px;">Entidad (EPS):</span>
+        <div class="fw-semibold text-dark text-uppercase"><%= epsCompleta %></div>
+      </div>
+      <div class="col-3">
+        <span class="text-secondary fw-semibold text-uppercase d-block" style="font-size: 11px;">Contrato / Póliza:</span>
+        <div class="text-dark font-monospace"><%= contratoPaciente %></div>
+      </div>
+      <!-- [8.9]: Vigencia -->
+      <div class="col-3" data-trace="C8-9">
+        <span class="text-secondary fw-semibold text-uppercase d-block" style="font-size: 11px;">Vigencia:</span>
+        <div class="fw-bold text-danger"><%= diasVigencia %> días (Válida hasta <%= vigenciaTexto %>)</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- [8.7], [8.8]: Bloque diagnóstico justificativo -->
+  <section class="order-box order-box-diagnostic mb-3 border rounded-3 p-3 bg-white" data-trace="C8-7">
+    <div data-trace="C8-8">
+      <span class="badge bg-primary-subtle text-primary border border-primary-subtle text-uppercase fw-semibold mb-1" style="font-size: 10px;">Diagnóstico: CIE-10 que justifica la orden</span>
+      <div class="fw-bold text-dark fs-6 mt-1"><%= diagCompleto %></div>
+    </div>
+  </section>
+
+  <!-- [8.12]: Línea o recuadro -->
+  <hr class="order-separator my-3 opacity-25" data-trace="C8-12">
+
+  <!-- [8.17]: Contenedor de la tabla de procedimientos CUPS -->
+  <section class="table-container mb-3" data-trace="C8-17">
+    <table class="table table-bordered table-sm align-middle mb-0" data-trace="C8-17">
+      <thead class="table-light text-uppercase fw-bold text-secondary" style="font-size: 11px;">
+        <tr>
+          <!-- [8.14]: CÓDIGO CUPS -->
+          <th style="width: 20%;" class="ps-3 py-2" data-trace="C8-14">CÓDIGO CUPS</th>
+          <!-- [8.15]: DESCRIPCIÓN DEL EXAMEN -->
+          <th style="width: 65%;" class="py-2" data-trace="C8-15">DESCRIPCIÓN DEL EXAMEN</th>
+          <!-- [8.16]: CANT. -->
+          <th style="width: 15%;" class="text-center py-2" data-trace="C8-16">CANT.</th>
+        </tr>
+      </thead>
+      <!-- [8.13]: Filas de procedimiento -->
+      <tbody data-trace="C8-13">
+        <% items.forEach(item => { %>
+          <tr data-trace="C8-13">
+            <td class="font-monospace fw-bold ps-3 py-2 text-primary"><%= item.codigo %></td>
+            <td class="py-2 text-uppercase fw-medium text-dark"><%= item.descripcion %></td>
+            <td class="text-center fw-semibold py-2"><%= item.cantidad || 1 %></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- [8.18]: Texto de instrucciones -->
+  <div class="order-instructions mb-3 p-3 bg-light rounded-3 border d-flex align-items-center gap-2" data-trace="C8-18">
+    <svg width="20" height="20" fill="currentColor" class="bi bi-info-circle text-primary flex-shrink-0" viewBox="0 0 16 16" aria-hidden="true">
+      <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+      <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0"/>
+    </svg>
+    <div>
+      <strong>Instrucciones:</strong> <%= (typeof instrucciones !== 'undefined' && instrucciones) ? instrucciones : (ord.instrucciones || 'Presente este documento en el laboratorio para la toma de muestras. Ayuno de 8 horas para glucosa.') %>
+    </div>
+  </div>
+
+  <!-- [8.19], [8.20]: Código de barras CODE128 -->
+  <div class="barcode-container text-center my-3 p-3 border rounded-3 bg-white" data-trace="C8-20">
+    <svg id="barcode" class="barcode-svg" data-trace="C8-19" data-codigo="<%= codigoOrden %>" aria-label="Código de barras <%= codigoOrden %>"></svg>
+    <div id="barcodeText" class="barcode-text font-monospace small fw-bold text-dark mt-1" data-trace="C8-20"><%= codigoOrden %></div>
+  </div>
+
+  <!-- [8.21], [8.22]: Firma y sello del médico -->
+  <section class="signature-section mt-4 pt-2 d-flex justify-content-between align-items-end">
+    <div class="text-muted small" style="font-size: 10px; max-width: 340px; line-height: 1.5;">
+      Documento clínico generado electrónicamente conforme a la Resolución 1995 de 1999 y Ley 527 de 1999.<br>
+      Hash de verificación: <span class="font-monospace fw-semibold"><%= hashSeguridad %></span>
+    </div>
+    <div class="text-center signature-wrapper" data-trace="C8-22">
+      <div class="signature-line mx-auto mb-2 border-top border-dark" style="width: 220px;"></div>
+      <div class="signature-header small fw-bold text-uppercase text-secondary mb-1" data-trace="C8-21">FIRMA Y SELLO DEL MÉDICO</div>
+      <div class="fw-bold text-dark"><%= nombreMedico %></div>
+      <div class="text-secondary small"><%= regMedico %> · Medicina General</div>
+    </div>
+  </section>
+
+</main>
+
+<script src="/vendor/JsBarcode.all.min.js"></script>
+<script src="/js/orden_impresion.js"></script>
+
+</body>
+</html>

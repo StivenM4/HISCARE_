@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Acceso no autorizado · HISCARE</title>
+  <link rel="stylesheet" href="/vendor/bootstrap/css/bootstrap.min.css">
+  <link rel="stylesheet" href="/css/hiscare.css">
+</head>
+<body class="bg-light d-flex align-items-center justify-content-center min-vh-100 p-3">
+  <%
+    const rolActual = (typeof rol !== 'undefined' && rol) ? rol : ((typeof locals !== 'undefined' && locals.usuario && locals.usuario.rol) ? locals.usuario.rol : 'Usuario');
+    let defaultInicio = '/';
+    if (rolActual === 'MEDICO') defaultInicio = '/agenda';
+    else if (rolActual === 'ENFERMERO') defaultInicio = '/atenciones';
+    else if (rolActual === 'RECEPCIONISTA') defaultInicio = '/pacientes';
+    else if (rolActual === 'ADMIN') defaultInicio = '/admin/usuarios';
+    else if (rolActual === 'AUDITOR') defaultInicio = '/auditoria';
+    const urlDestino = typeof inicioUrl !== 'undefined' ? inicioUrl : defaultInicio;
+  %>
+  <div class="card p-4 p-sm-5 shadow-sm border-0 rounded-3 text-center" style="max-width: 480px; width: 100%;">
+    <!-- 27.3: Número 403 en rojo vibrante -->
+    <div class="display-3 fw-bold text-danger mb-1" data-trace="C27-3">403</div>
+
+    <!-- 27.4: Título Acceso no autorizado -->
+    <h1 class="h4 fw-bold text-dark mb-2" data-trace="C27-4">Acceso no autorizado</h1>
+
+    <!-- 27.5 y 27.6: Rol y mensaje descriptivo -->
+    <p class="text-secondary mb-3">
+      <span data-trace="C27-5">Su rol <strong><%= rolActual %></strong></span>
+      <span data-trace="C27-6">no tiene permiso para acceder a esta sección de la aplicación.</span>
+    </p>
+
+    <!-- 27.7: Alerta informativa institucional -->
+    <div class="alert alert-info text-start py-2 px-3 small mb-3" role="status" data-trace="C27-7">
+      ℹ La historia clínica solo es accesible para el equipo de salud tratante.
+    </div>
+
+    <!-- Metadatos de la solicitud -->
+    <div class="text-start mb-4">
+      <!-- 27.8, 27.9: Ruta solicitada -->
+      <div class="d-flex justify-content-between py-1 border-bottom">
+        <span class="text-muted" data-trace="C27-8">Ruta solicitada</span>
+        <code class="text-dark fw-semibold" data-trace="C27-9"><%= (typeof metodo !== 'undefined' ? metodo + ' ' : 'GET ') + (typeof ruta !== 'undefined' ? ruta : '') %></code>
+      </div>
+
+      <!-- 27.10, 27.11: Fecha -->
+      <div class="d-flex justify-content-between py-1 border-bottom">
+        <span class="text-muted" data-trace="C27-10">Fecha</span>
+        <span class="text-dark" data-trace="C27-11"><%= typeof fecha !== 'undefined' ? fecha : new Date().toLocaleString('es-CO') %></span>
+      </div>
+
+      <!-- 27.12, 27.13: Registro de auditoría -->
+      <div class="d-flex justify-content-between py-1 border-bottom">
+        <span class="text-muted" data-trace="C27-12">Registro</span>
+        <span class="badge bg-light text-dark border" data-trace="C27-13">Evento guardado en auditoría</span>
+      </div>
+    </div>
+
+    <!-- 27.14: Botón Volver al inicio -->
+    <a href="<%= urlDestino %>" class="btn btn-primary w-100 py-2 fw-semibold" data-trace="C27-14">Volver al inicio</a>
+  </div>
+</body>
+</html>

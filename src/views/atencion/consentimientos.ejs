@@ -1,0 +1,414 @@
+<%- include('../partials/_inicio', { titulo: 'Consentimientos informados' }) %>
+<!-- Atención clínica · Consentimientos informados -->
+<%- include('../partials/_banner_paciente', { figuraTrace: 'C19' }) %>
+<%- include('../partials/_tabs_atencion', { figuraTrace: 'C19', seccion: 'consentimientos' }) %>
+
+<%
+  const idAtencion = atencion.id;
+  const esCerrada = (atencion.estado === 'CERRADA');
+  const rolUsuario = (typeof usuario !== 'undefined' && usuario && usuario.rol) ? usuario.rol : '';
+  const esSoloLectura = Boolean((typeof soloLectura !== 'undefined' && soloLectura) || esCerrada || rolUsuario === 'ENFERMERO');
+  const puedeRegistrar = Boolean(typeof puedeEditar !== 'undefined' ? puedeEditar : !esSoloLectura);
+  const listaConsentimientos = (typeof consentimientos !== 'undefined' && Array.isArray(consentimientos)) ? consentimientos : [];
+
+  const tiposDisponibles = (typeof tiposConsentimiento !== 'undefined' && Array.isArray(tiposConsentimiento) && tiposConsentimiento.length > 0)
+    ? tiposConsentimiento
+    : [
+        'Toma de muestras',
+        'Procedimiento invasivo menor',
+        'Procedimiento diagnóstico con sedación',
+        'Procedimiento radiológico con medio de contraste',
+        'Administración de medicamentos endovenosos',
+        'Procedimiento quirúrgico ambulatorio',
+        'Consentimiento informado general'
+      ];
+
+  const hoyIso = new Date().toISOString().split('T')[0];
+
+  function formatearFechaDDMMYYYY(val) {
+    if (!val) return '—';
+    if (typeof val === 'string') {
+      if (val.includes('/')) return val.split(' ')[0];
+      const m = val.match(/^(\d{4})-(\d{2})-(\d{2})/);
+      if (m) return `${m[3]}/${m[2]}/${m[1]}`;
+    }
+    const d = new Date(val);
+    if (isNaN(d.getTime())) return String(val);
+    const dia = String(d.getUTCDate()).padStart(2, '0');
+    const mes = String(d.getUTCMonth() + 1).padStart(2, '0');
+    const anio = d.getUTCFullYear();
+    return `${dia}/${mes}/${anio}`;
+  }
+%>
+
+<div class="row g-4" id="contenedorConsentimientos" data-atencion="<%= idAtencion %>" data-solo-lectura="<%= esSoloLectura ? 'true' : 'false' %>">
+
+  <!-- ================================================================= -->
+  <!-- VISTA PRINCIPAL A ANCHO COMPLETO: Tabla de Consentimientos        -->
+  <!-- ================================================================= -->
+  <div class="col-12">
+    
+    <!-- Encabezado principal [19.28] con botón destacado para nuevo consentimiento -->
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-3">
+      <div class="d-flex align-items-center gap-3">
+        <h2 class="h5 fw-bold text-dark mb-0 d-flex align-items-center gap-2" data-trace="C19-28">
+          <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+          </svg>
+          <span>Consentimientos de la atención</span>
+        </h2>
+        <span class="badge bg-light text-secondary border px-2 py-1 font-monospace" id="contadorConsentimientos">
+          <%= listaConsentimientos.length %> <%= listaConsentimientos.length === 1 ? 'registro' : 'registros' %>
+        </span>
+      </div>
+
+      <div>
+        <button type="button"
+                class="btn btn-primary d-inline-flex align-items-center gap-2 shadow-sm"
+                id="btnAbrirModalNuevoConsentimiento"
+                data-bs-toggle="modal"
+                data-bs-target="#modalNuevoConsentimiento"
+                <%= esSoloLectura ? 'disabled title="Atención en modo solo lectura: no es posible agregar nuevos consentimientos"' : '' %>>
+          <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+          </svg>
+          <span>Nuevo consentimiento informado</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Banner dinámico de notificación de éxito en la vista principal -->
+    <div id="alertaExitoPrincipalConsentimiento" class="alert alert-success d-none py-2 px-3 small mb-3 border-0 shadow-sm" role="alert"></div>
+
+    <!-- [19.35] Callout / Banner de alerta clínica sobre orden de laboratorio -->
+    <div class="alert alert-warning border border-warning-subtle shadow-sm d-flex align-items-start gap-2 mb-3"
+         role="alert"
+         data-trace="C19-35"
+         id="bannerAlertaLaboratorio"
+         style="border-radius: 0.5rem;">
+      <svg width="20" height="20" fill="currentColor" class="bi bi-exclamation-triangle-fill text-warning flex-shrink-0 mt-1" viewBox="0 0 16 16" aria-hidden="true">
+        <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+      </svg>
+      <div class="text-dark small">
+        <strong>⚠️ La orden de laboratorio no se despacha mientras el consentimiento de toma de muestras esté PENDIENTE</strong>
+      </div>
+    </div>
+
+    <!-- [19.30] Tabla de consentimientos de la atención -->
+    <div class="card shadow-sm border-0 bg-white mb-4" style="border-radius: 0.5rem;">
+      <div class="table-responsive">
+        <table class="table align-middle table-hover mb-0" id="tablaConsentimientos" data-trace="C19-30">
+          <thead class="table-light text-secondary small border-bottom">
+            <tr>
+              <th scope="col" class="ps-3 py-3">Tipo</th>
+              <th scope="col" class="py-3">Fecha</th>
+              <th scope="col" class="py-3">Estado de firma</th>
+              <th scope="col" class="text-end pe-3 py-3">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="cuerpoTablaConsentimientos">
+            <% if (listaConsentimientos.length === 0) { %>
+              <tr id="filaSinConsentimientos">
+                <td colspan="4" class="text-center text-muted py-4">
+                  No se han registrado consentimientos informados en esta atención clínica.
+                </td>
+              </tr>
+            <% } else { %>
+              <% listaConsentimientos.forEach(c => { %>
+                <tr data-trace="C19-29" data-id="<%= c.id %>" class="fila-consentimiento">
+                  <td class="ps-3 py-3">
+                    <div class="fw-semibold text-dark text-break"><%= c.tipo %></div>
+                    <% if (c.firmado && c.firmado_por) { %>
+                      <div class="small text-muted mt-1">
+                        Firmado por: <span class="fw-medium text-dark"><%= c.firmado_por === 'PACIENTE' ? 'Paciente' : (c.firmado_por === 'ACUDIENTE' ? 'Acudiente' : c.firmado_por) %></span>
+                      </div>
+                    <% } else if (!c.firmado) { %>
+                      <div class="small text-warning-emphasis fst-italic mt-1">Sin firma registrada</div>
+                    <% } %>
+                  </td>
+                  <td class="py-3">
+                    <span class="small font-monospace text-secondary" data-trace="C19-31"><%= formatearFechaDDMMYYYY(c.fecha) %></span>
+                  </td>
+                  <td class="py-3">
+                    <% if (c.firmado) { %>
+                      <span class="badge bg-success text-white px-2 py-1" data-trace="C19-32">FIRMADO</span>
+                    <% } else { %>
+                      <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2 py-1" data-trace="C19-33">PENDIENTE</span>
+                    <% } %>
+                  </td>
+                  <td class="text-end pe-3 py-3">
+                    <div class="d-inline-flex align-items-center gap-1">
+                      <button type="button"
+                              class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1 btn-ver-consentimiento"
+                              data-id="<%= c.id %>"
+                              data-trace="C19-34">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                        </svg>
+                        <span>Ver</span>
+                      </button>
+                      <% if (!c.firmado && puedeRegistrar) { %>
+                        <button type="button"
+                                class="btn btn-sm btn-outline-success d-inline-flex align-items-center gap-1 btn-firmar-rapido"
+                                data-id="<%= c.id %>"
+                                title="Firmar consentimiento">
+                          <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+                          </svg>
+                          <span>Firmar</span>
+                        </button>
+                      <% } %>
+                    </div>
+                  </td>
+                </tr>
+              <% }) %>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- ================================================================= -->
+<!-- MODAL DE CREACIÓN: Card Nuevo Consentimiento [19.36 - 19.47]      -->
+<!-- ================================================================= -->
+<div class="modal fade" id="modalNuevoConsentimiento" tabindex="-1" aria-labelledby="modalNuevoConsentimientoLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content shadow-lg border-0" style="border-radius: 0.5rem;">
+      <!-- [19.36] Card Nuevo consentimiento informado -->
+      <div class="card shadow-none border-0 bg-white" data-trace="C19-36" id="cardNuevoConsentimiento">
+        <div class="modal-header border-bottom py-3">
+          <h3 class="h6 fw-bold modal-title text-white mb-0 d-flex align-items-center gap-2" id="modalNuevoConsentimientoLabel">
+            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" class="text-info" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+            <span>Nuevo consentimiento informado</span>
+          </h3>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body p-4">
+
+          <% if (esSoloLectura) { %>
+            <div class="alert alert-secondary py-2 px-3 small d-flex align-items-center gap-2 mb-3" role="alert" id="avisoSoloLecturaConsentimiento">
+              <svg width="16" height="16" fill="currentColor" class="bi bi-lock-fill flex-shrink-0" viewBox="0 0 16 16">
+                <path d="M8 1a2 2 0 0 0-2 2v4H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2zm1 6V3a1 1 0 0 0-2 0v4h2z"/>
+              </svg>
+              <span>Atención en modo solo lectura: no es posible agregar nuevos consentimientos informados.</span>
+            </div>
+          <% } %>
+
+          <form id="formConsentimiento" novalidate>
+
+            <!-- Contenedor dinámico de alertas de validación o del backend -->
+            <div id="alertaFormularioConsentimiento" class="alert d-none py-2 px-3 small mb-3" role="alert"></div>
+
+            <!-- [19.37] Label + [19.38] Select tipo de consentimiento -->
+            <div class="mb-3">
+              <label for="tipoConsentimiento" class="form-label fw-semibold text-secondary small" data-trace="C19-37">
+                Tipo de consentimiento <span class="text-danger">*</span>
+              </label>
+              <select class="form-select shadow-none"
+                      id="tipoConsentimiento"
+                      name="tipo"
+                      required
+                      data-trace="C19-38"
+                      <%= esSoloLectura ? 'disabled' : '' %>>
+                <option value="">Seleccione un tipo de consentimiento...</option>
+                <% tiposDisponibles.forEach(t => { %>
+                  <option value="<%= t %>"><%= t %></option>
+                <% }) %>
+              </select>
+              <div class="invalid-feedback small">Seleccione el tipo de consentimiento a registrar.</div>
+            </div>
+
+            <!-- [19.39] Label + [19.40] Textarea alcance y descripción -->
+            <div class="mb-3">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <label for="descripcionConsentimiento" class="form-label fw-semibold text-secondary small mb-0" data-trace="C19-39">
+                  Alcance y descripción <span class="text-danger">*</span>
+                </label>
+                <small class="text-muted font-monospace" id="contadorCaracteres">0 / mín. 20 car.</small>
+              </div>
+              <textarea class="form-control shadow-none"
+                        id="descripcionConsentimiento"
+                        name="descripcion"
+                        rows="5"
+                        minlength="20"
+                        required
+                        placeholder="Describa el procedimiento, justificación clínica, beneficios y riesgos explicados al paciente..."
+                        data-trace="C19-40"
+                        <%= esSoloLectura ? 'disabled' : '' %>></textarea>
+              <div class="form-text small text-muted">
+                Texto sugerido editable según el tipo. Debe incluir justificación, alcance y riesgos (mínimo 20 caracteres).
+              </div>
+            </div>
+
+            <!-- [19.41] Label + [19.42] Input date con fecha de hoy -->
+            <div class="mb-3">
+              <label for="fechaConsentimiento" class="form-label fw-semibold text-secondary small" data-trace="C19-41">
+                Fecha <span class="text-danger">*</span>
+              </label>
+              <input type="date"
+                     class="form-control shadow-none"
+                     id="fechaConsentimiento"
+                     name="fecha"
+                     required
+                     value="<%= hoyIso %>"
+                     data-trace="C19-42"
+                     <%= esSoloLectura ? 'disabled' : '' %>>
+              <div class="invalid-feedback small">Ingrese una fecha válida para el consentimiento.</div>
+            </div>
+
+            <!-- [19.45] Checkbox 'El paciente firmó el formato físico / tableta de firma' -->
+            <div class="form-check p-3 bg-light rounded-3 mb-3 border">
+              <input class="form-check-input ms-0 me-2"
+                     type="checkbox"
+                     id="checkFirmado"
+                     name="firmado"
+                     value="true"
+                     data-trace="C19-45"
+                     <%= esSoloLectura ? 'disabled' : '' %>>
+              <label class="form-check-label fw-semibold text-dark small" for="checkFirmado">
+                El paciente firmó el formato físico / tableta de firma
+              </label>
+            </div>
+
+            <!-- [19.43] Label + [19.44] Select ('Paciente' [PACIENTE], 'Acudiente' [ACUDIENTE]) -->
+            <div class="mb-4" id="grupoFirmadoPor">
+              <label for="firmadoPorConsentimiento" class="form-label fw-semibold text-secondary small" data-trace="C19-43">
+                Firmado por
+              </label>
+              <select class="form-select shadow-none"
+                      id="firmadoPorConsentimiento"
+                      name="firmado_por"
+                      data-trace="C19-44"
+                      disabled>
+                <option value="">Seleccione quién firma...</option>
+                <option value="PACIENTE">Paciente</option>
+                <option value="ACUDIENTE">Acudiente</option>
+              </select>
+              <div class="form-text small text-muted">Obligatorio si el consentimiento se marca como firmado.</div>
+            </div>
+
+            <!-- [19.46] Botón 'Cancelar' + [19.47] Botón 'Guardar consentimiento' -->
+            <div class="d-flex align-items-center justify-content-end gap-2 pt-3 border-top">
+              <button type="button"
+                      class="btn btn-outline-secondary px-3"
+                      id="btnCancelarConsentimiento"
+                      data-trace="C19-46"
+                      <%= esSoloLectura ? 'disabled' : '' %>>
+                Cancelar
+              </button>
+              <button type="submit"
+                      class="btn btn-primary px-3 d-inline-flex align-items-center gap-2"
+                      id="btnGuardarConsentimiento"
+                      data-trace="C19-47"
+                      <%= esSoloLectura ? 'disabled' : '' %>>
+                <span class="spinner-border spinner-border-sm d-none" id="spinnerGuardarConsentimiento" role="status" aria-hidden="true"></span>
+                <span>Guardar consentimiento</span>
+              </button>
+            </div>
+
+          </form>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================= -->
+<!-- MODAL DE VISUALIZACIÓN / FIRMA DE CONSENTIMIENTO [19.34]          -->
+<!-- ================================================================= -->
+<div class="modal fade" id="modalVerConsentimiento" tabindex="-1" aria-labelledby="modalVerConsentimientoTitulo" aria-hidden="true" data-trace="C19-34">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content shadow-lg border-0" style="border-radius: 0.5rem;">
+      <div class="modal-header border-bottom py-3">
+        <h5 class="modal-title fw-bold text-dark d-flex align-items-center gap-2" id="modalVerConsentimientoTitulo">
+          <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" class="text-primary" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+          </svg>
+          <span id="modalTipoConsentimiento">Detalle del consentimiento informado</span>
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body p-4">
+        
+        <!-- Alerta de retroalimentación interna del modal -->
+        <div id="alertaModalConsentimiento" class="alert d-none py-2 px-3 small mb-3" role="alert"></div>
+
+        <!-- Metadatos del consentimiento -->
+        <div class="row g-3 mb-4 p-3 bg-light rounded-3 border">
+          <div class="col-sm-4">
+            <div class="text-secondary small fw-semibold">Fecha de registro</div>
+            <div class="fw-bold text-dark font-monospace mt-1" id="modalFechaConsentimiento">—</div>
+          </div>
+          <div class="col-sm-4">
+            <div class="text-secondary small fw-semibold">Estado de firma</div>
+            <div class="mt-1" id="modalEstadoFirma">
+              <span class="badge bg-secondary">Cargando...</span>
+            </div>
+          </div>
+          <div class="col-sm-4">
+            <div class="text-secondary small fw-semibold">Firmado por</div>
+            <div class="fw-semibold text-dark mt-1" id="modalFirmadoPor">—</div>
+          </div>
+        </div>
+
+        <!-- Alcance y descripción -->
+        <div class="mb-4">
+          <label class="form-label fw-bold text-secondary small">Alcance, riesgos y beneficios clínicos informados:</label>
+          <div class="p-3 bg-white border rounded text-dark text-break"
+               id="modalDescripcionConsentimiento"
+               style="white-space: pre-wrap; min-height: 120px; max-height: 300px; overflow-y: auto; line-height: 1.6;">
+            —
+          </div>
+        </div>
+
+        <!-- Sección interactiva para firmar si está pendiente y no es soloLectura -->
+        <div id="seccionFirmarModal" class="p-3 border border-warning-subtle bg-warning bg-opacity-10 rounded-3 d-none">
+          <h6 class="fw-bold text-dark mb-2 d-flex align-items-center gap-2">
+            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" class="text-warning-emphasis" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+            </svg>
+            <span>Registrar firma para este consentimiento</span>
+          </h6>
+          <p class="small text-muted mb-3">
+            El consentimiento se encuentra actualmente <strong>PENDIENTE</strong>. Si el paciente o su acudiente ya suscribió el formato físico o tableta, registre la firma a continuación.
+          </p>
+          <div class="row g-2 align-items-center">
+            <div class="col-sm-6">
+              <select class="form-select form-select-sm" id="selectFirmarModal">
+                <option value="">Seleccione quién firma...</option>
+                <option value="PACIENTE">Paciente</option>
+                <option value="ACUDIENTE">Acudiente</option>
+              </select>
+            </div>
+            <div class="col-sm-6 text-sm-end">
+              <button type="button" class="btn btn-sm btn-success d-inline-flex align-items-center gap-1" id="btnConfirmarFirmaModal">
+                <span class="spinner-border spinner-border-sm d-none" id="spinnerFirmaModal" role="status" aria-hidden="true"></span>
+                <span>Confirmar firma</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+      <div class="modal-footer border-top bg-light py-2 px-4 justify-content-end">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Datos embebidos para hidratación inmediata sin retrasos de red -->
+<script id="consentimientosInicialesData" type="application/json"><%- JSON.stringify(listaConsentimientos) %></script>
+
+<!-- Script de cliente específico de consentimientos -->
+<script src="/js/consentimientos.js"></script>
+
+<%- include('../partials/_fin') %>

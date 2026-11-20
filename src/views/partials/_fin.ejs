@@ -1,0 +1,18 @@
+    </main>
+  </div>
+</div>
+<div id="hiscareLivePolite" class="visually-hidden" aria-live="polite" aria-atomic="true"></div>
+<div id="hiscareLiveAssertive" class="visually-hidden" role="alert" aria-live="assertive" aria-atomic="true"></div>
+<script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="/vendor/jquery/jquery.min.js"></script>
+<script src="/vendor/select2/js/select2.min.js"></script>
+<script src="/vendor/select2/js/i18n/es.js"></script>
+<script src="/vendor/datatables.net/js/dataTables.min.js"></script>
+<script src="/vendor/datatables.net-bs5/js/dataTables.bootstrap5.min.js"></script>
+<script src="/vendor/sweetalert2/sweetalert2.all.min.js"></script>
+<script src="/js/comun.js"></script>
+<script src="/js/topbar.js"></script>
+<script src="/js/notificaciones.js"></script>
+<% (typeof scripts !== 'undefined' ? scripts : []).forEach(s => { %><script src="<%= s %>"></script><% }) %>
+</body>
+</html>

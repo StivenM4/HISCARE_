@@ -1,0 +1,1071 @@
+/**
+ * ============================================================================
+ * HISCARE CLINICAL DESIGN SYSTEM — TOKENS MAESTROS (v2.0 Enterprise OS)
+ * Archivo: public/css/hiscare-tokens.css
+ * ============================================================================
+ * Sistema de diseño de aplicación clínica hospitalaria propietaria (Healthcare OS).
+ * Diseñado con estándares internacionales de usabilidad médica y ergonomía cognitiva.
+ *
+ * Cumplimiento Normativo y Técnico:
+ * 1. Accesibilidad Web WCAG 2.1 Nivel AA (Ratio de contraste texto >= 4.5:1,
+ *    elementos interactivos y gráficos >= 3.0:1, indicador de foco visible).
+ * 2. Clasificación de Triage según Resolución 5596 de 2015 del Ministerio de
+ *    Salud y Protección Social de Colombia (Niveles I al V).
+ * 3. Sobrescritura profunda de Bootstrap 5 (--bs-*) para unificar cualquier
+ *    componente bajo la identidad visual de software clínico hospitalario.
+ * ============================================================================
+ */
+
+:root,
+[data-bs-theme="light"] {
+  /* ==========================================================================
+     01. PALETA ESTRUCTURAL Y NAVEGACIÓN — MEDICAL NAVY & SLATE PROFUNDO
+     Inspirada en estaciones clínicas y consolas de monitoreo hospitalario.
+     ========================================================================== */
+  --hiscare-navy-950: #070d19;          /* Obsidiana médica para fondos ultradescendentes */
+  --hiscare-navy-900: #0b1528;          /* Azul medianoche hospitalario: Sidebar base */
+  --hiscare-navy-850: #0f172a;          /* Slate 900: Bordes oscuros y tarjetas nav */
+  --hiscare-navy-800: #1e293b;          /* Slate 800: Superficie lateral secundaria */
+  --hiscare-navy-700: #334155;          /* Slate 700: Separadores oscuros de estación */
+  --hiscare-navy-600: #475569;          /* Slate 600: Textos secundarios en modo oscuro */
+  --hiscare-navy-500: #64748b;          /* Slate 500: Iconos y glifos técnicos */
+  --hiscare-navy-400: #94a3b8;          /* Slate 400: Labels técnicos sobre oscuro */
+  --hiscare-navy-300: #cbd5e1;          /* Slate 300: Bordes estructurales primarios */
+  --hiscare-navy-200: #e2e8f0;          /* Slate 200: Separadores de tabla e inputs */
+  --hiscare-navy-100: #f1f5f9;          /* Slate 100: Hover interactivo sutil */
+  --hiscare-navy-50:  #f8fafc;          /* Slate 50: Fondos de tarjetas y paneles */
+
+  /* Variables específicas de navegación y estructura */
+  --hiscare-sidebar-bg: var(--hiscare-navy-900);
+  --hiscare-sidebar-gradient: linear-gradient(180deg, #070d19 0%, #0b1528 45%, #0f172a 100%);
+  --hiscare-sidebar-border: rgba(255, 255, 255, 0.08);
+  --hiscare-sidebar-text: #94a3b8;
+  --hiscare-sidebar-text-hover: #ffffff;
+  --hiscare-sidebar-text-active: #ffffff;
+  --hiscare-sidebar-hover-bg: rgba(255, 255, 255, 0.06);
+  --hiscare-sidebar-active-bg: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
+  --hiscare-sidebar-active-glow: 0 4px 14px -1px rgba(37, 99, 235, 0.45);
+
+  --hiscare-topbar-bg: rgba(255, 255, 255, 0.94);
+  --hiscare-topbar-blur: blur(14px);
+  --hiscare-topbar-border: rgba(226, 232, 240, 0.9);
+  --hiscare-topbar-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.04), 0 1px 2px -1px rgba(15, 23, 42, 0.02);
+
+  /* ==========================================================================
+     02. ACENTOS CLÍNICOS E INTERACTIVOS — CLINICAL COBALT & SURGICAL CYAN
+     Azules clínicos calibrados para guiar la atención médica sin fatiga visual.
+     ========================================================================== */
+  /* Cobalt Clínico (Primario) */
+  --hiscare-cobalt-50:  #eff6ff;         /* Tintes de fondo de selección */
+  --hiscare-cobalt-100: #dbeafe;         /* Badges suaves y acentos de lectura */
+  --hiscare-cobalt-200: #bfdbfe;         /* Bordes activos suaves */
+  --hiscare-cobalt-300: #93c5fd;         /* Iconografía diagnóstica */
+  --hiscare-cobalt-400: #60a5fa;         /* Indicadores sobre fondos oscuros */
+  --hiscare-cobalt-500: #3b82f6;         /* Acento interactivo claro */
+  --hiscare-cobalt-600: #2563eb;         /* Azul primario clínico vibrante */
+  --hiscare-cobalt-700: #1d4ed8;         /* Cobalt institucional (WCAG AA 4.8:1) */
+  --hiscare-cobalt-800: #1e40af;         /* Estado pressed y badges oscuros */
+  --hiscare-cobalt-900: #1e3a8a;         /* Texto con alto contraste (Ratio > 7:1) */
+  --hiscare-cobalt-950: #172554;         /* Profundidad clínica extrema */
+
+  /* Surgical Cyan / Teal Quirúrgico (Acentos de soporte y monitoreo) */
+  --hiscare-cyan-50:  #ecfeff;
+  --hiscare-cyan-100: #cffafe;
+  --hiscare-cyan-200: #a5f3fc;
+  --hiscare-cyan-300: #67e8f9;
+  --hiscare-cyan-400: #22d3ee;
+  --hiscare-cyan-500: #06b6d4;
+  --hiscare-cyan-600: #0891b2;
+  --hiscare-cyan-700: #0e7490;
+  --hiscare-cyan-800: #155e75;
+  --hiscare-cyan-900: #164e63;
+
+  /* ==========================================================================
+     03. SUPERFICIES HOSPITALARIAS MULTICAPA (SURFACE ELEVATION ARCHITECTURE)
+     Construcción óptica con elevación física, texturas clínicas y cristal esmerilado.
+     ========================================================================== */
+  --hiscare-surface-0: #f3f6fb;          /* Canvas de fondo general (tono slate-azulado clínico) */
+  --hiscare-surface-1: #ffffff;          /* Tarjetas principales y mesas clínicas */
+  --hiscare-surface-2: #f8fafc;          /* Cabeceras de tabla, áreas de filtros y docks */
+  --hiscare-surface-3: #f1f5f9;          /* Menús contextuales, hover de filas y listados */
+  --hiscare-surface-4: #ffffff;          /* Modales flotantes y paneles de diagnóstico */
+
+  /* Fondos con textura microscópica clínica para eliminar sensación de plástico */
+  --hiscare-canvas-pattern: radial-gradient(circle at 50% 0%, rgba(37, 99, 235, 0.035) 0%, transparent 65%),
+                            radial-gradient(circle at 100% 100%, rgba(14, 116, 144, 0.025) 0%, transparent 50%);
+
+  /* Superficies de Cristal Esmerilado (Frosted Glass / Glassmorphism Hospitalario) */
+  --hiscare-glass-bg: rgba(255, 255, 255, 0.88);
+  --hiscare-glass-border: rgba(255, 255, 255, 0.65);
+  --hiscare-glass-blur: blur(14px);
+  --hiscare-glass-dark-bg: rgba(11, 21, 40, 0.82);
+  --hiscare-glass-dark-border: rgba(255, 255, 255, 0.08);
+  --hiscare-glass-dark-blur: blur(16px);
+
+  /* Superficie y Layout Aliases */
+  --hiscare-sidebar-hover: #1e293b;
+  --hiscare-sidebar-active: #2563eb;
+  --hiscare-body-bg: var(--hiscare-surface-0);
+  --hiscare-card-bg: var(--hiscare-surface-1);
+  --hiscare-surface-subtle: var(--hiscare-surface-3);
+
+  /* Tipografía y Contraste Aliases */
+  --hiscare-text-main: var(--hiscare-navy-850);
+  --hiscare-text-secondary: var(--hiscare-navy-600);
+  --hiscare-text-muted: #526277;
+  --hiscare-text-placeholder: #64748b;
+  --hiscare-text-inverse: #ffffff;
+  --hiscare-scrollbar-thumb: #cbd5e1;
+  --hiscare-scrollbar-thumb-hover: #94a3b8;
+
+  /* Primarios Institucionales Aliases */
+  --hiscare-primary: var(--hiscare-cobalt-600);
+  --hiscare-primary-dark: var(--hiscare-cobalt-700);
+  --hiscare-primary-subtle: var(--hiscare-cobalt-50);
+  --hiscare-primary-border: var(--hiscare-cobalt-200);
+
+  /* ==========================================================================
+     03.1 TOKENS SEMÁNTICOS UNIFICADOS (WCAG 2.1 AA · MODO CLARO)
+     ========================================================================== */
+  /* Primary (Clinical Cobalt) */
+  --hiscare-primary-solid: #2563eb;
+  --hiscare-primary-solid-hover: #1d4ed8;
+  --hiscare-primary-on-solid: #ffffff;
+  --hiscare-primary-text: #1d4ed8;
+  --hiscare-primary-subtle-bg: #eff6ff;
+  --hiscare-primary-subtle-text: #1e40af;
+  --hiscare-primary-subtle-border: #bfdbfe;
+
+  /* Secondary (Clinical Slate) */
+  --hiscare-secondary-solid: #475569;
+  --hiscare-secondary-solid-hover: #334155;
+  --hiscare-secondary-on-solid: #ffffff;
+  --hiscare-secondary-text: #334155;
+  --hiscare-secondary-subtle-bg: #f1f5f9;
+  --hiscare-secondary-subtle-text: #1e293b;
+  --hiscare-secondary-subtle-border: #cbd5e1;
+
+  /* Success (Surgical Green — unificado sin mezcla Emerald) */
+  --hiscare-success-solid: #15803d;
+  --hiscare-success-solid-hover: #166534;
+  --hiscare-success-on-solid: #ffffff;
+  --hiscare-success-text: #15803d;
+  --hiscare-success-subtle-bg: #f0fdf4;
+  --hiscare-success-subtle-text: #166534;
+  --hiscare-success-subtle-border: #bbf7d0;
+
+  /* Warning (Clinical Orange con texto oscuro accesible #1c1003) */
+  --hiscare-warning-solid: #f97316;
+  --hiscare-warning-solid-hover: #ea580c;
+  --hiscare-warning-on-solid: #1c1003;
+  --hiscare-warning-text: #9a3412;
+  --hiscare-warning-subtle-bg: #fff7ed;
+  --hiscare-warning-subtle-text: #9a3412;
+  --hiscare-warning-subtle-border: #fdba74;
+
+  /* Danger (Surgical Crimson) */
+  --hiscare-danger-solid: #dc2626;
+  --hiscare-danger-solid-hover: #b91c1c;
+  --hiscare-danger-on-solid: #ffffff;
+  --hiscare-danger-text: #b91c1c;
+  --hiscare-danger-subtle-bg: #fef2f2;
+  --hiscare-danger-subtle-text: #991b1b;
+  --hiscare-danger-subtle-border: #fecaca;
+
+  /* Info (Surgical Sky) */
+  --hiscare-info-solid: #0369a1;
+  --hiscare-info-solid-hover: #075985;
+  --hiscare-info-on-solid: #ffffff;
+  --hiscare-info-text: #0369a1;
+  --hiscare-info-subtle-bg: #f0f9ff;
+  --hiscare-info-subtle-text: #075985;
+  --hiscare-info-subtle-border: #bae6fd;
+
+  /* Violet (Sala de Espera / En Vivo) */
+  --hiscare-violet-solid: #6d28d9;
+  --hiscare-violet-solid-hover: #5b21b6;
+  --hiscare-violet-on-solid: #ffffff;
+  --hiscare-violet-text: #5b21b6;
+  --hiscare-violet-subtle-bg: #f5f3ff;
+  --hiscare-violet-subtle-text: #5b21b6;
+  --hiscare-violet-subtle-border: #ddd6fe;
+
+  /* ==========================================================================
+     04. SEMÁFORO CLÍNICO Y TRIAGE MÉDICO (Res. 5596 de 2015 MinSalud Colombia)
+     Diseñado para visibilidad instantánea bajo estrés operativo y turnos nocturnos.
+     Todos los textos cumplen WCAG 2.1 AA (mínimo 4.5:1, la mayoría AAA > 7:1).
+     ========================================================================== */
+  /* --- TRIAGE I · REANIMACIÓN / RESUCITACIÓN (Atención Inmediata 0 min) --- */
+  --hiscare-triage-1-bg: #b91c1c;                     /* Rojo Carmesí Quirúrgico (5.9:1) */
+  --hiscare-triage-1-gradient: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  --hiscare-triage-1-text: #ffffff;
+  --hiscare-triage-1-border: #ef4444;
+  --hiscare-triage-1-glow: 0 0 16px rgba(185, 28, 28, 0.45);
+  --hiscare-triage-1-shadow: 0 4px 12px -2px rgba(185, 28, 28, 0.35);
+  --hiscare-triage-1-subtle-bg: #fef2f2;
+  --hiscare-triage-1-subtle-text: #991b1b;
+  --hiscare-triage-1-subtle-border: #fca5a5;
+
+  /* --- TRIAGE II · EMERGENCIA (Evaluación médica <= 30 min) --- */
+  --hiscare-triage-2-bg: #c2410c;                     /* Naranja Clínico Profundo (5.18:1 AA) */
+  --hiscare-triage-2-gradient: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
+  --hiscare-triage-2-text: #ffffff;
+  --hiscare-triage-2-border: #f97316;
+  --hiscare-triage-2-glow: 0 0 14px rgba(234, 88, 12, 0.38);
+  --hiscare-triage-2-shadow: 0 4px 12px -2px rgba(194, 65, 12, 0.28);
+  --hiscare-triage-2-subtle-bg: #fff7ed;
+  --hiscare-triage-2-subtle-text: #9a3412;
+  --hiscare-triage-2-subtle-border: #fdba74;
+
+  /* --- TRIAGE III · URGENCIA (Evaluación médica <= 45 min) --- */
+  --hiscare-triage-3-bg: #fef08a;                     /* Amarillo Señalización */
+  --hiscare-triage-3-gradient: linear-gradient(135deg, #fef08a 0%, #fde047 100%);
+  --hiscare-triage-3-text: #713f12;                   /* Marrón Ámbar (7.5:1 AAA sobre fondo amarillo) */
+  --hiscare-triage-3-border: #eab308;
+  --hiscare-triage-3-glow: 0 0 12px rgba(234, 179, 8, 0.35);
+  --hiscare-triage-3-shadow: 0 4px 10px -2px rgba(234, 179, 8, 0.25);
+  --hiscare-triage-3-subtle-bg: #fefce8;
+  --hiscare-triage-3-subtle-text: #854d0e;
+  --hiscare-triage-3-subtle-border: #fde047;
+
+  /* --- TRIAGE IV · PRIORITARIO / URGENCIA MENOR --- */
+  --hiscare-triage-4-bg: #15803d;                     /* Verde Clínico Esmeralda (5.1:1) */
+  --hiscare-triage-4-gradient: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+  --hiscare-triage-4-text: #ffffff;
+  --hiscare-triage-4-border: #22c55e;
+  --hiscare-triage-4-glow: 0 0 14px rgba(21, 128, 61, 0.35);
+  --hiscare-triage-4-shadow: 0 4px 12px -2px rgba(21, 128, 61, 0.25);
+  --hiscare-triage-4-subtle-bg: #f0fdf4;
+  --hiscare-triage-4-subtle-text: #166534;
+  --hiscare-triage-4-subtle-border: #86efac;
+
+  /* --- TRIAGE V · NO URGENTE / CONSULTA EXTERNA --- */
+  --hiscare-triage-5-bg: #1d4ed8;                     /* Azul Zafiro Clínico (5.9:1) */
+  --hiscare-triage-5-gradient: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  --hiscare-triage-5-text: #ffffff;
+  --hiscare-triage-5-border: #3b82f6;
+  --hiscare-triage-5-glow: 0 0 14px rgba(29, 78, 216, 0.35);
+  --hiscare-triage-5-shadow: 0 4px 12px -2px rgba(29, 78, 216, 0.25);
+  --hiscare-triage-5-subtle-bg: #eff6ff;
+  --hiscare-triage-5-subtle-text: #1e40af;
+  --hiscare-triage-5-subtle-border: #93c5fd;
+
+  /* --- TRIAGE PENDIENTE / SIN CLASIFICAR --- */
+  --hiscare-triage-pendiente-bg: #475569;             /* Slate Neutro Accesible (5.6:1) */
+  --hiscare-triage-pendiente-gradient: linear-gradient(135deg, #64748b 0%, #475569 100%);
+  --hiscare-triage-pendiente-text: #ffffff;
+  --hiscare-triage-pendiente-border: #64748b;
+  --hiscare-triage-pendiente-shadow: 0 2px 6px rgba(71, 85, 105, 0.2);
+  --hiscare-triage-pendiente-subtle-bg: var(--hiscare-secondary-subtle-bg);
+  --hiscare-triage-pendiente-subtle-text: var(--hiscare-secondary-subtle-text);
+  --hiscare-triage-pendiente-subtle-border: var(--hiscare-secondary-subtle-border);
+
+  /* ==========================================================================
+     05. SISTEMA DE ELEVACIÓN CLÍNICA (CLINICAL ELEVATION SYSTEM)
+     Sombras multicapa físicas compuestas por luz ambiental + oclusión de contacto.
+     ========================================================================== */
+  /* Hairline perimetral interno para biselado de cristal o plástico quirúrgico */
+  --hiscare-inner-hairline: inset 0 1px 0 rgba(255, 255, 255, 0.9), inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+  --hiscare-inner-hairline-dark: inset 0 1px 0 rgba(255, 255, 255, 0.12), inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+  --hiscare-inner-recessed: inset 0 1px 2px rgba(15, 23, 42, 0.06);
+
+  /* Elevaciones 0 a 5 */
+  --hiscare-elevation-0: none;
+
+  /* Elevación 1: Tarjetas estándar, celdas interactivas, controles en reposo */
+  --hiscare-elevation-1: 0 1px 2px -1px rgba(15, 23, 42, 0.06),
+                         0 1px 3px 0 rgba(15, 23, 42, 0.04),
+                         0 0 0 1px rgba(15, 23, 42, 0.04);
+
+  /* Elevación 2: Tarjetas clínicas activas, botones con relieve, KPIs */
+  --hiscare-elevation-2: 0 4px 6px -2px rgba(15, 23, 42, 0.05),
+                         0 2px 4px -1px rgba(15, 23, 42, 0.04),
+                         0 0 0 1px rgba(15, 23, 42, 0.05);
+
+  /* Elevación 3: Hover de tarjetas, paneles sticky, popovers en foco */
+  --hiscare-elevation-3: 0 10px 15px -3px rgba(15, 23, 42, 0.08),
+                         0 4px 6px -4px rgba(15, 23, 42, 0.04),
+                         0 0 0 1px rgba(15, 23, 42, 0.05);
+
+  /* Elevación 4: Dropdowns flotantes, menús de autocompletado, drawer lateral */
+  --hiscare-elevation-4: 0 20px 25px -5px rgba(15, 23, 42, 0.11),
+                         0 8px 10px -6px rgba(15, 23, 42, 0.06),
+                         0 0 0 1px rgba(15, 23, 42, 0.06);
+
+  /* Elevación 5: Modales hospitalarios de diagnóstico, diálogos críticos */
+  --hiscare-elevation-5: 0 25px 50px -12px rgba(15, 23, 42, 0.25),
+                         0 12px 24px -8px rgba(15, 23, 42, 0.12),
+                         0 0 0 1px rgba(15, 23, 42, 0.08);
+
+  /* Resplandores clínicos (Clinical Glows) para estados de atención médica */
+  --hiscare-glow-primary: 0 0 0 3px rgba(37, 99, 235, 0.18), 0 2px 8px rgba(37, 99, 235, 0.22);
+  --hiscare-glow-danger:  0 0 0 3px rgba(220, 38, 38, 0.2),  0 2px 8px rgba(220, 38, 38, 0.24);
+  --hiscare-glow-warning: 0 0 0 3px rgba(234, 88, 12, 0.22), 0 2px 8px rgba(234, 88, 12, 0.24);
+  --hiscare-glow-success: 0 0 0 3px rgba(22, 163, 74, 0.2),  0 2px 8px rgba(22, 163, 74, 0.22);
+  --hiscare-glow-cyan:    0 0 0 3px rgba(6, 182, 212, 0.22), 0 2px 8px rgba(6, 182, 212, 0.24);
+
+  /* Aliases de sombras clínicas compatibles */
+  --hiscare-shadow-sm: var(--hiscare-elevation-1);
+  --hiscare-shadow-md: var(--hiscare-elevation-2);
+  --hiscare-shadow-lg: var(--hiscare-elevation-3);
+
+  /* ==========================================================================
+     05.1 ESCALA CENTRALIZADA DE JERARQUÍA Z-INDEX (ENTERPRISE HEALTHCARE OS)
+     Escala estandarizada y coherente:
+     topbar (1020) < backdrop (1040) < modal/drawer (1050) < popover/notif (1060) < select2 (1070)
+     ========================================================================== */
+  --z-topbar: 1020;
+  --z-backdrop: 1040;
+  --z-modal: 1050;
+  --z-popover: 1060;
+  --z-select2: 1070;
+
+  /* Aliases compatibles de z-index para layout y cajones deslizantes */
+  --hiscare-backdrop-zindex: var(--z-backdrop);
+  --hiscare-drawer-zindex: var(--z-modal);
+
+  /* ==========================================================================
+     06. TIPOGRAFÍA CLÍNICA Y TÉCNICA (TECHNICAL MEDICAL TYPOGRAPHY)
+     Escalas fluidas, monoespaciado tabular numérico y tracking de alta legibilidad.
+     ========================================================================== */
+  --hiscare-font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --hiscare-font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+
+  /* Escala fluida basada en clamp() para estaciones médicas y pantallas retina */
+  --hiscare-fs-2xs: clamp(0.6875rem, 0.65rem + 0.15vw, 0.75rem);       /* ~11px - 12px: Micro badges, timestamps */
+  --hiscare-fs-xs:  clamp(0.75rem, 0.72rem + 0.18vw, 0.8125rem);       /* ~12px - 13px: Headers de tabla, labels secundarios */
+  --hiscare-fs-sm:  clamp(0.84375rem, 0.81rem + 0.2vw, 0.875rem);      /* ~13.5px - 14px: Celdas de tabla, inputs */
+  --hiscare-fs-base: clamp(0.9375rem, 0.9rem + 0.25vw, 1rem);          /* ~15px - 16px: Texto base de lectura médica */
+  --hiscare-fs-md:  clamp(1.0625rem, 1rem + 0.35vw, 1.125rem);         /* ~17px - 18px: Subtítulos de sección */
+  --hiscare-fs-lg:  clamp(1.1875rem, 1.1rem + 0.45vw, 1.25rem);        /* ~19px - 20px: Títulos de tarjetas */
+  --hiscare-fs-xl:  clamp(1.375rem, 1.25rem + 0.6vw, 1.5rem);          /* ~22px - 24px: Títulos de página */
+  --hiscare-fs-2xl: clamp(1.625rem, 1.45rem + 0.9vw, 1.875rem);        /* ~26px - 30px: Indicadores KPI */
+  --hiscare-fs-3xl: clamp(2rem, 1.75rem + 1.25vw, 2.375rem);           /* ~32px - 38px: Métricas de monitor en tiempo real */
+
+  /* Alturas de línea adaptadas al flujo de lectura de historias clínicas */
+  --hiscare-lh-tight: 1.2;
+  --hiscare-lh-snug:  1.375;
+  --hiscare-lh-base:  1.5;
+  --hiscare-lh-loose: 1.625;
+
+  /* Letter-spacing calibrado para rótulos técnicos */
+  --hiscare-tracking-tight: -0.025em;
+  --hiscare-tracking-normal: 0em;
+  --hiscare-tracking-wide: 0.035em;
+  --hiscare-tracking-wider: 0.06em;
+  --hiscare-tracking-caps: 0.08em;
+
+  /* Aliases de escala tipográfica uniforme */
+  --hiscare-font-size-xs: var(--hiscare-fs-xs);
+  --hiscare-font-size-sm: var(--hiscare-fs-sm);
+  --hiscare-font-size-base: var(--hiscare-fs-base);
+  --hiscare-font-size-md: var(--hiscare-fs-md);
+  --hiscare-font-size-lg: var(--hiscare-fs-lg);
+  --hiscare-font-size-xl: var(--hiscare-fs-xl);
+  --hiscare-font-size-2xl: var(--hiscare-fs-2xl);
+  --hiscare-line-height-tight: var(--hiscare-lh-tight);
+  --hiscare-line-height-base: var(--hiscare-lh-base);
+  --hiscare-line-height-relaxed: var(--hiscare-lh-loose);
+
+  /* Escala de espaciados uniformes */
+  --hiscare-space-1: 0.25rem;
+  --hiscare-space-2: 0.5rem;
+  --hiscare-space-3: 0.75rem;
+  --hiscare-space-4: 1rem;
+  --hiscare-space-5: 1.5rem;
+  --hiscare-space-6: 2rem;
+
+  /* ==========================================================================
+     07. RADIOS DE BORDE Y CONTORNOS QUIRÚRGICOS (CORNER RADII)
+     Geometría con esquinas suavizadas estilo hardware de diagnóstico médico.
+     ========================================================================== */
+  --hiscare-radius-xs: 0.25rem;          /* 4px: Badges diminutos y tags de tabla */
+  --hiscare-radius-sm: 0.375rem;         /* 6px: Botones pequeños y chips */
+  --hiscare-radius-md: 0.5rem;           /* 8px: Inputs, controles de formulario, botones estándar */
+  --hiscare-radius-lg: 0.75rem;          /* 12px: Tarjetas clínicas, modales estándar, dropdowns */
+  --hiscare-radius-xl: 1rem;             /* 16px: Tarjetas destacadas, paneles modales de alta jerarquía */
+  --hiscare-radius-2xl: 1.25rem;         /* 20px: Estaciones dashboard y contenedores flotantes */
+  --hiscare-radius-pill: 9999px;         /* Píldoras de estado y badges tipo cápsula */
+  --hiscare-radius-full: var(--hiscare-radius-pill);
+
+  /* ==========================================================================
+     08. CURVAS DE TRANSICIÓN NATIVAS Y MICRO-INTERACCIONES
+     Respuesta háptica y transiciones orgánicas inspiradas en hardware táctil.
+     ========================================================================== */
+  --hiscare-ease-clinical: cubic-bezier(0.16, 1, 0.3, 1);  /* Desaceleración nítida grado clínico */
+  --hiscare-ease-spring: var(--hiscare-ease-clinical);     /* Alias compatible */
+  --hiscare-ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1); /* Rebote sutil para notificaciones */
+  --hiscare-ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+
+  --hiscare-dur-micro: 140ms;
+  --hiscare-dur-enter: 220ms;
+  --hiscare-dur-surface: 240ms;
+  --hiscare-dur-modal: 240ms;
+
+  --hiscare-transition-fast: var(--hiscare-dur-micro) var(--hiscare-ease-clinical);
+  --hiscare-transition-base: var(--hiscare-dur-enter) var(--hiscare-ease-clinical);
+  --hiscare-transition-slow: 320ms var(--hiscare-ease-clinical);
+
+  /* ==========================================================================
+     09. BORDES Y SEPARADORES CLÍNICOS
+     ========================================================================== */
+  --hiscare-border-subtle: #f1f5f9;       /* Slate 100 */
+  --hiscare-border-color: #e2e8f0;        /* Slate 200: Separación neutral */
+  --hiscare-border-strong: #cbd5e1;       /* Slate 300: Contornos de inputs */
+  --hiscare-border-dark: #334155;         /* Slate 700 */
+
+  /* ==========================================================================
+     10. ACCESIBILIDAD Y FOCO UNIVERSAL (WCAG 2.1 AA)
+     ========================================================================== */
+  --hiscare-focus-ring: #2563eb;          /* Azul de alto contraste */
+  --hiscare-focus-shadow: 0 0 0 3px rgba(37, 99, 235, 0.22);
+  --hiscare-focus-offset: 2px;
+  --hiscare-touch-min: 44px;              /* Touch target mínimo según WCAG 2.5.5 / 2.5.8 */
+  --hiscare-touch-target-min: var(--hiscare-touch-min);
+
+  /* ==========================================================================
+     10.1 TOKENS DE TABLAS CLÍNICAS Y ESPACIADO ADAPTATIVO DINÁMICO
+     ========================================================================== */
+  --hiscare-table-pad-y: clamp(0.65rem, 1.2vh, 0.85rem);
+  --hiscare-table-pad-x: clamp(0.75rem, 1.2vw, 1rem);
+  --hiscare-table-sm-pad-y: clamp(0.4rem, 0.8vh, 0.55rem);
+  --hiscare-table-sm-pad-x: clamp(0.5rem, 0.9vw, 0.75rem);
+  --hiscare-table-th-pad-y: clamp(0.65rem, 1.1vh, 0.85rem);
+  --hiscare-table-th-pad-x: var(--hiscare-table-pad-x);
+  --hiscare-table-th-bg: #f8fafc;
+  --hiscare-table-th-color: #334155;
+  --hiscare-table-th-border: #cbd5e1;
+  --hiscare-table-border: #e2e8f0;
+  --hiscare-table-border-subtle: #f1f5f9;
+  --hiscare-table-hover-bg: rgba(241, 245, 249, 0.85);
+  --hiscare-table-selected-bg: #eff6ff;
+
+  /* ==========================================================================
+     10.2 TOKENS DE RESPONSIVIDAD Y DISPOSITIVOS MÓVILES (WCAG 2.1 AA)
+     ========================================================================== */
+  --hiscare-drawer-width: 280px;
+  --hiscare-drawer-max-w: 85vw;
+  --hiscare-mobile-topbar-h: 56px;
+  --hiscare-mobile-pad: 0.75rem;
+
+  /* ==========================================================================
+     11. SOBRESCRITURA TOTAL DE VARIABLES BOOTSTRAP 5 (--bs-*)
+     Inyecta la identidad visual clínica en cualquier clase nativa de Bootstrap.
+     ========================================================================== */
+  /* Colores de marca y funcionales */
+  --bs-primary: #1d4ed8;                 /* Azul Cobalt Clínico */
+  --bs-primary-rgb: 29, 78, 216;
+  --bs-primary-text-emphasis: #1e3a8a;
+  --bs-primary-bg-subtle: #eff6ff;
+  --bs-primary-border-subtle: #bfdbfe;
+
+  --bs-secondary: #475569;               /* Slate Clínico Neutro */
+  --bs-secondary-rgb: 71, 85, 105;
+  --bs-secondary-text-emphasis: #1e293b;
+  --bs-secondary-bg-subtle: #f1f5f9;
+  --bs-secondary-border-subtle: #cbd5e1;
+
+  --bs-success: #15803d;                 /* Surgical Green */
+  --bs-success-rgb: 21, 128, 61;
+  --bs-success-text-emphasis: #166534;
+  --bs-success-bg-subtle: #f0fdf4;
+  --bs-success-border-subtle: #bbf7d0;
+
+  --bs-info: #0369a1;                    /* Surgical Sky */
+  --bs-info-rgb: 3, 105, 161;
+  --bs-info-text-emphasis: #075985;
+  --bs-info-bg-subtle: #f0f9ff;
+  --bs-info-border-subtle: #bae6fd;
+
+  --bs-warning: #ea580c;                 /* Naranja de Alerta Clínica */
+  --bs-warning-rgb: 234, 88, 12;
+  --bs-warning-text-emphasis: #9a3412;
+  --bs-warning-bg-subtle: #fff7ed;
+  --bs-warning-border-subtle: #fdba74;
+
+  --bs-danger: #b91c1c;                  /* Carmesí Triage I / Resucitación */
+  --bs-danger-rgb: 185, 28, 28;
+  --bs-danger-text-emphasis: #7f1d1d;
+  --bs-danger-bg-subtle: #fef2f2;
+  --bs-danger-border-subtle: #fecaca;
+
+  --bs-light: #f8fafc;                   /* Slate 50 Clínico */
+  --bs-light-rgb: 248, 250, 252;
+  --bs-light-text-emphasis: #334155;
+  --bs-light-bg-subtle: #f8fafc;
+  --bs-light-border-subtle: #e2e8f0;
+
+  --bs-dark: #0b1528;                    /* Navy Clínico Profundo */
+  --bs-dark-rgb: 11, 21, 40;
+  --bs-dark-text-emphasis: #0f172a;
+  --bs-dark-bg-subtle: #1e293b;
+  --bs-dark-border-subtle: #334155;
+
+  /* Cuerpo y texto */
+  --bs-body-font-family: var(--hiscare-font-sans);
+  --bs-body-font-size: var(--hiscare-fs-base);
+  --bs-body-font-weight: 400;
+  --bs-body-line-height: var(--hiscare-lh-base);
+  --bs-body-color: #0f172a;
+  --bs-body-color-rgb: 15, 23, 42;
+  --bs-body-bg: var(--hiscare-surface-0);
+  --bs-body-bg-rgb: 243, 246, 251;
+
+  --bs-emphasis-color: #020617;
+  --bs-emphasis-color-rgb: 2, 6, 23;
+  --bs-secondary-color: #475569;
+  --bs-secondary-color-rgb: 71, 85, 105;
+  --bs-tertiary-color: #526277;
+  --bs-tertiary-color-rgb: 82, 98, 119;
+
+  /* Bordes generales de Bootstrap */
+  --bs-border-width: 1px;
+  --bs-border-style: solid;
+  --bs-border-color: var(--hiscare-border-color);
+  --bs-border-color-translucent: rgba(15, 23, 42, 0.08);
+
+  /* Radios de Bootstrap */
+  --bs-border-radius: var(--hiscare-radius-md);
+  --bs-border-radius-sm: var(--hiscare-radius-sm);
+  --bs-border-radius-lg: var(--hiscare-radius-lg);
+  --bs-border-radius-xl: var(--hiscare-radius-xl);
+  --bs-border-radius-2xl: var(--hiscare-radius-2xl);
+  --bs-border-radius-pill: var(--hiscare-radius-pill);
+
+  /* Sombras de Bootstrap */
+  --bs-box-shadow: var(--hiscare-elevation-2);
+  --bs-box-shadow-sm: var(--hiscare-elevation-1);
+  --bs-box-shadow-lg: var(--hiscare-elevation-4);
+  --bs-box-shadow-inset: var(--hiscare-inner-recessed);
+
+  /* Enlaces */
+  --bs-link-color: #1d4ed8;
+  --bs-link-color-rgb: 29, 78, 216;
+  --bs-link-decoration: none;
+  --bs-link-hover-color: #1e40af;
+  --bs-link-hover-color-rgb: 30, 64, 175;
+
+  /* Anillo de foco de Bootstrap 5 */
+  --bs-focus-ring-width: 3px;
+  --bs-focus-ring-opacity: 0.22;
+  --bs-focus-ring-color: rgba(37, 99, 235, 0.22);
+
+  /* Componentes específicos en raíz */
+  --bs-card-bg: var(--hiscare-surface-1);
+  --bs-card-border-color: var(--hiscare-border-color);
+  --bs-card-border-radius: var(--hiscare-radius-lg);
+  --bs-card-box-shadow: var(--hiscare-elevation-1);
+  --bs-card-cap-bg: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  --bs-card-cap-padding-y: 0.875rem;
+  --bs-card-cap-padding-x: 1.25rem;
+
+  --bs-modal-bg: var(--hiscare-surface-1);
+  --bs-modal-border-color: var(--hiscare-border-color);
+  --bs-modal-border-radius: var(--hiscare-radius-xl);
+  --bs-modal-box-shadow: var(--hiscare-elevation-5);
+  --bs-modal-header-border-color: var(--hiscare-border-color);
+  --bs-modal-footer-border-color: var(--hiscare-border-color);
+  --bs-backdrop-zindex: var(--z-backdrop);
+  --bs-modal-zindex: var(--z-modal);
+
+  --bs-dropdown-bg: rgba(255, 255, 255, 0.96);
+  --bs-dropdown-border-color: var(--hiscare-border-color);
+  --bs-dropdown-border-radius: var(--hiscare-radius-lg);
+  --bs-dropdown-box-shadow: var(--hiscare-elevation-4);
+  --bs-dropdown-link-color: #0f172a;
+  --bs-dropdown-link-hover-color: #1d4ed8;
+  --bs-dropdown-link-hover-bg: #f1f5f9;
+  --bs-dropdown-link-active-color: #ffffff;
+  --bs-dropdown-link-active-bg: #2563eb;
+}
+
+/* ============================================================================
+   12. ESTILOS GLOBALES DE NÚCLEO — BASE & ATMÓSFERA CLÍNICA
+   Aplica optimización tipográfica para pantallas médicas y elimina efectos genéricos.
+   ============================================================================ */
+
+/* Selección de texto clínica de alta legibilidad */
+::selection {
+  background-color: var(--hiscare-cobalt-200);
+  color: var(--hiscare-cobalt-950);
+}
+
+::-moz-selection {
+  background-color: var(--hiscare-cobalt-200);
+  color: var(--hiscare-cobalt-950);
+}
+
+/* Scrollbars Clínicos Personalizados de Grado Quirúrgico */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--hiscare-scrollbar-thumb, #cbd5e1);
+  border-radius: var(--hiscare-radius-pill);
+  border: 2px solid transparent;
+  background-clip: content-box;
+  transition: background-color var(--hiscare-transition-fast);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--hiscare-scrollbar-thumb-hover, #94a3b8);
+}
+
+/* Fondo general de aplicación hospitalaria con textura micro-radial sutil */
+body {
+  background-color: var(--hiscare-surface-0) !important;
+  background-image: var(--hiscare-canvas-pattern);
+  background-attachment: fixed;
+  color: var(--hiscare-text-main);
+  font-family: var(--hiscare-font-sans);
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Reset de fondos estándar .bg-light de Bootstrap para adherirse al sistema */
+.bg-light {
+  background-color: var(--hiscare-surface-0) !important;
+}
+
+/* ============================================================================
+   13. TOKENS DE ESTADOS DE CITAS Y FLUJO DE PACIENTES
+   Codificación semántica de alto contraste WCAG AA para salas de espera y consultorios.
+   ============================================================================ */
+:root,
+[data-theme="light"],
+[data-bs-theme="light"] {
+  /* Cita Programada (Gris Slate Neutro) */
+  --hiscare-estado-programada-bg: #64748b;
+  --hiscare-estado-programada-gradient: linear-gradient(135deg, #64748b 0%, #475569 100%);
+  --hiscare-estado-programada-text: #ffffff;
+  --hiscare-estado-programada-border: #475569;
+  --hiscare-estado-programada-subtle-bg: #f1f5f9;
+  --hiscare-estado-programada-subtle-text: #334155;
+
+  /* Cita Confirmada (Azul Cobalt Institucional) */
+  --hiscare-estado-confirmada-bg: #2563eb;
+  --hiscare-estado-confirmada-gradient: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  --hiscare-estado-confirmada-text: #ffffff;
+  --hiscare-estado-confirmada-border: #1d4ed8;
+  --hiscare-estado-confirmada-subtle-bg: #eff6ff;
+  --hiscare-estado-confirmada-subtle-text: #1e40af;
+
+  /* Cita En Sala de Espera (Naranja Clínico en Vivo) */
+  --hiscare-estado-ensala-bg: #c2410c;
+  --hiscare-estado-ensala-gradient: linear-gradient(135deg, #ea580c 0%, #c2410c 100%);
+  --hiscare-estado-ensala-text: #ffffff;
+  --hiscare-estado-ensala-border: #9a3412;
+  --hiscare-estado-ensala-subtle-bg: #fff7ed;
+  --hiscare-estado-ensala-subtle-text: #9a3412;
+  --hiscare-estado-ensala-subtle-border: #fdba74;
+  --hiscare-estado-ensala-pulse: 0 0 12px rgba(234, 88, 12, 0.40);
+  --hiscare-estado-ensala-shadow: 0 4px 12px -2px rgba(194, 65, 12, 0.28);
+
+  /* Cita Atendida / Completada (Surgical Green) */
+  --hiscare-estado-atendida-bg: var(--hiscare-success-solid);
+  --hiscare-estado-atendida-gradient: linear-gradient(135deg, var(--hiscare-success-solid) 0%, var(--hiscare-success-solid-hover) 100%);
+  --hiscare-estado-atendida-text: var(--hiscare-success-on-solid);
+  --hiscare-estado-atendida-border: var(--hiscare-success-solid-hover);
+  --hiscare-estado-atendida-subtle-bg: var(--hiscare-success-subtle-bg);
+  --hiscare-estado-atendida-subtle-text: var(--hiscare-success-subtle-text);
+
+  /* Cita Cancelada (Rojo Carmesí) */
+  --hiscare-estado-cancelada-bg: #dc2626;
+  --hiscare-estado-cancelada-gradient: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  --hiscare-estado-cancelada-text: #ffffff;
+  --hiscare-estado-cancelada-border: #b91c1c;
+  --hiscare-estado-cancelada-subtle-bg: #fef2f2;
+  --hiscare-estado-cancelada-subtle-text: #991b1b;
+
+  /* Cita No Asistió (Naranja Ámbar Oscuro / Terracota) */
+  --hiscare-estado-noasistio-bg: #9a3412;
+  --hiscare-estado-noasistio-gradient: linear-gradient(135deg, #b45309 0%, #9a3412 100%);
+  --hiscare-estado-noasistio-text: #ffffff;
+  --hiscare-estado-noasistio-border: #7c2d12;
+  --hiscare-estado-noasistio-subtle-bg: #ffedd5;
+  --hiscare-estado-noasistio-subtle-text: #7c2d12;
+}
+
+/* ============================================================================
+   14. TOKENS DE RANGOS DE SIGNOS VITALES (VITAL SIGNS THRESHOLDS)
+   Calibración visual para tensión arterial, frecuencia cardíaca, SpO2 y temperatura.
+   ============================================================================ */
+:root,
+[data-theme="light"],
+[data-bs-theme="light"] {
+  --hiscare-vital-normal-color: #15803d;
+  --hiscare-vital-normal-bg: #f0fdf4;
+  --hiscare-vital-normal-border: #bbf7d0;
+
+  --hiscare-vital-warning-color: #c2410c;
+  --hiscare-vital-warning-bg: #fff7ed;
+  --hiscare-vital-warning-border: #fdba74;
+
+  --hiscare-vital-critical-color: #b91c1c;
+  --hiscare-vital-critical-bg: #fef2f2;
+  --hiscare-vital-critical-border: #fecaca;
+  --hiscare-vital-critical-glow: 0 0 12px rgba(185, 28, 28, 0.35);
+}
+
+/* ============================================================================
+   15. UTILIDADES DE TIPOGRAFÍA TÉCNICA CLÍNICA Y CÓDIGOS
+   Números tabulares obligatorios para signos vitales, códigos CUPS y CIE-10.
+   ============================================================================ */
+.font-tabular,
+.tabular-nums,
+.cell-time,
+.col-hora,
+.vital-value,
+.kpi-value,
+.badge-espera,
+[data-trace*="Hora"] {
+  font-variant-numeric: tabular-nums lining-nums !important;
+  letter-spacing: -0.015em;
+}
+
+.text-technical-label {
+  font-size: var(--hiscare-fs-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: var(--hiscare-tracking-caps);
+  color: var(--hiscare-text-secondary);
+}
+
+.text-clinical-code {
+  font-family: var(--hiscare-font-mono);
+  font-size: 0.8125rem;
+  letter-spacing: -0.02em;
+  background-color: var(--hiscare-surface-3);
+  color: var(--hiscare-text-main);
+  padding: 0.15rem 0.4rem;
+  border-radius: var(--hiscare-radius-xs);
+  border: 1px solid var(--hiscare-border-color);
+}
+
+/* ============================================================================
+   16. TEMA OSCURO CLÍNICO ([data-theme="dark"], [data-bs-theme="dark"])
+   Paleta nocturna calibrada para turnos largos, inspirada en la estación login.
+   ============================================================================ */
+[data-theme="dark"],
+[data-bs-theme="dark"] {
+  color-scheme: dark;
+
+  /* Superficies Multicapa (Obsidiana -> 4 escalones claros de elevación) */
+  --hiscare-surface-0: #070d19;
+  --hiscare-surface-1: #0d182d;
+  --hiscare-surface-2: #13213b;
+  --hiscare-surface-3: #1b2b48;
+  --hiscare-surface-4: #223454;
+  --hiscare-body-bg: var(--hiscare-surface-0);
+  --hiscare-card-bg: var(--hiscare-surface-1);
+  --hiscare-surface-subtle: var(--hiscare-surface-3);
+
+  /* Topbar y Cristal Esmerilado Oscuro */
+  --hiscare-topbar-bg: rgba(13, 24, 45, 0.88);
+  --hiscare-topbar-border: rgba(148, 163, 184, 0.16);
+  --hiscare-topbar-shadow: 0 4px 16px -2px rgba(2, 6, 23, 0.55), 0 1px 0 0 rgba(255, 255, 255, 0.04);
+  --hiscare-glass-bg: rgba(13, 24, 45, 0.84);
+  --hiscare-glass-border: rgba(148, 163, 184, 0.16);
+
+  /* Canvas Pattern Nocturno */
+  --hiscare-canvas-pattern: radial-gradient(ellipse 80% 60% at 15% 10%, rgba(37, 99, 235, 0.16) 0%, transparent 60%),
+                            radial-gradient(ellipse 65% 55% at 88% 88%, rgba(3, 105, 161, 0.14) 0%, transparent 58%),
+                            radial-gradient(ellipse 50% 45% at 75% 18%, rgba(21, 128, 61, 0.08) 0%, transparent 55%);
+
+  /* Tipografía y Contraste WCAG AA sobre oscuro */
+  --hiscare-text-main: #f1f5f9;
+  --hiscare-text-secondary: #cbd5e1;
+  --hiscare-text-muted: #94a3b8;
+  --hiscare-text-placeholder: #94a3b8;
+  --hiscare-text-inverse: #070d19;
+  --hiscare-scrollbar-thumb: #334155;
+  --hiscare-scrollbar-thumb-hover: #475569;
+
+  /* Primarios y Acentos Subtle */
+  --hiscare-primary: #3b82f6;
+  --hiscare-primary-dark: #60a5fa;
+  --hiscare-primary-subtle: rgba(37, 99, 235, 0.18);
+  --hiscare-primary-border: rgba(56, 189, 248, 0.32);
+
+  /* Tokens Semánticos Unificados (Modo Oscuro · WCAG 2.1 AA) */
+  --hiscare-primary-solid: #2563eb;
+  --hiscare-primary-solid-hover: #1d4ed8;
+  --hiscare-primary-on-solid: #ffffff;
+  --hiscare-primary-text: #93c5fd;
+  --hiscare-primary-subtle-bg: rgba(37, 99, 235, 0.22);
+  --hiscare-primary-subtle-text: #bfdbfe;
+  --hiscare-primary-subtle-border: rgba(96, 165, 250, 0.38);
+
+  --hiscare-secondary-solid: #475569;
+  --hiscare-secondary-solid-hover: #334155;
+  --hiscare-secondary-on-solid: #ffffff;
+  --hiscare-secondary-text: #cbd5e1;
+  --hiscare-secondary-subtle-bg: rgba(100, 116, 139, 0.24);
+  --hiscare-secondary-subtle-text: #e2e8f0;
+  --hiscare-secondary-subtle-border: rgba(148, 163, 184, 0.32);
+
+  --hiscare-success-solid: #15803d;
+  --hiscare-success-solid-hover: #166534;
+  --hiscare-success-on-solid: #ffffff;
+  --hiscare-success-text: #86efac;
+  --hiscare-success-subtle-bg: rgba(21, 128, 61, 0.22);
+  --hiscare-success-subtle-text: #bbf7d0;
+  --hiscare-success-subtle-border: rgba(74, 222, 128, 0.38);
+
+  --hiscare-warning-solid: #f97316;
+  --hiscare-warning-solid-hover: #ea580c;
+  --hiscare-warning-on-solid: #1c1003;
+  --hiscare-warning-text: #fdba74;
+  --hiscare-warning-subtle-bg: rgba(194, 65, 12, 0.22);
+  --hiscare-warning-subtle-text: #fed7aa;
+  --hiscare-warning-subtle-border: rgba(251, 146, 60, 0.38);
+
+  --hiscare-danger-solid: #dc2626;
+  --hiscare-danger-solid-hover: #b91c1c;
+  --hiscare-danger-on-solid: #ffffff;
+  --hiscare-danger-text: #fca5a5;
+  --hiscare-danger-subtle-bg: rgba(185, 28, 28, 0.24);
+  --hiscare-danger-subtle-text: #fecaca;
+  --hiscare-danger-subtle-border: rgba(248, 113, 113, 0.40);
+
+  --hiscare-info-solid: #0369a1;
+  --hiscare-info-solid-hover: #075985;
+  --hiscare-info-on-solid: #ffffff;
+  --hiscare-info-text: #7dd3fc;
+  --hiscare-info-subtle-bg: rgba(3, 105, 161, 0.24);
+  --hiscare-info-subtle-text: #bae6fd;
+  --hiscare-info-subtle-border: rgba(56, 189, 248, 0.38);
+
+  --hiscare-violet-solid: #6d28d9;
+  --hiscare-violet-solid-hover: #5b21b6;
+  --hiscare-violet-on-solid: #ffffff;
+  --hiscare-violet-text: #c4b5fd;
+  --hiscare-violet-subtle-bg: rgba(109, 40, 217, 0.24);
+  --hiscare-violet-subtle-text: #ddd6fe;
+  --hiscare-violet-subtle-border: rgba(167, 139, 250, 0.40);
+
+  /* Bordes y Foco Accesible */
+  --hiscare-border-subtle: rgba(148, 163, 184, 0.12);
+  --hiscare-border-color: rgba(148, 163, 184, 0.20);
+  --hiscare-border-strong: #64748b;
+  --hiscare-focus-ring: #38bdf8;
+  --hiscare-focus-shadow: 0 0 0 3px rgba(56, 189, 248, 0.30);
+
+  /* Elevaciones y Hairlines en Oscuro */
+  --hiscare-inner-hairline: inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 0 0 1px rgba(148, 163, 184, 0.06);
+  --hiscare-inner-recessed: inset 0 1px 2px rgba(2, 6, 23, 0.45);
+  --hiscare-elevation-1: 0 2px 6px -1px rgba(2, 6, 23, 0.45), 0 0 0 1px rgba(148, 163, 184, 0.10);
+  --hiscare-elevation-2: 0 6px 14px -2px rgba(2, 6, 23, 0.52), 0 0 0 1px rgba(148, 163, 184, 0.14);
+  --hiscare-elevation-3: 0 12px 24px -4px rgba(2, 6, 23, 0.62), 0 0 0 1px rgba(148, 163, 184, 0.18);
+  --hiscare-elevation-4: 0 20px 30px -6px rgba(2, 6, 23, 0.72), 0 0 0 1px rgba(148, 163, 184, 0.22);
+  --hiscare-elevation-5: 0 25px 50px -12px rgba(2, 6, 23, 0.82), 0 0 0 1px rgba(148, 163, 184, 0.24);
+
+  /* Tablas Clínicas en Modo Oscuro */
+  --hiscare-table-th-bg: var(--hiscare-surface-2);
+  --hiscare-table-th-color: #cbd5e1;
+  --hiscare-table-th-border: rgba(148, 163, 184, 0.24);
+  --hiscare-table-border: rgba(148, 163, 184, 0.14);
+  --hiscare-table-border-subtle: rgba(148, 163, 184, 0.08);
+  --hiscare-table-hover-bg: rgba(27, 43, 72, 0.72);
+  --hiscare-table-selected-bg: rgba(37, 99, 235, 0.18);
+
+  /* Variantes Subtle de Triage Res. 5596/2015 en Modo Oscuro */
+  --hiscare-triage-1-subtle-bg: rgba(185, 28, 28, 0.22);
+  --hiscare-triage-1-subtle-text: #fca5a5;
+  --hiscare-triage-1-subtle-border: rgba(248, 113, 113, 0.42);
+
+  --hiscare-triage-2-subtle-bg: rgba(194, 65, 12, 0.22);
+  --hiscare-triage-2-subtle-text: #fdba74;
+  --hiscare-triage-2-subtle-border: rgba(251, 146, 60, 0.42);
+  --hiscare-triage-2-border: #fb923c;
+  --hiscare-triage-2-glow: 0 0 16px rgba(234, 88, 12, 0.45);
+  --hiscare-triage-2-shadow: 0 4px 14px -2px rgba(234, 88, 12, 0.35);
+
+  --hiscare-triage-3-subtle-bg: rgba(202, 138, 4, 0.20);
+  --hiscare-triage-3-subtle-text: #fde047;
+  --hiscare-triage-3-subtle-border: rgba(250, 204, 21, 0.42);
+
+  --hiscare-triage-4-subtle-bg: rgba(21, 128, 61, 0.22);
+  --hiscare-triage-4-subtle-text: #86efac;
+  --hiscare-triage-4-subtle-border: rgba(74, 222, 128, 0.40);
+
+  --hiscare-triage-5-subtle-bg: rgba(29, 78, 216, 0.22);
+  --hiscare-triage-5-subtle-text: #93c5fd;
+  --hiscare-triage-5-subtle-border: rgba(96, 165, 250, 0.40);
+
+  --hiscare-triage-pendiente-subtle-bg: var(--hiscare-secondary-subtle-bg);
+  --hiscare-triage-pendiente-subtle-text: var(--hiscare-secondary-subtle-text);
+  --hiscare-triage-pendiente-subtle-border: var(--hiscare-secondary-subtle-border);
+
+  /* Variantes Subtle de Estados de Citas en Modo Oscuro */
+  --hiscare-estado-programada-subtle-bg: rgba(100, 116, 139, 0.22);
+  --hiscare-estado-programada-subtle-text: #cbd5e1;
+
+  --hiscare-estado-confirmada-subtle-bg: rgba(37, 99, 235, 0.22);
+  --hiscare-estado-confirmada-subtle-text: #93c5fd;
+
+  --hiscare-estado-ensala-subtle-bg: rgba(234, 88, 12, 0.22);
+  --hiscare-estado-ensala-subtle-text: #fdba74;
+  --hiscare-estado-ensala-subtle-border: rgba(251, 146, 60, 0.42);
+  --hiscare-estado-ensala-border: #fb923c;
+  --hiscare-estado-ensala-pulse: 0 0 14px rgba(251, 146, 60, 0.42);
+  --hiscare-estado-ensala-shadow: 0 4px 14px -2px rgba(234, 88, 12, 0.35);
+
+  --hiscare-estado-atendida-subtle-bg: var(--hiscare-success-subtle-bg);
+  --hiscare-estado-atendida-subtle-text: var(--hiscare-success-subtle-text);
+
+  --hiscare-estado-cancelada-subtle-bg: rgba(220, 38, 38, 0.22);
+  --hiscare-estado-cancelada-subtle-text: #fca5a5;
+
+  --hiscare-estado-noasistio-subtle-bg: rgba(194, 65, 12, 0.24);
+  --hiscare-estado-noasistio-subtle-text: #fed7aa;
+
+  /* Signos Vitales en Modo Oscuro */
+  --hiscare-vital-normal-color: #86efac;
+  --hiscare-vital-normal-bg: rgba(21, 128, 61, 0.20);
+  --hiscare-vital-normal-border: rgba(74, 222, 128, 0.35);
+
+  --hiscare-vital-warning-color: #fdba74;
+  --hiscare-vital-warning-bg: rgba(194, 65, 12, 0.20);
+  --hiscare-vital-warning-border: rgba(251, 146, 60, 0.38);
+
+  --hiscare-vital-critical-color: #fca5a5;
+  --hiscare-vital-critical-bg: rgba(185, 28, 28, 0.24);
+  --hiscare-vital-critical-border: rgba(248, 113, 113, 0.42);
+
+  /* Sobrescrituras Bootstrap 5 (--bs-*) para Modo Oscuro */
+  --bs-primary: #60a5fa;
+  --bs-primary-rgb: 96, 165, 250;
+  --bs-secondary: #94a3b8;
+  --bs-secondary-rgb: 148, 163, 184;
+  --bs-success: #4ade80;
+  --bs-success-rgb: 74, 222, 128;
+  --bs-info: #38bdf8;
+  --bs-info-rgb: 56, 189, 248;
+  --bs-warning: #fb923c;
+  --bs-warning-rgb: 251, 146, 60;
+  --bs-danger: #f87171;
+  --bs-danger-rgb: 248, 113, 113;
+
+  --bs-light: #13213b;
+  --bs-light-rgb: 19, 33, 59;
+  --bs-dark: #070d19;
+  --bs-dark-rgb: 7, 13, 25;
+
+  --bs-body-bg: var(--hiscare-surface-0);
+  --bs-body-bg-rgb: 7, 13, 25;
+  --bs-body-color: #f1f5f9;
+  --bs-body-color-rgb: 241, 245, 249;
+  --bs-emphasis-color: #f8fafc;
+  --bs-emphasis-color-rgb: 248, 250, 252;
+  --bs-secondary-color: #cbd5e1;
+  --bs-secondary-color-rgb: 203, 213, 225;
+  --bs-tertiary-color: #94a3b8;
+  --bs-tertiary-color-rgb: 148, 163, 184;
+  --bs-secondary-bg: var(--hiscare-surface-2);
+  --bs-secondary-bg-rgb: 19, 33, 59;
+  --bs-tertiary-bg: var(--hiscare-surface-3);
+  --bs-tertiary-bg-rgb: 27, 43, 72;
+
+  --bs-border-color: var(--hiscare-border-color);
+  --bs-border-color-translucent: rgba(148, 163, 184, 0.16);
+
+  --bs-card-bg: var(--hiscare-surface-1);
+  --bs-card-border-color: var(--hiscare-border-color);
+  --bs-card-cap-bg: linear-gradient(180deg, var(--hiscare-surface-2) 0%, var(--hiscare-surface-1) 100%);
+
+  --bs-modal-bg: var(--hiscare-surface-1);
+  --bs-modal-border-color: var(--hiscare-border-color);
+  --bs-modal-header-border-color: var(--hiscare-border-color);
+  --bs-modal-footer-border-color: var(--hiscare-border-color);
+
+  --bs-dropdown-bg: rgba(19, 33, 59, 0.96);
+  --bs-dropdown-border-color: var(--hiscare-border-color);
+  --bs-dropdown-link-color: #f1f5f9;
+  --bs-dropdown-link-hover-color: #ffffff;
+  --bs-dropdown-link-hover-bg: var(--hiscare-surface-3);
+
+  --bs-link-color: #60a5fa;
+  --bs-link-color-rgb: 96, 165, 250;
+  --bs-link-hover-color: #93c5fd;
+  --bs-link-hover-color-rgb: 147, 197, 253;
+  --bs-focus-ring-color: rgba(56, 189, 248, 0.30);
+
+  --bs-primary-text-emphasis: #93c5fd;
+  --bs-primary-bg-subtle: rgba(37, 99, 235, 0.22);
+  --bs-primary-border-subtle: rgba(96, 165, 250, 0.38);
+
+  --bs-secondary-text-emphasis: #e2e8f0;
+  --bs-secondary-bg-subtle: rgba(100, 116, 139, 0.24);
+  --bs-secondary-border-subtle: rgba(148, 163, 184, 0.32);
+
+  --bs-success-text-emphasis: #bbf7d0;
+  --bs-success-bg-subtle: rgba(21, 128, 61, 0.22);
+  --bs-success-border-subtle: rgba(74, 222, 128, 0.38);
+
+  --bs-info-text-emphasis: #bae6fd;
+  --bs-info-bg-subtle: rgba(3, 105, 161, 0.24);
+  --bs-info-border-subtle: rgba(56, 189, 248, 0.38);
+
+  --bs-warning-text-emphasis: #fed7aa;
+  --bs-warning-bg-subtle: rgba(194, 65, 12, 0.22);
+  --bs-warning-border-subtle: rgba(251, 146, 60, 0.38);
+
+  --bs-danger-text-emphasis: #fecaca;
+  --bs-danger-bg-subtle: rgba(185, 28, 28, 0.24);
+  --bs-danger-border-subtle: rgba(248, 113, 113, 0.40);
+
+  --bs-light-text-emphasis: #f1f5f9;
+  --bs-light-bg-subtle: var(--hiscare-surface-3);
+  --bs-light-border-subtle: rgba(148, 163, 184, 0.22);
+
+  --bs-dark-text-emphasis: #e2e8f0;
+  --bs-dark-bg-subtle: var(--hiscare-surface-2);
+  --bs-dark-border-subtle: rgba(148, 163, 184, 0.24);
+}
+
+/* ============================================================================
+   17. TOKENS DE IMPRESIÓN Y REPORTE CLÍNICO (HIGH DENSITY PRINT TOKENS)
+   ============================================================================ */
+@media print {
+  :root,
+  [data-theme="dark"],
+  [data-bs-theme="dark"] {
+    color-scheme: light !important;
+    --hiscare-surface-0: #ffffff !important;
+    --hiscare-surface-1: #ffffff !important;
+    --hiscare-surface-2: #ffffff !important;
+    --hiscare-surface-3: #ffffff !important;
+    --hiscare-surface-4: #ffffff !important;
+    --hiscare-body-bg: #ffffff !important;
+    --hiscare-card-bg: #ffffff !important;
+    --hiscare-canvas-pattern: none !important;
+    --hiscare-text-main: #000000 !important;
+    --hiscare-text-secondary: #1e293b !important;
+    --hiscare-text-muted: #475569 !important;
+    --hiscare-border-color: #000000 !important;
+    --hiscare-border-strong: #000000 !important;
+    --hiscare-elevation-1: none !important;
+    --hiscare-elevation-2: none !important;
+    --hiscare-elevation-3: none !important;
+    --hiscare-elevation-4: none !important;
+    --hiscare-elevation-5: none !important;
+    --bs-body-bg: #ffffff !important;
+    --bs-body-color: #000000 !important;
+    --bs-card-bg: #ffffff !important;
+    --hiscare-table-th-bg: #f8fafc !important;
+    --hiscare-table-th-color: #000000 !important;
+    --hiscare-table-th-border: #000000 !important;
+    --hiscare-table-border: #cbd5e1 !important;
+  }
+}
+
+/* Fin de hiscare-tokens.css */
+

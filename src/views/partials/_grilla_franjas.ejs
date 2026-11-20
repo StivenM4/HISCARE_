@@ -1,0 +1,44 @@
+<!-- Grilla de franjas horarias y leyenda de estados -->
+<div class="franjas-wrapper">
+  <!-- [16.29] Contenedor dinámico de franjas horarias -->
+  <div id="grillaFranjas" class="d-flex flex-wrap gap-2 py-2 mb-3 min-vh-20 align-items-center" data-trace="C16-29">
+    <div class="text-muted small py-4 w-100 text-center bg-light rounded-3 border border-dashed" id="grillaFranjasPlaceholder">
+      <div class="mb-1">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-calendar-event text-secondary" viewBox="0 0 16 16">
+          <path d="M11 6.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5z"/>
+          <path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5M1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4z"/>
+        </svg>
+      </div>
+      <span>Seleccione especialidad, profesional y fecha para consultar franjas disponibles.</span>
+    </div>
+  </div>
+
+  <!-- Leyenda de estados de franjas [16.30 - 16.33] -->
+  <div class="card bg-light border-0 py-2 px-3 mt-3 rounded-3">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 text-secondary small">
+      <!-- [16.30] Libre (indicador verde) -->
+      <div class="d-flex align-items-center gap-2" data-trace="C16-30">
+        <span class="btn btn-sm btn-outline-success py-0 px-2 fw-semibold" style="pointer-events: none; min-width: 54px; font-size: 0.75rem;">08:00</span>
+        <span>Libre</span>
+      </div>
+
+      <!-- [16.31] Ocupada (indicador gris tachado) -->
+      <div class="d-flex align-items-center gap-2" data-trace="C16-31">
+        <span class="btn btn-sm btn-light text-decoration-line-through text-muted border py-0 px-2 fw-semibold" style="pointer-events: none; min-width: 54px; font-size: 0.75rem;">08:30</span>
+        <span>Ocupada</span>
+      </div>
+
+      <!-- [16.32] Seleccionada (indicador azul) -->
+      <div class="d-flex align-items-center gap-2" data-trace="C16-32">
+        <span class="btn btn-sm btn-primary active py-0 px-2 fw-semibold" style="pointer-events: none; min-width: 54px; font-size: 0.75rem;">09:00</span>
+        <span>Seleccionada</span>
+      </div>
+
+      <!-- [16.33] Tomada por otro usuario (indicador naranja/rojo) -->
+      <div class="d-flex align-items-center gap-2" data-trace="C16-33">
+        <span class="btn btn-sm btn-danger py-0 px-2 fw-semibold" style="pointer-events: none; min-width: 54px; font-size: 0.75rem;">09:30</span>
+        <span>Tomada por otro usuario</span>
+      </div>
+    </div>
+  </div>
+</div>

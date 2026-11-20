@@ -1,0 +1,174 @@
+<%- include('../partials/_inicio', { titulo: 'Agendar cita médica' }) %>
+<!-- Agendamiento de citas y control de cruces horarios -->
+
+<div class="container-fluid px-0">
+  <!-- [16.15] Encabezado del flujo -->
+  <div class="d-flex flex-wrap align-items-center justify-content-between mb-4 pb-2 border-bottom">
+    <div>
+      <h1 class="h3 fw-bold text-dark mb-1" data-trace="C16-15">Agendar cita médica</h1>
+      <p class="text-muted small mb-0">Seleccione la especialidad, el profesional médico y una franja horaria disponible para programar la cita.</p>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+      <a href="/pacientes/<%= paciente.id %>" class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-1">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-left" viewBox="0 0 16 16">
+          <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
+        </svg>
+        <span>Volver al paciente</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Formulario y Layout de dos columnas -->
+  <div class="row g-4" id="formCita" data-paciente="<%= paciente.id %>">
+    
+    <!-- Panel izquierdo: 1. Paciente y profesional [16.16] -->
+    <div class="col-lg-5 col-xl-4">
+      <div class="card border-0 shadow-sm rounded-3 h-100" data-trace="C16-16">
+        <div class="card-header bg-white py-3 border-bottom">
+          <h2 class="h5 fw-bold mb-0 text-primary">1. Paciente y profesional</h2>
+        </div>
+        <div class="card-body p-4 d-flex flex-column gap-3">
+          
+          <!-- [16.17] Label Paciente y [16.18] Paciente preseleccionado -->
+          <div>
+            <label class="form-label fw-semibold text-secondary small mb-1" data-trace="C16-17">Paciente</label>
+            <div class="p-3 bg-light rounded-3 border d-flex align-items-center justify-content-between" data-trace="C16-18" id="pacienteInfo">
+              <div>
+                <div class="fw-bold text-dark"><%= paciente.nombre %></div>
+                <div class="text-muted small"><%= paciente.documento %></div>
+              </div>
+              <span class="badge bg-secondary-subtle text-secondary border">Titular</span>
+            </div>
+          </div>
+
+          <!-- [16.19] Label Especialidad y [16.20] Select especialidad -->
+          <div>
+            <label for="especialidad" class="form-label fw-semibold text-secondary small mb-1" data-trace="C16-19">Especialidad</label>
+            <select id="especialidad" class="form-select" data-trace="C16-20">
+              <option value="">Seleccione una especialidad…</option>
+              <% (typeof especialidades !== 'undefined' ? especialidades : []).forEach(e => { %>
+                <option value="<%= e.id %>"><%= e.nombre %></option>
+              <% }) %>
+            </select>
+          </div>
+
+          <!-- [16.21] Label Profesional y [16.22] Select profesional -->
+          <div>
+            <label for="profesional" class="form-label fw-semibold text-secondary small mb-1" data-trace="C16-21">Profesional</label>
+            <select id="profesional" class="form-select" disabled data-trace="C16-22">
+              <option value="">Seleccione primero una especialidad…</option>
+            </select>
+          </div>
+
+          <!-- [16.23] Label Fecha y [16.24] Input fecha -->
+          <div>
+            <label for="fecha" class="form-label fw-semibold text-secondary small mb-1" data-trace="C16-23">Fecha</label>
+            <input type="date" id="fecha" class="form-control" value="<%= typeof fecha !== 'undefined' ? fecha : '' %>" min="<%= typeof fecha !== 'undefined' ? fecha : '' %>" data-trace="C16-24">
+          </div>
+
+          <!-- [16.25] Label Duración y [16.26] Input duración de solo lectura -->
+          <div>
+            <label for="duracionMinutos" class="form-label fw-semibold text-secondary small mb-1" data-trace="C16-25">Duración</label>
+            <input type="text" id="duracionMinutos" class="form-control bg-light" readonly disabled value="30 minutos" data-trace="C16-26">
+          </div>
+
+          <!-- [16.27] Aviso de afiliación EPS -->
+          <%
+            const afil = (typeof afiliacion !== 'undefined' && afiliacion) ? afiliacion : (paciente.afiliacion || null);
+            const epsNombre = afil ? (afil.eps || afil.aseguradora_nombre || 'EPS Sanitas') : 'EPS Sanitas';
+            const fechaFin = afil ? (afil.fecha_fin || '31/12/2026') : '31/12/2026';
+            const esVigente = afil ? (afil.vigente !== false && (!afil.fecha_fin || new Date(afil.fecha_fin) >= new Date())) : true;
+          %>
+          <div class="mt-auto pt-2">
+            <% if (esVigente) { %>
+              <div id="avisoAfiliacion" class="alert alert-info py-2 mb-0 d-flex align-items-center gap-2 small" data-trace="C16-27">
+                <span class="fs-6">ℹ</span>
+                <span>Afiliación <%= epsNombre %> vigente hasta <%= fechaFin %>.</span>
+              </div>
+            <% } else { %>
+              <div id="avisoAfiliacion" class="alert alert-warning py-2 mb-0 d-flex align-items-center gap-2 small" data-trace="C16-27">
+                <span class="fs-6">⚠️</span>
+                <span>Afiliación <%= epsNombre %> vencida desde <%= fechaFin %>. Confirmar en taller.</span>
+              </div>
+            <% } %>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Panel derecho: 2. Franjas disponibles de [Profesional] - [Fecha] [16.28] -->
+    <div class="col-lg-7 col-xl-8">
+      <div class="card border-0 shadow-sm rounded-3" data-trace="C16-28">
+        <div class="card-header bg-white py-3 border-bottom d-flex align-items-center justify-content-between">
+          <h2 class="h5 fw-bold mb-0 text-primary" id="panelFranjasTitulo">
+            2. Franjas disponibles de <span id="nombreProfesionalHeader">[Profesional]</span> - <span id="fechaHeader">[Fecha]</span>
+          </h2>
+        </div>
+        <div class="card-body p-4">
+          
+          <!-- [16.29 - 16.33] Grilla de franjas horarias y leyenda de estados -->
+          <%- include('../partials/_grilla_franjas') %>
+
+          <!-- [16.34] Alerta de conflicto con alternativas -->
+          <div id="alertaConflicto" class="alert alert-danger mt-3" style="display:none;" data-trace="C16-34">
+            <div class="d-flex align-items-start gap-2 mb-2">
+              <span class="fs-5">⚠️</span>
+              <div class="flex-grow-1">
+                <div id="alertaConflictoTexto" class="fw-semibold">
+                  La franja acaba de ser reservada por otro usuario. Alternativas cercanas:
+                </div>
+              </div>
+            </div>
+            <div id="alternativasContenedor" class="d-flex flex-wrap gap-2 pt-1"></div>
+          </div>
+
+          <!-- [16.35] Card Resumen de la cita -->
+          <div class="card border rounded-3 bg-light mt-4 shadow-sm" id="cardResumen" data-trace="C16-35">
+            <div class="card-body p-3">
+              <h6 class="fw-bold text-dark mb-3 d-flex align-items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-file-earmark-check text-primary" viewBox="0 0 16 16">
+                  <path d="M10.854 7.854a.5.5 0 0 0-.708-.708L7.5 9.793 6.354 8.646a.5.5 0 1 0-.708.708l1.5 1.5a.5.5 0 0 0 .708 0z"/>
+                  <path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2M9.5 3A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5z"/>
+                </svg>
+                <span>Resumen de la cita</span>
+              </h6>
+              <div class="row g-3">
+                <!-- [16.36] y [16.37] Paciente -->
+                <div class="col-sm-6 col-md-3">
+                  <span class="text-muted small d-block" data-trace="C16-36">Paciente</span>
+                  <strong class="text-dark d-block text-truncate" id="resumenPaciente" data-trace="C16-37"><%= paciente.nombre %></strong>
+                </div>
+                <!-- [16.38] y [16.39] Profesional -->
+                <div class="col-sm-6 col-md-3">
+                  <span class="text-muted small d-block" data-trace="C16-38">Profesional</span>
+                  <strong class="text-dark d-block text-truncate" id="resumenProfesional" data-trace="C16-39">Sin seleccionar</strong>
+                </div>
+                <!-- [16.40] y [16.41] Fecha y hora -->
+                <div class="col-sm-6 col-md-3">
+                  <span class="text-muted small d-block" data-trace="C16-40">Fecha y hora</span>
+                  <strong class="text-dark d-block" id="resumenFechaHora" data-trace="C16-41">Sin seleccionar</strong>
+                </div>
+                <!-- [16.42] y [16.43] Estado inicial -->
+                <div class="col-sm-6 col-md-3">
+                  <span class="text-muted small d-block" data-trace="C16-42">Estado inicial</span>
+                  <span class="badge bg-secondary" id="resumenEstado" data-trace="C16-43">PROGRAMADA</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Botones de acción [16.44] y [16.45] -->
+          <div class="d-flex flex-wrap align-items-center justify-content-end gap-2 mt-4 pt-2 border-top">
+            <a href="/pacientes/<%= paciente.id %>" id="btnCancelar" class="btn btn-outline-secondary px-4" data-trace="C16-44">Cancelar</a>
+            <button id="btnConfirmar" class="btn btn-primary px-4 fw-semibold" disabled data-trace="C16-45">Confirmar cita</button>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<%- include('../partials/_fin', { scripts: ['/js/grilla_franjas.js', '/js/cita_nueva.js'] }) %>

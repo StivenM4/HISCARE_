@@ -1,0 +1,147 @@
+<%- include('../partials/_inicio', { titulo: typeof titulo !== 'undefined' ? titulo : 'Atención clínica' }) %>
+
+<div class="container-fluid px-0">
+  <!-- Encabezado de la pantalla -->
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+    <div>
+      <h1 class="h3 fw-bold text-dark mb-1">Atención clínica</h1>
+      <p class="text-muted small mb-0">Listado de atenciones de consulta externa y seguimiento de pacientes.</p>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+      <a href="/agenda" class="btn btn-outline-primary d-inline-flex align-items-center gap-1">
+        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+          <path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5M1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4z"/>
+        </svg>
+        <span>Ver agenda médica</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Banner de atención en curso si existe -->
+  <% if (typeof atencionAbierta !== 'undefined' && atencionAbierta) { %>
+    <div class="alert alert-warning border-0 shadow-sm d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4 p-3 rounded-3">
+      <div class="d-flex align-items-center gap-3">
+        <div class="p-2 rounded-circle bg-warning bg-opacity-25 text-warning-emphasis d-flex align-items-center justify-content-center" style="width: 44px; height: 44px;">
+          <svg width="22" height="22" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/>
+          </svg>
+        </div>
+        <div>
+          <div class="fw-bold fs-6">Atención en curso activa</div>
+          <div class="small text-secondary">
+            Paciente: <strong><%= atencionAbierta.paciente_nombre %></strong> (<%= atencionAbierta.documento %>) · Médico: <%= atencionAbierta.medico_nombre %> · Hora: <%= atencionAbierta.hora %>
+          </div>
+        </div>
+      </div>
+      <div>
+        <a href="/atenciones/<%= atencionAbierta.id %>/consulta" class="btn btn-warning fw-semibold px-4 shadow-sm">
+          Continuar consulta &rarr;
+        </a>
+      </div>
+    </div>
+  <% } %>
+
+  <!-- Filtro por pestañas si es médico -->
+  <% if (typeof usuario !== 'undefined' && usuario && usuario.rol === 'MEDICO') { %>
+    <% const esTodos = (typeof todos !== 'undefined' && Boolean(todos)); %>
+    <ul id="tabsFiltroAtenciones" class="nav nav-pills mb-3 gap-2">
+      <li class="nav-item">
+        <a class="nav-link <%= (!esTodos) ? 'active' : 'bg-white border' %>" href="/atenciones">
+          Mis atenciones
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link <%= (esTodos) ? 'active' : 'bg-white border' %>" href="/atenciones?todos=true">
+          Todas las atenciones
+        </a>
+      </li>
+    </ul>
+  <% } %>
+
+  <!-- Tabla de atenciones -->
+  <div class="card border-0 shadow-sm rounded-3 overflow-hidden hc-tabla-card">
+    <div class="card-body p-0 hc-tabla-body">
+      <div class="hc-tabla-contenedor">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0" id="tablaAtenciones">
+            <thead class="bg-light text-secondary text-uppercase" style="font-size: 0.75rem; letter-spacing: 0.05em;">
+              <tr>
+                <th class="ps-4 py-3">Fecha / Hora</th>
+                <th class="py-3">Paciente</th>
+                <th class="py-3">EPS</th>
+                <th class="py-3">Médico</th>
+                <th class="py-3">Motivo de consulta</th>
+                <th class="py-3">Estado</th>
+                <th class="pe-4 py-3 text-end" data-orderable="false">Acción</th>
+              </tr>
+            </thead>
+          <tbody>
+            <% if (atenciones && atenciones.length > 0) { %>
+              <% atenciones.forEach(a => { %>
+                <tr>
+                  <td class="ps-4 py-3 text-nowrap">
+                    <div class="fw-semibold text-dark"><%= a.fecha_formateada || a.hora %></div>
+                  </td>
+                  <td class="py-3">
+                    <div class="fw-bold text-dark"><%= a.paciente_nombre %></div>
+                    <div class="small text-muted">
+                      <%= a.documento %><% if (a.edad != null) { %> · <%= a.edad %> años<% } %><% if (a.sexo) { %> · <%= a.sexo %><% } %>
+                    </div>
+                  </td>
+                  <td class="py-3 text-nowrap">
+                    <span class="badge bg-light text-dark border"><%= a.eps || 'Sin EPS' %></span>
+                  </td>
+                  <td class="py-3 text-nowrap">
+                    <div class="small fw-semibold text-secondary"><%= a.medico_nombre %></div>
+                  </td>
+                  <td class="py-3" style="max-width: 250px;">
+                    <div class="text-truncate small text-secondary" title="<%= a.motivo_consulta || '' %>">
+                      <% if (a.motivo_consulta) { %>
+                        <%= a.motivo_consulta %>
+                      <% } else { %>
+                        <em class="text-muted">Sin motivo registrado</em>
+                      <% } %>
+                    </div>
+                  </td>
+                  <td class="py-3 text-nowrap">
+                    <% if (a.estado === 'ABIERTA') { %>
+                      <span class="badge rounded-pill badge-estado-en-sala">ABIERTA</span>
+                    <% } else { %>
+                      <span class="badge rounded-pill badge-estado-atendida">CERRADA</span>
+                    <% } %>
+                  </td>
+                  <td class="pe-4 py-3 text-end text-nowrap">
+                    <% if (a.estado === 'ABIERTA') { %>
+                      <a href="/atenciones/<%= a.id %>/consulta" class="btn btn-sm btn-primary fw-semibold px-3">
+                        Atender
+                      </a>
+                    <% } else { %>
+                      <a href="/atenciones/<%= a.id %>/consulta" class="btn btn-sm btn-outline-secondary px-3">
+                        Ver atención
+                      </a>
+                    <% } %>
+                  </td>
+                </tr>
+              <% }); %>
+            <% } else { %>
+              <tr>
+                <td colspan="7" class="text-center text-muted py-5">
+                  <div class="mb-2">
+                    <svg width="32" height="32" fill="currentColor" class="text-secondary opacity-50" viewBox="0 0 16 16">
+                      <path d="M9.5 0a.5.5 0 0 1 .5.5.5.5 0 0 0 .5.5.5.5 0 0 1 .5.5V2a.5.5 0 0 1-.5.5h-5A.5.5 0 0 1 5 2v-.5a.5.5 0 0 1 .5-.5.5.5 0 0 0 .5-.5.5.5 0 0 1 .5-.5z"/>
+                      <path d="M3 2.5a.5.5 0 0 1 .5-.5H4a1.5 1.5 0 0 0 1.4-1H6a.5.5 0 0 1 0 1h-.5a.5.5 0 0 0-.5.5V3h6v-.5a.5.5 0 0 0-.5-.5H10a.5.5 0 0 1 0-1h.6a1.5 1.5 0 0 0 1.4 1h.5a.5.5 0 0 1 .5.5v12a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5z"/>
+                    </svg>
+                  </div>
+                  No se encontraron atenciones clínicas registradas.
+                </td>
+              </tr>
+            <% } %>
+          </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/_fin', { scripts: ['/js/atenciones_lista.js'] }) %>

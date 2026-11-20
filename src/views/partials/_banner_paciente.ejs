@@ -1,0 +1,187 @@
+<!-- Banner del paciente: compartido por todas las pestañas de la atención -->
+<%
+  const atn = (typeof atencion !== 'undefined' && atencion) ? atencion : ((typeof paciente !== 'undefined' && paciente) ? paciente : {});
+  const pacienteNombre = atn.paciente || ((atn.nombres || '') + ' ' + (atn.apellidos || '')).trim() || atn.nombreCompleto || 'Paciente';
+
+  // Formato de documento, edad y sexo (C4-17 / C25-16)
+  const tipoDoc = atn.tipo_documento || atn.tipoDocumento || '';
+  const numDoc = atn.numero_documento || atn.documento || '';
+  const docTexto = (tipoDoc && numDoc) ? `${tipoDoc} ${numDoc}` : (numDoc || atn.documento || '');
+
+  const edadTexto = atn.edad != null ? `${atn.edad} años` : '';
+  const sexoRaw = (atn.sexo || atn.paciente_sexo || '').toUpperCase();
+  const sexoTexto = (sexoRaw === 'M' || sexoRaw === 'MASCULINO') ? 'M' :
+                    (sexoRaw === 'F' || sexoRaw === 'FEMENINO') ? 'F' :
+                    (sexoRaw === 'I' || sexoRaw === 'INTERSEXUAL') ? 'I' : (sexoRaw || 'M');
+  const sexoCompleto = (sexoRaw === 'M' || sexoRaw === 'MASCULINO') ? 'Masculino (M)' :
+                       (sexoRaw === 'F' || sexoRaw === 'FEMENINO') ? 'Femenino (F)' :
+                       (sexoRaw === 'I' || sexoRaw === 'INTERSEXUAL') ? 'Intersexual (I)' : (sexoRaw || 'M');
+
+  const partesDemograficas = [docTexto, edadTexto, sexoTexto].filter(Boolean);
+  const textoDemografico = partesDemograficas.join(' · ');
+
+  // Aseguradora y régimen (C4-18 / C25-17)
+  const regimen = atn.regimen || atn.tipo_plan || (atn.afiliacion && (atn.afiliacion.tipo_plan || atn.afiliacion.tipo_usuario)) || '';
+  const epsTexto = atn.eps ? (regimen ? `${atn.eps} · ${regimen}` : atn.eps) : (regimen ? `Particular · ${regimen}` : 'Particular');
+
+  // Alergias (C4-19 / C25-18)
+  const listaAlergiasRaw = Array.isArray(atn.alergias) ? atn.alergias : (atn.alergias ? [atn.alergias] : []);
+  const listaAlergias = [];
+  const alergiasVistas = new Set();
+  for (const a of listaAlergiasRaw) {
+    if (!a) continue;
+    const itemStr = String(a).trim();
+    const itemKey = itemStr.replace(/\s+/g, ' ').replace(/[–—]/g, '-').toUpperCase();
+    if (!alergiasVistas.has(itemKey)) {
+      alergiasVistas.add(itemKey);
+      listaAlergias.push(itemStr);
+    }
+  }
+  const textoAlergias = listaAlergias.join(' · ').toUpperCase();
+
+  // Código de atención (C4-20, C4-21 / C25-19, C25-20)
+  const codigoAtencion = atn.codigo_atencion || atn.codigo || (atn.id ? 'ATE-' + atn.id.slice(0, 8) : 'ATE-0000');
+
+  // Clasificación de Triage (Resolución 5596 de 2015 MinSalud Colombia)
+  // Soporta rawTriage explícito o inferencia dinámica desde signos_vitales sin cambios en la BD existente
+  const rawTriage = atn.triage || atn.nivel_triage || atn.triage_nivel || (atn.triaje && (atn.triaje.nivel || atn.triaje.clasificacion)) || null;
+  let triageClase = 'badge-triage-5';
+  let triageLabel = 'Triage V · Consulta Externa';
+
+  if (rawTriage) {
+    const trStr = String(rawTriage).trim().toUpperCase();
+    if (trStr === '1' || trStr === 'I' || trStr.includes('REANIM') || trStr.includes('TRIAGE I') || trStr.includes('TRIAGE 1')) {
+      triageClase = 'badge-triage-1';
+      triageLabel = 'Triage I · Reanimación';
+    } else if (trStr === '2' || trStr === 'II' || trStr.includes('EMERG') || trStr.includes('TRIAGE II') || trStr.includes('TRIAGE 2')) {
+      triageClase = 'badge-triage-2';
+      triageLabel = 'Triage II · Emergencia';
+    } else if (trStr === '3' || trStr === 'III' || trStr.includes('URGEN') || trStr.includes('TRIAGE III') || trStr.includes('TRIAGE 3')) {
+      triageClase = 'badge-triage-3';
+      triageLabel = 'Triage III · Urgencia';
+    } else if (trStr === '4' || trStr === 'IV' || trStr.includes('PRIOR') || trStr.includes('TRIAGE IV') || trStr.includes('TRIAGE 4')) {
+      triageClase = 'badge-triage-4';
+      triageLabel = 'Triage IV · Prioritario';
+    } else if (trStr === '5' || trStr === 'V' || trStr.includes('CONSULTA') || trStr.includes('NO URG') || trStr.includes('TRIAGE V') || trStr.includes('TRIAGE 5')) {
+      triageClase = 'badge-triage-5';
+      triageLabel = 'Triage V · Consulta Externa';
+    } else {
+      triageClase = 'badge-triage-pendiente';
+      triageLabel = 'Sin triaje';
+    }
+  } else {
+    // Inferencia clínica automática desde signos_vitales existentes (Resolución 5596 de 2015)
+    const ultimaToma = (Array.isArray(atn.tomas) && atn.tomas.length > 0) ? atn.tomas[0] : (atn.signos || atn.ultima_toma || null);
+    if (ultimaToma) {
+      const spo2 = Number(ultimaToma.saturacion_oxigeno ?? ultimaToma.spo2 ?? 0);
+      const pas = Number(ultimaToma.presion_sistolica ?? ultimaToma.pas ?? 0);
+      const pad = Number(ultimaToma.presion_diastolica ?? ultimaToma.pad ?? 0);
+      const fc = Number(ultimaToma.frecuencia_cardiaca ?? ultimaToma.fc ?? 0);
+      const fr = Number(ultimaToma.frecuencia_respiratoria ?? ultimaToma.fr ?? 0);
+      const temp = Number(ultimaToma.temperatura_celsius ?? ultimaToma.temperatura ?? ultimaToma.temp ?? 0);
+
+      const tieneSignos = spo2 > 0 || pas > 0 || pad > 0 || fc > 0 || fr > 0 || temp > 0;
+
+      if (tieneSignos) {
+        if ((spo2 > 0 && spo2 < 85) || (pas > 0 && (pas < 70 || pas >= 220)) || (fc > 0 && (fc < 40 || fc >= 150)) || (fr > 0 && (fr < 8 || fr >= 35))) {
+          triageClase = 'badge-triage-1';
+          triageLabel = 'Triage I · Reanimación';
+        } else if ((spo2 >= 85 && spo2 < 90) || (pas >= 180 || (pas > 0 && pas < 90)) || (pad >= 110) || (fc >= 130 || (fc > 0 && fc < 50)) || (fr >= 28 || (fr > 0 && fr < 10)) || (temp >= 40.0 || (temp > 0 && temp < 35.0))) {
+          triageClase = 'badge-triage-2';
+          triageLabel = 'Triage II · Emergencia';
+        } else if ((spo2 >= 90 && spo2 < 94) || (pas >= 160) || (pad >= 100) || (fc >= 110) || (fr >= 22) || (temp >= 38.5)) {
+          triageClase = 'badge-triage-3';
+          triageLabel = 'Triage III · Urgencia';
+        } else if ((pas >= 140) || (pad >= 90) || (fc > 100) || (temp >= 37.8)) {
+          triageClase = 'badge-triage-4';
+          triageLabel = 'Triage IV · Prioritario';
+        } else {
+          triageClase = 'badge-triage-5';
+          triageLabel = 'Triage V · Consulta Externa';
+        }
+      } else {
+        triageClase = 'badge-triage-5';
+        triageLabel = 'Triage V · Consulta Externa';
+      }
+    } else {
+      triageClase = 'badge-triage-5';
+      triageLabel = 'Triage V · Consulta Externa';
+    }
+  }
+
+  const prefijoTrace = (typeof figuraTrace !== 'undefined' && figuraTrace)
+    ? figuraTrace
+    : ((typeof seccion !== 'undefined' && seccion === 'cierre') ? 'C22' : ((typeof seccion !== 'undefined' && seccion === 'alta') ? 'C21' : ((typeof seccion !== 'undefined' && seccion === 'diagnosticos') ? 'C20' : ((typeof seccion !== 'undefined' && seccion === 'consentimientos') ? 'C19' : ((typeof seccion !== 'undefined' && seccion === 'antecedentes') ? 'C5' : ((typeof seccion !== 'undefined' && seccion === 'evolucion') ? 'C6' : 'C4'))))));
+  const esC22 = prefijoTrace === 'C22';
+  const esC25 = prefijoTrace === 'C25';
+%>
+
+<div class="card mb-3 shadow-sm border-0 bg-white" role="region" aria-label="Encabezado clínico del paciente" <% if (!esC22 && !esC25) { %>data-trace="<%= prefijoTrace %>-15"<% } %> id="bannerPaciente" style="border-radius: var(--hiscare-radius-md, 0.5rem);">
+  <div class="card-body py-2 px-3 d-flex flex-wrap align-items-center justify-content-between gap-3">
+    <!-- Bloque de Identificación y Datos Clínicos Críticos -->
+    <div class="d-flex flex-wrap align-items-center gap-3">
+      <div class="fs-5 fw-bold text-dark text-nowrap" data-trace="<%= (esC22 || esC25) ? (prefijoTrace + '-15') : (prefijoTrace + '-16') %>" title="Paciente: <%= pacienteNombre %>"><%= pacienteNombre %></div>
+      <div class="text-secondary small text-nowrap" data-trace="<%= (esC22 || esC25) ? (prefijoTrace + '-16') : (prefijoTrace + '-17') %>" aria-label="Documento <%= docTexto %>, Edad <%= edadTexto %>, Sexo <%= sexoCompleto %>"><%= textoDemografico %></div>
+      <div class="badge bg-light text-primary border border-primary-subtle px-2 py-1 fw-medium" data-trace="<%= (esC22 || esC25) ? (prefijoTrace + '-17') : (prefijoTrace + '-18') %>" aria-label="Aseguradora y Régimen: <%= epsTexto %>" title="Aseguradora y Régimen"><%= epsTexto %></div>
+
+      <!-- Badge de Triage Clínico (I a V - Res. 5596/2015 MinSalud) -->
+      <span class="badge badge-triage <%= triageClase %>"
+            id="bannerTriage"
+            title="Clasificación de Triage: <%= triageLabel %>"
+            aria-label="Clasificación de Triage: <%= triageLabel %>">
+        <svg width="12" height="12" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
+          <circle cx="8" cy="8" r="7"/>
+        </svg>
+        <span><%= triageLabel %></span>
+      </span>
+
+      <!-- Badge de Alergias y Seguridad del Paciente -->
+      <% if (listaAlergias.length > 0) { %>
+        <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-2 py-1 fw-bold text-uppercase d-inline-flex align-items-center gap-1 text-truncate banner-alergias-badge"
+              id="bannerAlergias"
+              role="alert"
+              aria-live="polite"
+              data-trace="<%= (esC22 || esC25) ? (prefijoTrace + '-18') : (prefijoTrace + '-19') %>"
+              title="ALERGIA: <%= textoAlergias.replace(/"/g, '&quot;') %>"
+              style="max-width: 480px; vertical-align: middle; cursor: help;">
+          <svg width="13" height="13" fill="currentColor" class="bi bi-exclamation-triangle-fill flex-shrink-0" viewBox="0 0 16 16" aria-hidden="true">
+            <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+          </svg>
+          <span class="text-truncate">ALERGIA: <%= textoAlergias %></span>
+        </span>
+      <% } else { %>
+        <span class="badge bg-light text-secondary border px-2 py-1 fw-normal d-inline-flex align-items-center gap-1"
+              id="bannerAlergias"
+              data-trace="<%= (esC22 || esC25) ? (prefijoTrace + '-18') : (prefijoTrace + '-19') %>"
+              title="Sin alergias reportadas en la historia clínica"
+              aria-label="Sin alergias reportadas">
+          <svg width="12" height="12" fill="currentColor" class="bi bi-shield-check text-success flex-shrink-0" viewBox="0 0 16 16" aria-hidden="true">
+            <path d="M5.338 1.59a61.44 61.44 0 0 0-2.837.856.481.481 0 0 0-.328.39c-.554 4.157.726 7.19 2.253 9.188a10.725 10.725 0 0 0 2.287 2.233c.346.244.652.42.893.533.12.057.218.095.293.118a.55.55 0 0 0 .101.025.615.615 0 0 0 .1-.025c.076-.023.174-.061.294-.118.24-.113.547-.29.893-.533a10.726 10.726 0 0 0 2.287-2.233c1.527-1.997 2.807-5.031 2.253-9.188a.48.48 0 0 0-.328-.39c-.651-.213-1.75-.56-2.837-.855C9.552 1.29 8.531 1.067 8 1.067c-.53 0-1.552.223-2.662.524zM5.072.56C6.157.265 7.31 0 8 0s1.843.265 2.928.56c1.11.3 2.229.655 2.887.87a1.54 1.54 0 0 1 1.044 1.262c.599 4.491-.71 7.776-2.363 9.93-1.636 2.133-3.652 3.14-4.224 3.37a1.542 1.542 0 0 1-1.044 0c-.572-.23-2.588-1.237-4.224-3.37C1.472 10.428.163 7.143.762 2.652A1.54 1.54 0 0 1 1.806 1.39c.658-.215 1.777-.57 2.887-.87z"/>
+            <path d="M10.854 5.146a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 1 1 .708-.708L7.5 7.793l2.646-2.647a.5.5 0 0 1 .708 0z"/>
+          </svg>
+          <span>Sin alergias reportadas</span>
+        </span>
+      <% } %>
+    </div>
+
+    <!-- Bloque de Código de Atención y Estado Asistencial -->
+    <div class="d-flex align-items-center gap-2 ms-auto small">
+      <span class="text-muted fw-normal" <% if (esC25) { %>data-trace="C25-19"<% } else if (!esC22) { %>data-trace="<%= prefijoTrace %>-20"<% } %>>Atención</span>
+      <span class="badge bg-light text-dark border px-2 py-1 font-monospace fw-semibold" data-trace="<%= esC22 ? 'C22-19' : (esC25 ? 'C25-20' : ((prefijoTrace === 'C7' || prefijoTrace === 'C21') ? (prefijoTrace + '-20') : (prefijoTrace + '-21'))) %>"><%= codigoAtencion %></span>
+      <% if (atn.estado) { %>
+        <%
+          const estadoNorm = String(atn.estado).toUpperCase();
+          const claseEstadoAtencion = (estadoNorm === 'CERRADA' || estadoNorm === 'ALTA') ? 'badge-atencion-cerrada' :
+                                      (estadoNorm === 'TRIAJE') ? 'badge-atencion-triaje' :
+                                      (estadoNorm === 'CONSULTA') ? 'badge-atencion-consulta' : 'badge-atencion-abierta';
+        %>
+        <span class="badge <%= claseEstadoAtencion %> ms-1 d-inline-flex align-items-center" <% if (esC22) { %>data-trace="C22-20"<% } %> aria-label="Estado de la atención: <%= atn.estado %>">
+          <% if (estadoNorm === 'CERRADA') { %>
+            <svg width="12" height="12" fill="currentColor" class="bi bi-lock-fill me-1" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1a2 2 0 0 0-2 2v4H5a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1V3a2 2 0 0 0-2-2zm-1 2a1 1 0 0 1 2 0v4H7V3z"/></svg>
+          <% } %>
+          <%= atn.estado %>
+        </span>
+      <% } %>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,305 @@
+<%- include('../partials/_inicio', { titulo: 'Codificación de diagnósticos y procedimientos' }) %>
+<!-- Codificación de diagnósticos CIE-10 y procedimientos CUPS -->
+<%- include('../partials/_banner_paciente', { figuraTrace: 'C20' }) %>
+<%- include('../partials/_tabs_atencion', { figuraTrace: 'C20', seccion: 'diagnosticos' }) %>
+
+<%
+  const idAtencion = atencion.id;
+  const esCerrada = (atencion.estado === 'CERRADA');
+  const rolUsuario = (typeof usuario !== 'undefined' && usuario && usuario.rol) ? usuario.rol : '';
+  const esSoloLectura = Boolean((typeof soloLectura !== 'undefined' && soloLectura) || esCerrada || (rolUsuario && rolUsuario !== 'MEDICO' && rolUsuario !== 'ADMINISTRADOR'));
+  const listaDiagnosticos = (typeof diagnosticos !== 'undefined' && Array.isArray(diagnosticos)) ? diagnosticos : [];
+  const listaProcedimientos = (typeof procedimientos !== 'undefined' && Array.isArray(procedimientos)) ? procedimientos : [];
+%>
+
+<div class="container-fluid px-0"
+     id="contenedorCodificacion"
+     data-atencion-id="<%= idAtencion %>"
+     data-solo-lectura="<%= esSoloLectura ? 'true' : 'false' %>">
+
+  <!-- Mensajes y alertas del sistema -->
+  <div id="contenedorAlertasCodificacion"></div>
+
+  <!-- Layout Bootstrap 5: dos columnas responsivas (CIE-10 a la izquierda, CUPS a la derecha) -->
+  <div class="row g-4">
+
+    <!-- ======================================================== -->
+    <!-- Columna Izquierda: Diagnósticos CIE-10 de la atención -->
+    <!-- ======================================================== -->
+    <div class="col-12 col-lg-6">
+      <div class="card shadow-sm border-0 bg-white h-100 p-4" style="border-radius: 0.5rem;">
+        
+        <!-- [20.27] Título de la sección de Diagnósticos -->
+        <div class="d-flex align-items-center justify-content-between mb-3 border-bottom pb-2">
+          <h5 class="fw-bold text-dark fs-6 mb-0 d-flex align-items-center gap-2" data-trace="C20-27">
+            <svg width="18" height="18" fill="currentColor" class="bi bi-file-medical text-primary" viewBox="0 0 16 16">
+              <path d="M8.5 4.5a.5.5 0 0 0-1 0v.634l-.549-.317a.5.5 0 1 0-.5.866L7 6l-.549.317a.5.5 0 1 0 .5.866l.549-.317V8.5a.5.5 0 1 0 1 0v-.634l.549.317a.5.5 0 1 0 .5-.866L9 7l.549-.317a.5.5 0 1 0-.5-.866l-.549.317V4.5zM5.5 11.5a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 0 1H6a.5.5 0 0 1-.5-.5zm0-2a.5.5 0 0 1 .5-.5h4a.5.5 0 0 1 0 1H6a.5.5 0 0 1-.5-.5z"/>
+              <path d="M2 2a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V2zm10-1H4a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1z"/>
+            </svg>
+            Diagnósticos CIE-10 de la atención
+          </h5>
+          <span class="badge bg-light text-secondary border small">Catálogo oficial CIE-10</span>
+        </div>
+
+        <!-- [20.28] Buscador predictivo CIE-10 con debounce -->
+        <div class="mb-3 position-relative" id="contenedorBuscadorCie10">
+          <label for="inputBuscarCie10" class="form-label text-secondary small fw-semibold mb-1">
+            Buscar diagnóstico CIE-10
+          </label>
+          <div class="input-group">
+            <span class="input-group-text bg-white border-end-0 text-secondary">
+              <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+              </svg>
+            </span>
+            <input type="text"
+                   class="form-control border-start-0 ps-0 shadow-none"
+                   id="inputBuscarCie10"
+                   data-trace="C20-28"
+                   placeholder="Buscar por código (ej. I10X) o descripción..."
+                   autocomplete="off"
+                   <%= esSoloLectura ? 'disabled' : '' %>>
+          </div>
+          <div class="form-text small text-muted">
+            Escriba código o texto (≥2 caracteres) para consultar las sugerencias oficiales.
+          </div>
+        </div>
+
+        <!-- [20.40] Alerta de validación: texto no vigente y sugerencias clickeables -->
+        <div class="alert alert-warning border border-warning-subtle shadow-sm py-2 px-3 mb-3 d-none"
+             id="alertaCie10Invalido"
+             data-trace="C20-40"
+             role="alert">
+          <div class="d-flex align-items-start justify-content-between">
+            <div class="d-flex align-items-center gap-2">
+              <svg width="18" height="18" fill="currentColor" class="bi bi-exclamation-triangle-fill text-warning flex-shrink-0" viewBox="0 0 16 16">
+                <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+              </svg>
+              <span class="small text-dark fw-medium" id="textoCie10Invalido">
+                Código no vigente. Seleccione una sugerencia del catálogo
+              </span>
+            </div>
+            <button type="button" class="btn-close shadow-none p-1" id="btnCerrarAlertaInvalido" aria-label="Cerrar"></button>
+          </div>
+          <div id="contenedorSugerenciasInvalidas" class="mt-2"></div>
+        </div>
+
+        <!-- [20.35 - 20.39] Tabla de Diagnósticos seleccionados -->
+        <div class="table-responsive" data-trace="C20-35">
+          <table class="table table-hover align-middle mb-0" id="tablaDiagnosticos">
+            <thead class="table-light text-secondary small text-uppercase">
+              <tr>
+                <th scope="col" style="width: 20%;" data-trace="C20-36">Código</th>
+                <th scope="col" style="width: 45%;">Descripción</th>
+                <th scope="col" class="text-center" style="width: 25%;" data-trace="C20-37">Tipo</th>
+                <th scope="col" class="text-center" style="width: 10%;" data-trace="C20-38">✕</th>
+              </tr>
+            </thead>
+            <tbody id="tbodyDiagnosticos">
+              <% if (listaDiagnosticos.length > 0) { %>
+                <% listaDiagnosticos.forEach((diag, index) => { %>
+                  <tr class="fila-diagnostico align-middle" data-cie10-id="<%= diag.cie10_id || diag.id %>">
+                    <td class="font-monospace fw-bold text-nowrap">
+                      <span class="badge bg-light text-dark border px-2 py-1 font-monospace">
+                        <%= diag.codigo %>
+                      </span>
+                    </td>
+                    <td class="text-dark small fw-medium">
+                      <%= diag.descripcion %>
+                    </td>
+                    <td class="text-center text-nowrap">
+                      <button type="button"
+                              class="btn btn-sm badge px-3 py-2 btn-tipo-diag <%= diag.tipo === 'PRINCIPAL' ? 'btn-diag-principal shadow-sm' : 'btn-diag-secundario' %>"
+                              data-trace="C20-39"
+                              role="radio"
+                              aria-checked="<%= diag.tipo === 'PRINCIPAL' ? 'true' : 'false' %>"
+                              aria-label="<%= diag.tipo === 'PRINCIPAL' ? 'Diagnóstico Principal' : 'Diagnóstico Secundario (clic para hacer Principal)' %>"
+                              <%= esSoloLectura ? 'disabled' : '' %>>
+                        <%= diag.tipo %>
+                      </button>
+                    </td>
+                    <td class="text-center text-nowrap">
+                      <% if (!esSoloLectura) { %>
+                        <button type="button"
+                                class="btn btn-sm btn-link text-danger text-decoration-none fw-bold p-0 btn-eliminar-diag"
+                                data-trace="C20-38"
+                                aria-label="Remover <%= diag.codigo %>">
+                          ✕
+                        </button>
+                      <% } else { %>
+                        <span class="text-muted small">—</span>
+                      <% } %>
+                    </td>
+                  </tr>
+                <% }) %>
+              <% } else { %>
+                <tr id="filaSinDiagnosticos">
+                  <td colspan="4" class="text-center text-muted py-4">
+                    <div class="d-flex flex-column align-items-center gap-1">
+                      <span class="fw-medium">No se han registrado diagnósticos para esta atención.</span>
+                      <span class="small text-secondary">Utilice el buscador superior para agregar diagnósticos CIE-10 oficiales.</span>
+                    </div>
+                  </td>
+                </tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ======================================================== -->
+    <!-- Columna Derecha: Procedimientos CUPS realizados -->
+    <!-- ======================================================== -->
+    <div class="col-12 col-lg-6">
+      <div class="card shadow-sm border-0 bg-white h-100 p-4" style="border-radius: 0.5rem;">
+        
+        <!-- [20.41] Título de la sección de Procedimientos -->
+        <div class="d-flex align-items-center justify-content-between mb-3 border-bottom pb-2">
+          <h5 class="fw-bold text-dark fs-6 mb-0 d-flex align-items-center gap-2" data-trace="C20-41">
+            <svg width="18" height="18" fill="currentColor" class="bi bi-activity text-primary" viewBox="0 0 16 16">
+              <path fill-rule="evenodd" d="M6 2a.5.5 0 0 1 .47.33L10 12.036l1.53-4.208A.5.5 0 0 1 12 7.5h3.5a.5.5 0 0 1 0 1h-3.15l-1.88 5.17a.5.5 0 0 1-.94 0L6 3.964 4.47 8.171A.5.5 0 0 1 4 8.5H.5a.5.5 0 0 1 0-1h3.15l1.88-5.17A.5.5 0 0 1 6 2z"/>
+            </svg>
+            Procedimientos CUPS realizados
+          </h5>
+          <span class="badge bg-light text-secondary border small">Catálogo oficial CUPS</span>
+        </div>
+
+        <!-- [20.42] Buscador predictivo CUPS -->
+        <div class="mb-3 position-relative" id="contenedorBuscadorCups">
+          <label for="inputBuscarCups" class="form-label text-secondary small fw-semibold mb-1">
+            Buscar procedimiento CUPS
+          </label>
+          <div class="input-group">
+            <span class="input-group-text bg-white border-end-0 text-secondary">
+              <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+              </svg>
+            </span>
+            <input type="text"
+                   class="form-control border-start-0 ps-0 shadow-none"
+                   id="inputBuscarCups"
+                   data-trace="C20-42"
+                   placeholder="Buscar código o nombre CUPS..."
+                   autocomplete="off"
+                   <%= esSoloLectura ? 'disabled' : '' %>>
+          </div>
+          <div class="form-text small text-muted">
+            Escriba código o texto (≥2 caracteres) para consultar los procedimientos CUPS.
+          </div>
+        </div>
+
+        <!-- [20.43 - 20.46] Tabla de Procedimientos seleccionados -->
+        <div class="table-responsive" data-trace="C20-43">
+          <table class="table table-hover align-middle mb-0" id="tablaProcedimientos">
+            <thead class="table-light text-secondary small text-uppercase">
+              <tr>
+                <th scope="col" style="width: 20%;" data-trace="C20-44">Código</th>
+                <th scope="col" style="width: 45%;" data-trace="C20-45">Procedimiento</th>
+                <th scope="col" style="width: 25%;" data-trace="C20-46">Fecha</th>
+                <th scope="col" class="text-center" style="width: 10%;">✕</th>
+              </tr>
+            </thead>
+            <tbody id="tbodyProcedimientos">
+              <% if (listaProcedimientos.length > 0) { %>
+                <% listaProcedimientos.forEach((proc, index) => { %>
+                  <tr class="fila-procedimiento align-middle" data-cups-id="<%= proc.cups_id || proc.id %>">
+                    <td class="font-monospace fw-bold text-nowrap">
+                      <span class="badge bg-light text-secondary border px-2 py-1 font-monospace">
+                        <%= proc.codigo %>
+                      </span>
+                    </td>
+                    <td class="text-dark small fw-medium">
+                      <%= proc.descripcion %>
+                    </td>
+                    <td class="text-nowrap">
+                      <input type="date"
+                             class="form-control form-control-sm fecha-proc shadow-none"
+                             data-trace="C20-46"
+                             value="<%= proc.fecha ? (typeof proc.fecha === 'string' ? proc.fecha.slice(0, 10) : new Date(proc.fecha).toISOString().slice(0, 10)) : '' %>"
+                             style="max-width: 145px;"
+                             <%= esSoloLectura ? 'disabled' : '' %>>
+                    </td>
+                    <td class="text-center text-nowrap">
+                      <% if (!esSoloLectura) { %>
+                        <button type="button"
+                                class="btn btn-sm btn-link text-danger text-decoration-none fw-bold p-0 btn-eliminar-proc"
+                                aria-label="Remover <%= proc.codigo %>">
+                          ✕
+                        </button>
+                      <% } else { %>
+                        <span class="text-muted small">—</span>
+                      <% } %>
+                    </td>
+                  </tr>
+                <% }) %>
+              <% } else { %>
+                <tr id="filaSinProcedimientos">
+                  <td colspan="4" class="text-center text-muted py-4">
+                    <div class="d-flex flex-column align-items-center gap-1">
+                      <span class="fw-medium">No se han registrado procedimientos CUPS para esta atención.</span>
+                      <span class="small text-secondary">Utilice el buscador superior para agregar procedimientos realizados.</span>
+                    </div>
+                  </td>
+                </tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <!-- [20.47] Callout informativo azul -->
+  <div class="alert alert-info d-flex align-items-center gap-2 mt-4 mb-3 shadow-sm border-0 rounded-2"
+       role="alert"
+       data-trace="C20-47">
+    <svg width="20" height="20" fill="currentColor" class="bi bi-info-circle-fill flex-shrink-0" viewBox="0 0 16 16">
+      <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/>
+    </svg>
+    <span>
+      <strong>ℹ</strong> Una atención solo puede cerrarse si tiene exactamente un diagnóstico PRINCIPAL
+    </span>
+  </div>
+
+  <!-- [20.48, 20.49] Barra de acciones inferior -->
+  <div class="card shadow-sm border-0 bg-white p-3 mb-4" style="border-radius: 0.5rem;">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+      <div class="d-flex align-items-center gap-2">
+        <button type="button"
+                class="btn btn-outline-secondary px-3"
+                id="btnDescartar"
+                data-trace="C20-48"
+                <%= esSoloLectura ? 'disabled' : '' %>>
+          Descartar
+        </button>
+      </div>
+      <div class="d-flex align-items-center gap-2">
+        <button type="button"
+                class="btn btn-primary px-4 shadow-sm text-white d-inline-flex align-items-center gap-2"
+                id="btnGuardarCodificacion"
+                data-trace="C20-49"
+                <%= esSoloLectura ? 'disabled' : '' %>>
+          <span class="spinner-border spinner-border-sm d-none" id="spinnerGuardar" role="status" aria-hidden="true"></span>
+          <span id="textoBotonGuardar">Guardar codificación</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Datos iniciales para hidratación sin llamadas redundantes -->
+<script id="datosInicialesCodificacion" type="application/json">
+<%- JSON.stringify({
+  diagnosticos: listaDiagnosticos,
+  procedimientos: listaProcedimientos
+}) %>
+</script>
+<script id="diagnosticosInicialesData" type="application/json"><%- JSON.stringify(listaDiagnosticos) %></script>
+<script id="procedimientosInicialesData" type="application/json"><%- JSON.stringify(listaProcedimientos) %></script>
+
+<%- include('../partials/_fin', { scripts: ['/js/autocompletar.js', '/js/diagnosticos.js'] }) %>

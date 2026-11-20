@@ -1,0 +1,961 @@
+/**
+ * ============================================================================
+ * HISCARE CLINICAL OS — Estilos Especializados de Autenticación (Pantalla C.1)
+ * Archivo: public/css/hiscare-login.css
+ * ============================================================================
+ * Extiende los tokens maestros de HISCARE (hiscare-tokens.css) para ofrecer una
+ * experiencia de inicio de sesión hospitalaria moderna, interactiva y accesible
+ * (WCAG 2.1 AA), con soporte nativo para prefers-reduced-motion y autofill.
+ * ============================================================================
+ */
+
+/* Contenedor principal de página de login (anula el body.bg-light estándar) */
+body.hiscare-login-body {
+  background-color: #070d19 !important;
+  background-image: none !important;
+  color: #f8fafc;
+  min-height: 100vh;
+  min-height: 100dvh;
+  margin: 0;
+  position: relative;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ============================================================================
+   01. FONDO ANIMADO INTERACTIVO ESTILO HISCARE
+   ========================================================================== */
+.hiscare-login-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 80% 60% at 15% 15%, rgba(37, 99, 235, 0.28) 0%, transparent 60%),
+    radial-gradient(ellipse 65% 55% at 85% 85%, rgba(6, 182, 212, 0.2) 0%, transparent 58%),
+    radial-gradient(ellipse 50% 45% at 75% 18%, rgba(16, 185, 129, 0.12) 0%, transparent 55%),
+    linear-gradient(155deg, #070d19 0%, #0b1528 48%, #0f172a 78%, #111827 100%);
+  --pointer-x: 50%;
+  --pointer-y: 50%;
+}
+
+/* Spotlight interactivo que sigue suavemente al cursor */
+.hiscare-login-spotlight {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    560px circle at var(--pointer-x) var(--pointer-y),
+    rgba(56, 189, 248, 0.13) 0%,
+    rgba(37, 99, 235, 0.06) 35%,
+    transparent 70%
+  );
+  transition: opacity 0.35s ease;
+}
+
+/* Malla médica/geométrica de precisión con máscara radial */
+.hiscare-login-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(148, 163, 184, 0.065) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 163, 184, 0.065) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: radial-gradient(ellipse 85% 80% at 50% 50%, #000 35%, transparent 92%);
+  -webkit-mask-image: radial-gradient(ellipse 85% 80% at 50% 50%, #000 35%, transparent 92%);
+}
+
+/* Orbes clínicos flotantes (acelerados por GPU vía transform) */
+.hiscare-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(55px);
+  opacity: 0.42;
+  will-change: transform;
+}
+
+.hiscare-orb--cobalt {
+  width: 420px;
+  height: 420px;
+  top: -110px;
+  left: -90px;
+  background: radial-gradient(circle, rgba(37, 99, 235, 0.65) 0%, rgba(29, 78, 216, 0.12) 65%, transparent 100%);
+}
+
+.hiscare-orb--cyan {
+  width: 360px;
+  height: 360px;
+  bottom: -90px;
+  right: -70px;
+  background: radial-gradient(circle, rgba(6, 182, 212, 0.52) 0%, rgba(14, 116, 144, 0.1) 65%, transparent 100%);
+}
+
+.hiscare-orb--emerald {
+  width: 260px;
+  height: 260px;
+  top: 42%;
+  left: 42%;
+  opacity: 0.25;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.48) 0%, rgba(21, 128, 61, 0.06) 65%, transparent 100%);
+}
+
+/* Canvas de constelación clínica interactiva */
+#hiscareClinicalCanvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Línea de pulso ECG decorativa en el fondo */
+.hiscare-bg-ecg {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 4.5%;
+  height: 92px;
+  opacity: 0.26;
+  overflow: hidden;
+}
+
+.hiscare-bg-ecg svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.hiscare-ecg-trace {
+  fill: none;
+  stroke: url(#hiscareEcgGrad);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.hiscare-ecg-sweep {
+  fill: none;
+  stroke: #38bdf8;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 220 1200;
+  stroke-dashoffset: 1420;
+  filter: drop-shadow(0 0 6px rgba(56, 189, 248, 0.85));
+}
+
+@keyframes orbFloatA {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(36px, 28px, 0) scale(1.06);
+  }
+}
+
+@keyframes orbFloatB {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(-32px, -24px, 0) scale(1.08);
+  }
+}
+
+@keyframes orbFloatC {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(20px, -30px, 0) scale(0.94);
+  }
+}
+
+@keyframes ecgSweepFlow {
+  0% {
+    stroke-dashoffset: 1420;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes loginCardEnter {
+  0% {
+    opacity: 0;
+    transform: translateY(18px) scale(0.985);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes loginStaggerEnter {
+  0% {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulseDotLive {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.45;
+    transform: scale(0.8);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  body.hiscare-login-body:not(.ambient-paused) .hiscare-orb--cobalt {
+    animation: orbFloatA 16s ease-in-out infinite;
+  }
+  body.hiscare-login-body:not(.ambient-paused) .hiscare-orb--cyan {
+    animation: orbFloatB 19s ease-in-out infinite;
+  }
+  body.hiscare-login-body:not(.ambient-paused) .hiscare-orb--emerald {
+    animation: orbFloatC 14s ease-in-out infinite;
+  }
+  body.hiscare-login-body:not(.ambient-paused) .hiscare-ecg-sweep {
+    animation: ecgSweepFlow 4.8s linear infinite;
+  }
+  body.hiscare-login-body:not(.ambient-paused) .login-status-dot {
+    animation: pulseDotLive 2.2s ease-in-out infinite;
+  }
+
+  .login-anim-card {
+    animation: loginCardEnter 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  .login-anim-brand {
+    animation: loginStaggerEnter 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  .login-anim-stagger-1 {
+    animation: loginStaggerEnter 0.48s cubic-bezier(0.16, 1, 0.3, 1) 0.08s both;
+  }
+  .login-anim-stagger-2 {
+    animation: loginStaggerEnter 0.48s cubic-bezier(0.16, 1, 0.3, 1) 0.16s both;
+  }
+  .login-anim-stagger-3 {
+    animation: loginStaggerEnter 0.48s cubic-bezier(0.16, 1, 0.3, 1) 0.24s both;
+  }
+}
+
+/* Botón discreto para pausar animaciones de fondo (WCAG 2.2.2) */
+.login-ambient-control {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.75rem;
+  min-height: 36px;
+  border-radius: 9999px;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  background: rgba(15, 23, 42, 0.72);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: #cbd5e1;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+}
+
+.login-ambient-control:hover {
+  background: rgba(30, 41, 59, 0.9);
+  border-color: rgba(56, 189, 248, 0.45);
+  color: #ffffff;
+}
+
+.login-ambient-control:focus-visible {
+  outline: 3px solid #38bdf8 !important;
+  outline-offset: 2px !important;
+}
+
+/* ============================================================================
+   02. ESTRUCTURA SPLIT-SCREEN RESPONSIVA
+   ========================================================================== */
+.login-shell {
+  position: relative;
+  z-index: 2;
+  flex: 1 0 auto;
+  width: 100%;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: clamp(1rem, 3vw, 2.25rem) 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-grid {
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 450px);
+  gap: clamp(1.75rem, 4vw, 3.75rem);
+  align-items: center;
+}
+
+@media (max-width: 991.98px) {
+  .login-grid {
+    grid-template-columns: minmax(0, 440px);
+    justify-content: center;
+  }
+}
+
+/* ============================================================================
+   03. PANEL EDITORIAL DE MARCA CLÍNICA (DESKTOP)
+   ========================================================================== */
+.login-brand-panel {
+  color: #f8fafc;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding-inline-end: 0.5rem;
+}
+
+.login-os-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  align-self: flex-start;
+  padding: 0.4rem 0.9rem;
+  border-radius: 9999px;
+  background: rgba(15, 23, 42, 0.65);
+  border: 1px solid rgba(56, 189, 248, 0.28);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  color: #bae6fd;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.login-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #10b981;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.85);
+  flex-shrink: 0;
+}
+
+.login-hero-title {
+  font-size: clamp(1.85rem, 2.8vw, 2.65rem);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  margin: 0;
+  color: #ffffff;
+}
+
+.login-hero-accent {
+  background: linear-gradient(135deg, #60a5fa 0%, #22d3ee 55%, #34d399 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.login-hero-desc {
+  color: #cbd5e1;
+  font-size: 0.98rem;
+  line-height: 1.6;
+  margin: 0;
+  max-width: 48ch;
+}
+
+/* Tarjeta glass de telemetría clínica en el panel izquierdo */
+.login-telemetry-card {
+  background: rgba(11, 21, 40, 0.72);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 1rem;
+  padding: 1.15rem 1.25rem;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 20px 35px -15px rgba(2, 6, 23, 0.65);
+}
+
+.login-telemetry-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+  font-size: 0.75rem;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 700;
+}
+
+.login-telemetry-ecg {
+  height: 46px;
+  border-radius: 0.65rem;
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.85) 0%, rgba(7, 13, 25, 0.9) 100%);
+  border: 1px solid rgba(56, 189, 248, 0.16);
+  padding: 0.35rem 0.5rem;
+  margin-bottom: 0.95rem;
+  overflow: hidden;
+}
+
+.login-telemetry-ecg svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.login-feature-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.login-feature-item {
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 0.75rem;
+  padding: 0.65rem 0.75rem;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.login-feature-item:hover {
+  transform: translateY(-2px);
+  border-color: rgba(56, 189, 248, 0.32);
+  background: rgba(37, 99, 235, 0.1);
+}
+
+.login-feature-label {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #38bdf8;
+  margin-bottom: 0.15rem;
+}
+
+.login-feature-val {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #f1f5f9;
+}
+
+/* ============================================================================
+   04. TARJETA ELEVADA GLASS DE INICIO DE SESIÓN
+   ========================================================================== */
+.login-card {
+  width: 100%;
+  max-width: 450px;
+  background: rgba(255, 255, 255, 0.97) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.75) !important;
+  border-radius: 1.25rem !important;
+  padding: clamp(1.5rem, 3.5vw, 2.25rem) !important;
+  color: #0f172a;
+  box-shadow:
+    0 25px 50px -12px rgba(2, 6, 23, 0.58),
+    0 12px 24px -8px rgba(15, 23, 42, 0.32),
+    0 0 0 1px rgba(255, 255, 255, 0.16) !important;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Anula la franja azul superior degradada heredada de .auth-card::before y #formLogin::before en login */
+.login-card::before,
+.login-card.auth-card::before,
+.login-card #formLogin::before,
+.login-card #formSesionExpirada::before {
+  content: none;
+  display: none;
+}
+
+.login-card #formSesionExpirada {
+  background: transparent;
+  border-radius: 0 !important;
+  overflow: visible;
+}
+
+/* Cabecera de marca en la tarjeta */
+.login-card-header {
+  text-align: center;
+  margin-bottom: 1.4rem;
+}
+
+.login-brand-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  text-decoration: none;
+  font-size: 1.65rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: #0f172a;
+  margin-bottom: 0.45rem;
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.login-brand-link:hover {
+  transform: translateY(-1px);
+  color: var(--hiscare-primary-text, #1d4ed8);
+}
+
+.login-brand-emblem {
+  width: 38px;
+  height: 38px;
+  border-radius: 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--hiscare-primary-solid, #2563eb) 0%, var(--hiscare-info-solid, #0369a1) 100%);
+  color: var(--hiscare-primary-on-solid, #ffffff);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    0 6px 16px -3px rgba(37, 99, 235, 0.45);
+  flex-shrink: 0;
+}
+
+.login-brand-text {
+  background: linear-gradient(135deg, #0f172a 0%, var(--hiscare-primary-text, #1d4ed8) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.login-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+  margin: 0 0 0.25rem;
+}
+
+.login-subtitle {
+  font-size: 0.85rem;
+  color: var(--hiscare-secondary-solid, #475569);
+  margin: 0;
+}
+
+/* Ícono ámbar de sesión expirada por inactividad (C27-15) */
+.login-expired-icon-row {
+  display: flex;
+  justify-content: center;
+  margin: 0.35rem 0 0.75rem;
+}
+
+.login-expired-icon-wrap {
+  width: 52px;
+  height: 52px;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border: 1px solid #fcd34d;
+  color: #b45309;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.7),
+    0 8px 18px -6px rgba(217, 119, 6, 0.32);
+}
+
+/* ============================================================================
+   05. ALERTAS Y RETROALIMENTACIÓN
+   ========================================================================== */
+.login-alert {
+  border-radius: 0.75rem;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  padding: 0.75rem 0.9rem;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+}
+
+.login-alert.d-none {
+  display: none !important;
+}
+
+.login-alert-icon {
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+}
+
+#loginError {
+  background-color: var(--hiscare-danger-subtle-bg, #fef2f2);
+  border: 1px solid var(--hiscare-danger-subtle-border, #fecaca);
+  color: var(--hiscare-danger-subtle-text, #991b1b);
+  font-weight: 500;
+}
+
+.login-draft-alert {
+  background-color: var(--hiscare-success-subtle-bg, #f0fdf4);
+  border: 1px solid var(--hiscare-success-subtle-border, #bbf7d0);
+  color: var(--hiscare-success-subtle-text, #166534);
+}
+
+/* ============================================================================
+   06. CAMPOS DE FORMULARIO CON MICRO-INTERACCIONES
+   ========================================================================== */
+.login-field {
+  margin-bottom: 1.05rem;
+}
+
+.login-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.38rem;
+}
+
+.login-label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0;
+}
+
+/* Indicador CapsLock */
+.login-capslock-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #92400e;
+  background-color: #fef3c7;
+  border: 1px solid #fcd34d;
+  padding: 0.15rem 0.5rem;
+  border-radius: 9999px;
+}
+
+.login-capslock-badge.d-none {
+  display: none !important;
+}
+
+/* Contenedor de input con ícono izquierdo y acciones derechas */
+.login-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  border-radius: 0.75rem;
+  background-color: #f8fafc;
+  border: 1.5px solid #cbd5e1;
+  transition:
+    border-color 0.18s ease,
+    background-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.login-input-wrap:hover {
+  border-color: #94a3b8;
+  background-color: #ffffff;
+}
+
+.login-input-wrap:focus-within {
+  background-color: #ffffff;
+  border-color: var(--hiscare-primary-solid, #2563eb);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.16);
+}
+
+.login-input-icon {
+  position: absolute;
+  left: 0.85rem;
+  color: var(--hiscare-text-placeholder, #64748b);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  transition: color 0.18s ease, transform 0.18s ease;
+}
+
+.login-input-wrap:focus-within .login-input-icon {
+  color: var(--hiscare-primary-solid, #2563eb);
+  transform: scale(1.06);
+}
+
+.login-input {
+  width: 100%;
+  min-height: 48px;
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  outline: none !important;
+  padding: 0.65rem 2.85rem 0.65rem 2.65rem !important;
+  font-size: max(1rem, 0.9375rem) !important;
+  color: #0f172a !important;
+  border-radius: 0.75rem !important;
+}
+
+.login-input::placeholder {
+  color: var(--hiscare-text-placeholder, #64748b);
+  opacity: 1;
+}
+
+/* Estilo de autocompletado del navegador sin salto de diseño + indicador no-color */
+.login-input:is(:autofill, :-webkit-autofill) {
+  box-shadow:
+    inset 0 0 0 2px var(--hiscare-primary-solid, #2563eb),
+    inset 0 0 0 100vmax #eff6ff !important;
+  -webkit-text-fill-color: #0f172a !important;
+  caret-color: #0f172a !important;
+}
+
+/* Estados de validación post-interacción (:user-invalid / :user-valid + fallback) */
+.login-input-wrap:has(.login-input:user-invalid),
+.login-input-wrap.is-field-invalid {
+  border-color: var(--hiscare-danger-text, #b91c1c);
+  background-color: #fffbfa;
+}
+
+.login-input-wrap:has(.login-input:user-invalid):focus-within,
+.login-input-wrap.is-field-invalid:focus-within {
+  box-shadow: 0 0 0 4px rgba(185, 28, 28, 0.16);
+}
+
+.login-input-wrap:has(.login-input:user-invalid) .login-input-icon,
+.login-input-wrap.is-field-invalid .login-input-icon {
+  color: var(--hiscare-danger-text, #b91c1c);
+}
+
+.login-input-wrap.is-field-valid {
+  border-color: var(--hiscare-success-solid, #15803d);
+}
+
+.login-input-wrap.is-field-valid .login-input-icon {
+  color: var(--hiscare-success-solid, #15803d);
+}
+
+/* Indicador de estado válido */
+.login-valid-badge {
+  position: absolute;
+  right: 0.8rem;
+  color: var(--hiscare-success-solid, #15803d);
+  display: inline-flex;
+  align-items: center;
+  pointer-events: none;
+  opacity: 0;
+  transform: scale(0.8);
+  transition: opacity 0.18s ease, transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.login-input-wrap.is-field-valid .login-valid-badge {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Botón mostrar / ocultar contraseña (touch target mínimo 44x44px) */
+.login-toggle-btn {
+  position: absolute;
+  right: 0.25rem;
+  width: 44px;
+  height: 44px;
+  border: none;
+  background: transparent;
+  border-radius: 0.6rem;
+  color: var(--hiscare-secondary-solid, #475569);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: color 0.15s ease, background-color 0.15s ease, transform 0.15s ease;
+}
+
+.login-toggle-btn:hover {
+  background-color: rgba(15, 23, 42, 0.06);
+  color: var(--hiscare-primary-text, #1d4ed8);
+}
+
+.login-toggle-btn:active {
+  transform: scale(0.94);
+}
+
+.login-toggle-btn:focus-visible {
+  outline: 3px solid var(--hiscare-primary-solid, #2563eb) !important;
+  outline-offset: 1px !important;
+}
+
+.login-toggle-btn .icon-eye-off {
+  display: none;
+}
+
+.login-toggle-btn[aria-pressed="true"] .icon-eye {
+  display: none;
+}
+
+.login-toggle-btn[aria-pressed="true"] .icon-eye-off {
+  display: block;
+}
+
+/* Mensajes de validación por campo */
+.login-field-error {
+  display: none;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--hiscare-danger-text, #b91c1c);
+}
+
+.login-field-error.is-visible {
+  display: flex;
+}
+
+/* ============================================================================
+   07. BOTÓN DE ENVÍO CON RESPUESTA HÁPTICA Y SPINNER
+   ========================================================================== */
+.login-submit-btn {
+  width: 100%;
+  min-height: 48px;
+  margin-top: 0.35rem;
+  border-radius: 0.75rem !important;
+  font-size: 0.95rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.01em;
+  background: linear-gradient(135deg, var(--hiscare-primary-solid, #2563eb) 0%, var(--hiscare-primary-solid-hover, #1d4ed8) 60%, #1e40af 100%) !important;
+  border: 1px solid #1e40af !important;
+  color: var(--hiscare-primary-on-solid, #ffffff) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    0 8px 20px -4px rgba(37, 99, 235, 0.45) !important;
+  position: relative;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  transition:
+    transform 0.15s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.2s ease,
+    filter 0.2s ease !important;
+}
+
+.login-submit-btn::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    110deg,
+    transparent 25%,
+    rgba(255, 255, 255, 0.2) 50%,
+    transparent 75%
+  );
+  transform: translateX(-120%);
+  transition: transform 0.65s ease;
+  pointer-events: none;
+}
+
+.login-submit-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    0 12px 24px -4px rgba(37, 99, 235, 0.52) !important;
+  filter: brightness(1.04);
+}
+
+.login-submit-btn:hover:not(:disabled)::after {
+  transform: translateX(120%);
+}
+
+.login-submit-btn:active:not(:disabled) {
+  transform: translateY(1px) scale(0.988);
+}
+
+.login-submit-btn .btn-arrow {
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.login-submit-btn:hover:not(:disabled) .btn-arrow {
+  transform: translateX(3px);
+}
+
+/* ============================================================================
+   08. CALLOUT INFORMATIVO (C1-9) Y ENLACE DE SOPORTE (C1-10)
+   ========================================================================== */
+.login-callout {
+  margin-top: 1.1rem;
+  padding: 0.72rem 0.9rem;
+  border-radius: 0.75rem;
+  background: linear-gradient(135deg, #eff6ff 0%, #f0f9ff 100%);
+  border: 1px solid #bfdbfe;
+  color: #1e3a8a;
+  font-size: 0.79rem;
+  line-height: 1.45;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+}
+
+.login-callout-icon {
+  color: #2563eb;
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+}
+
+.login-footer-links {
+  margin-top: 1.1rem;
+  padding-top: 0.95rem;
+  border-top: 1px solid #e2e8f0;
+  text-align: center;
+}
+
+.login-help-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: #1d4ed8;
+  text-decoration: none;
+  padding: 0.35rem 0.65rem;
+  border-radius: 0.5rem;
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.login-help-link:hover {
+  color: #1e40af;
+  background-color: #eff6ff;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* ============================================================================
+   09. REFINAMIENTO PARA MOVIMIENTO REDUCIDO Y MÓVIL
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  .hiscare-login-spotlight,
+  .hiscare-ecg-sweep {
+    display: none;
+  }
+
+  .login-ambient-control {
+    display: none;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .login-shell {
+    padding: 1rem 0.85rem 4rem;
+  }
+
+  .login-ambient-control {
+    right: 0.75rem;
+    bottom: 0.75rem;
+  }
+}

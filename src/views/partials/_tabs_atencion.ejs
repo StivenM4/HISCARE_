@@ -1,0 +1,73 @@
+<%
+  const esC22 = (typeof figuraTrace !== 'undefined' && figuraTrace === 'C22') || (typeof seccion !== 'undefined' && seccion === 'cierre');
+  const esC21 = (typeof figuraTrace !== 'undefined' && figuraTrace === 'C21') || (typeof seccion !== 'undefined' && seccion === 'alta');
+  const esC20 = (typeof figuraTrace !== 'undefined' && figuraTrace === 'C20') || (typeof seccion !== 'undefined' && seccion === 'diagnosticos');
+  const esC19 = (typeof figuraTrace !== 'undefined' && figuraTrace === 'C19') || (typeof seccion !== 'undefined' && seccion === 'consentimientos');
+  const esC6 = (typeof figuraTrace !== 'undefined' && figuraTrace === 'C6') || (typeof seccion !== 'undefined' && seccion === 'evolucion');
+  const esC5 = (typeof figuraTrace !== 'undefined' && figuraTrace === 'C5') || (typeof seccion !== 'undefined' && seccion === 'antecedentes');
+
+  // Estandarización: Las 8 etapas de la atención clínica SIEMPRE presentes y ordenadas
+  const pestanas = esC22 ? [
+    ['consulta', 'Consulta y signos', 'C22-21'],
+    ['antecedentes', 'Antecedentes', 'C22-antecedentes'],
+    ['evolucion', 'Evolución SOAP', 'C22-22'],
+    ['diagnosticos', 'Diagnósticos y CUPS', 'C22-23'],
+    ['consentimientos', 'Consentimientos', 'C22-consentimientos'],
+    ['ordenes', 'Órdenes', 'C22-24'],
+    ['alta', 'Nota de alta', 'C22-25'],
+    ['cierre', 'Cierre', 'C22-26']
+  ] : (esC21 ? [
+    ['consulta', 'Consulta y signos', 'C21-21'],
+    ['antecedentes', 'Antecedentes', 'C21-antecedentes'],
+    ['evolucion', 'Evolución SOAP', 'C21-22'],
+    ['diagnosticos', 'Diagnósticos y CUPS', 'C21-24'],
+    ['consentimientos', 'Consentimientos', 'C21-consentimientos'],
+    ['ordenes', 'Órdenes', 'C21-25'],
+    ['alta', 'Nota de alta', 'C21-alta'],
+    ['cierre', 'Cierre', 'C21-26']
+  ] : (esC20 ? [
+    ['consulta', 'Consulta y signos', 'C20-21'],
+    ['antecedentes', 'Antecedentes', 'C20-22'],
+    ['evolucion', 'Evolución SOAP', 'C20-24'],
+    ['diagnosticos', 'Diagnósticos y CUPS', 'C20-25'],
+    ['consentimientos', 'Consentimientos', 'C20-consentimientos'],
+    ['ordenes', 'Órdenes', 'C20-26'],
+    ['alta', 'Nota de alta', 'C20-alta'],
+    ['cierre', 'Cierre', 'C20-27']
+  ] : [
+    ['consulta', 'Consulta y signos', esC19 ? 'C19-21' : (esC6 ? 'C6-21' : (esC5 ? 'C5-21' : 'C4-22'))],
+    ['antecedentes', 'Antecedentes', esC19 ? 'C19-22' : (esC6 ? 'C6-22' : (esC5 ? 'C5-22' : 'C4-23'))],
+    ['evolucion', 'Evolución SOAP', esC19 ? 'C19-24' : (esC6 ? 'C6-23' : (esC5 ? 'C5-23' : 'C4-24'))],
+    ['diagnosticos', 'Diagnósticos y CUPS', esC19 ? 'C19-25' : (esC6 ? 'C6-24' : (esC5 ? 'C5-24' : 'C4-25'))],
+    ['consentimientos', 'Consentimientos', esC19 ? 'C19-26' : (esC6 ? 'C6-25' : (esC5 ? 'C5-25' : 'C4-26'))],
+    ['ordenes', 'Órdenes', esC19 ? 'C19-26-b' : (esC6 ? 'C6-26' : (esC5 ? 'C5-26' : 'C4-27'))],
+    ['alta', 'Nota de alta', esC19 ? 'C19-alta' : (esC6 ? 'C6-alta' : (esC5 ? 'C5-alta' : 'C4-alta'))],
+    ['cierre', 'Cierre', esC19 ? 'C19-27' : (esC6 ? 'C6-27' : (esC5 ? 'C5-27' : 'C4-28'))]
+  ]));
+%>
+<nav class="mb-3 border-bottom pb-1" role="navigation" aria-label="Etapas de la atención clínica">
+  <ul class="nav nav-tabs border-0 gap-1 flex-nowrap overflow-x-auto" id="tabsAtencion" role="tablist">
+    <% pestanas.forEach(([clave, nombre, trace]) => { %>
+      <li class="nav-item" role="presentation">
+        <a class="nav-link <%= seccion === clave ? 'active fw-bold' : 'text-secondary' %> border-0 rounded-top px-3 py-2 text-nowrap"
+           href="/atenciones/<%= atencion.id %>/<%= clave %>"
+           data-trace="<%= trace %>"
+           role="tab"
+           aria-selected="<%= seccion === clave ? 'true' : 'false' %>"
+           aria-current="<%= seccion === clave ? 'page' : 'false' %>">
+          <%= nombre %>
+        </a>
+      </li>
+    <% }) %>
+  </ul>
+</nav>
+
+<% if (typeof soloLectura !== 'undefined' && soloLectura) { %>
+  <div class="alert alert-secondary d-flex align-items-center gap-2 py-2 mb-3 shadow-sm border-0" role="alert" id="bannerSoloLectura">
+    <svg width="18" height="18" fill="currentColor" class="bi bi-info-circle flex-shrink-0" viewBox="0 0 16 16" aria-hidden="true">
+      <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+      <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/>
+    </svg>
+    <span>Atención en solo lectura<%= atencion.estado === 'CERRADA' ? ': está cerrada; las modificaciones se registran como adenda.' : ' (solo el médico titular puede registrar modificaciones).' %></span>
+  </div>
+<% } %>

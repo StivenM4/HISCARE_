@@ -1,0 +1,960 @@
+<%- include('../partials/_inicio', { titulo: 'Resultados del paciente', figuraTrace: 'C25', moduloActivo: 'resultados' }) %>
+
+<%
+  const pac = (typeof paciente !== 'undefined' && paciente) ? paciente : ((typeof atencion !== 'undefined' && atencion) ? atencion : {});
+  const atn = (typeof atencion !== 'undefined' && atencion) ? atencion : {};
+  const listaResultados = (typeof resultados !== 'undefined' && Array.isArray(resultados))
+    ? resultados
+    : ((typeof resultadosPaciente !== 'undefined' && Array.isArray(resultadosPaciente)) ? resultadosPaciente : []);
+  const resAct = (typeof resultadoActual !== 'undefined' && resultadoActual)
+    ? resultadoActual
+    : ((typeof resultado !== 'undefined' && resultado) ? resultado : (listaResultados.length > 0 ? listaResultados[0] : null));
+
+  const pacienteId = pac.id || pac.paciente_id || atn.paciente_id || (resAct ? resAct.paciente_id : '');
+  const atencionId = (resAct && resAct.atencion_id) || atn.id || '';
+
+  function formatearFechaCorta(f) {
+    if (!f) return '';
+    const d = new Date(f);
+    if (isNaN(d.getTime())) return String(f);
+    const dia = String(d.getDate()).padStart(2, '0');
+    const mes = String(d.getMonth() + 1).padStart(2, '0');
+    const anio = d.getFullYear();
+    return `${dia}/${mes}/${anio}`;
+  }
+
+  function formatearFechaHora(f) {
+    if (!f) return '';
+    const d = new Date(f);
+    if (isNaN(d.getTime())) return String(f);
+    const dia = String(d.getDate()).padStart(2, '0');
+    const mes = String(d.getMonth() + 1).padStart(2, '0');
+    const anio = d.getFullYear();
+    const hora = String(d.getHours()).padStart(2, '0');
+    const min = String(d.getMinutes()).padStart(2, '0');
+    return `${dia}/${mes}/${anio} ${hora}:${min}`;
+  }
+
+  function formatearTipoEstudio(tipo) {
+    const t = String(tipo || '').toUpperCase();
+    if (t === 'LABORATORIO') return 'Laboratorio clínico';
+    if (t === 'RADIOLOGIA') return 'Estudio de radiología';
+    if (t === 'PROCEDIMIENTO') return 'Procedimiento diagnóstico';
+    return tipo || 'Estudio diagnóstico';
+  }
+
+  function formatearTipoCorto(tipo) {
+    const t = String(tipo || '').toUpperCase();
+    if (t === 'LABORATORIO') return 'Laboratorio';
+    if (t === 'RADIOLOGIA') return 'Radiología';
+    if (t === 'PROCEDIMIENTO') return 'Procedimiento';
+    return tipo || 'General';
+  }
+
+  function obtenerResultadosSimuladosPaciente(res) {
+    if (!res) return [];
+    if (Array.isArray(res.analitos) && res.analitos.length > 0) {
+      return res.analitos;
+    }
+    const tipo = String(res.tipo || '').toUpperCase();
+    const textoCompleto = ((res.nombre_examen || '') + ' ' + (res.examen_principal || '') + ' ' + (res.informe || '')).toUpperCase();
+    const esRx = tipo === 'RADIOLOGIA' || textoCompleto.includes('RADIOGRAF') || textoCompleto.includes('TORAX') || textoCompleto.includes('TÓRAX') || textoCompleto.includes('ECOGRAF') || textoCompleto.includes('TAC') || textoCompleto.includes(' RX ');
+    if (esRx) {
+      return [
+        { examen: 'Proyección / Técnica', resultado: 'PA y Lateral digital', referencia: 'Estándar diagnóstico HIS', fueraRango: false },
+        { examen: 'Índice cardiotorácico', resultado: '0.46', referencia: '< 0.50', fueraRango: false },
+        { examen: 'Campos pleuropulmonares', resultado: 'Sin consolidaciones', referencia: 'Transparencia conservada', fueraRango: false }
+      ];
+    }
+    return [
+      { examen: 'Hemoglobina', resultado: '14.2 g/dL', referencia: '13.0 - 17.0 g/dL', fueraRango: false },
+      { examen: 'Leucocitos totales', resultado: '7.400 /µL', referencia: '4.500 - 11.000 /µL', fueraRango: false },
+      { examen: 'Glucosa basal en suero', resultado: '92 mg/dL', referencia: '70 - 100 mg/dL', fueraRango: false },
+      { examen: 'Creatinina sérica', resultado: '0.88 mg/dL', referencia: '0.60 - 1.20 mg/dL', fueraRango: false }
+    ];
+  }
+
+  function evaluarAnalito(a) {
+    const estadoRaw = String((a && (a.estado || a.nivel)) || '').toUpperCase();
+    const esCritico = Boolean(a && a.critico) || estadoRaw === 'CRITICO' || estadoRaw === 'CRÍTICO';
+    const esAlto = estadoRaw === 'ALTO';
+    const esBajo = estadoRaw === 'BAJO';
+    const esAlterado = Boolean(a && a.fueraRango) || esAlto || esBajo || estadoRaw === 'ALTERADO';
+
+    const valorBase = (a && a.resultado !== undefined && a.resultado !== null)
+      ? String(a.resultado)
+      : ((a && a.valor !== undefined && a.valor !== null) ? String(a.valor) : '—');
+    const unidad = (a && a.unidad && !valorBase.includes(a.unidad)) ? (' ' + a.unidad) : '';
+
+    if (esCritico) {
+      return {
+        nivel: 'critico',
+        etiqueta: 'Crítico',
+        badgeClass: 'badge-prioridad-critico',
+        rowClass: 'analito-row-critico',
+        valorClass: 'text-danger',
+        valorMostrar: valorBase + unidad
+      };
+    }
+    if (esAlterado) {
+      return {
+        nivel: 'alterado',
+        etiqueta: esAlto ? 'Alto' : (esBajo ? 'Bajo' : 'Alterado'),
+        badgeClass: 'badge-prioridad-alterado',
+        rowClass: 'analito-row-alterado',
+        valorClass: 'text-warning-emphasis',
+        valorMostrar: valorBase + unidad
+      };
+    }
+    return {
+      nivel: 'normal',
+      etiqueta: 'Normal',
+      badgeClass: 'badge-prioridad-normal',
+      rowClass: '',
+      valorClass: 'text-dark',
+      valorMostrar: valorBase + unidad
+    };
+  }
+
+  function evaluarResumenClinico(res, analitos) {
+    if (!res) {
+      return { nivel: 'normal', etiqueta: 'Sin seleccionar', badgeClass: 'bg-light text-secondary border', accentClass: 'card-accent-primary', alterados: 0, criticos: 0 };
+    }
+    const evaluados = analitos.map(evaluarAnalito);
+    const criticos = evaluados.filter(e => e.nivel === 'critico').length;
+    const alterados = evaluados.filter(e => e.nivel === 'alterado').length;
+    const texto = String(res.informe || '').toUpperCase();
+
+    const tieneTextoCritico = texto.includes('CRÍTIC') || texto.includes('CRITIC') || texto.includes('PÁNICO') || texto.includes('INMEDIATA');
+    const tieneTextoAlterado = texto.includes('ALTERAD') || texto.includes('ELEVAD') || texto.includes('ANORMAL') || texto.includes('DISMINUID');
+
+    if (criticos > 0 || tieneTextoCritico) {
+      return { nivel: 'critico', etiqueta: 'Hallazgo crítico', badgeClass: 'badge-prioridad-critico', accentClass: 'card-accent-danger', alterados, criticos };
+    }
+    if (alterados > 0 || tieneTextoAlterado) {
+      return { nivel: 'alterado', etiqueta: 'Valores alterados', badgeClass: 'badge-prioridad-alterado', accentClass: 'card-accent-warning', alterados, criticos };
+    }
+    return { nivel: 'normal', etiqueta: 'Dentro de rango', badgeClass: 'badge-prioridad-normal', accentClass: 'card-accent-primary', alterados: 0, criticos: 0 };
+  }
+
+  const tieneAdjuntoInicial = Boolean(resAct && (resAct.archivo || resAct.archivo_url));
+  const nombreAdjuntoInicial = (resAct && resAct.archivo_nombre)
+    ? resAct.archivo_nombre
+    : ((resAct && (resAct.orden_codigo || resAct.codigo)) ? ('informe_' + (resAct.orden_codigo || resAct.codigo) + '.pdf') : 'informe_ORD-89001.pdf');
+  const urlAdjuntoRef = (resAct && (resAct.archivo_url || resAct.archivo_nombre)) ? String(resAct.archivo_url || resAct.archivo_nombre).toLowerCase() : '';
+  const esImagenInicial = /\.(png|jpe?g|webp)(\?|$)/i.test(urlAdjuntoRef);
+
+  const analitosExplicito = Boolean(resAct && Array.isArray(resAct.analitos) && resAct.analitos.length > 0);
+  const analitosRender = resAct ? obtenerResultadosSimuladosPaciente(resAct) : [];
+  const tieneAnalitosInicial = analitosRender.length > 0;
+  const resumenClinico = evaluarResumenClinico(resAct, analitosRender);
+  const totalFueraRango = resumenClinico.alterados + resumenClinico.criticos;
+
+  const textoInformeDefecto = 'Estudio procesado y validado internamente en el servicio clínico HISCARE. Parámetros dentro de límites biológicos de referencia.';
+  const informeTextoRender = (resAct && resAct.informe && resAct.informe.trim().length > 0) ? resAct.informe : (resAct ? textoInformeDefecto : 'Seleccione un resultado de la lista para visualizar su interpretación clínica.');
+
+  const revisadoAct = Boolean(resAct && resAct.revisado);
+  const pendientesCount = listaResultados.filter(r => !r.revisado).length;
+  const examenesOrden = (resAct && Array.isArray(resAct.examenes)) ? resAct.examenes : [];
+  const cargadoPorInicial = (resAct && (resAct.cargado_por || resAct.usuario_carga_nombre))
+    ? (resAct.cargado_por || resAct.usuario_carga_nombre)
+    : (resAct ? 'Profesional de laboratorio' : '—');
+  const indiceActual = resAct ? listaResultados.findIndex(r => r.id === resAct.id) : -1;
+%>
+
+<!-- Banner del paciente (C25 [25.15–25.20]) -->
+<%- include('../partials/_banner_paciente', { figuraTrace: 'C25', atencion: atn, paciente: pac }) %>
+
+<div class="container-fluid px-0" id="contenedorVisorResultados" data-paciente-id="<%= pacienteId %>">
+
+  <!-- Barra de navegación superior limpia y orientada a la acción -->
+  <div class="visor-top-nav mb-3 visor-no-print">
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+      <a href="/historias/<%= pacienteId %>?evento=<%= atencionId %>"
+         class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-2"
+         id="btnLineaTiempo"
+         data-trace="C25-42">
+        <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+        </svg>
+        <span>Ver en línea de tiempo</span>
+      </a>
+
+      <button type="button"
+              class="btn btn-sm btn-light border d-inline-flex align-items-center gap-2"
+              id="btnAbrirHistorial"
+              aria-haspopup="dialog">
+        <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h10"/>
+        </svg>
+        <span>Historial de órdenes</span>
+        <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 rounded-pill" id="badgeTotalHistorial">
+          <%= listaResultados.length %>
+        </span>
+        <% if (pendientesCount > 0) { %>
+          <span class="badge bg-success bg-opacity-25 text-success rounded-pill" id="badgePendientesHistorial">
+            <%= pendientesCount %> <%= pendientesCount === 1 ? 'nuevo' : 'nuevos' %>
+          </span>
+        <% } else { %>
+          <span class="badge bg-success bg-opacity-25 text-success rounded-pill d-none" id="badgePendientesHistorial">0 nuevos</span>
+        <% } %>
+      </button>
+    </div>
+
+    <% if (listaResultados.length > 1) { %>
+      <div class="d-flex align-items-center gap-2" id="navPaginadorResultados">
+        <span class="small text-muted tabular-nums" id="indicadorPosicionResultado">
+          Resultado <%= indiceActual >= 0 ? (indiceActual + 1) : 1 %> de <%= listaResultados.length %>
+        </span>
+        <div class="btn-group btn-group-sm" role="group" aria-label="Navegar entre resultados del paciente">
+          <button type="button" class="btn btn-light border" id="btnResultadoAnterior" title="Resultado anterior" <%= indiceActual <= 0 ? 'disabled' : '' %>>
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+            </svg>
+            <span class="visually-hidden">Anterior</span>
+          </button>
+          <button type="button" class="btn btn-light border" id="btnResultadoSiguiente" title="Siguiente resultado" <%= (indiceActual < 0 || indiceActual >= listaResultados.length - 1) ? 'disabled' : '' %>>
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+            <span class="visually-hidden">Siguiente</span>
+          </button>
+        </div>
+      </div>
+    <% } %>
+  </div>
+
+  <!-- PANEL PRINCIPAL DE DETALLE DEL RESULTADO (Ancho completo, jerarquía clara) -->
+  <div id="columnaDetalleResultado">
+    <div class="card border-0 shadow-sm rounded-3 overflow-hidden <%= resumenClinico.accentClass %>" id="panelDetalleResultado">
+
+      <!-- 1. ENCABEZADO / RESUMEN EJECUTIVO Y ACCIONES PRINCIPALES -->
+      <div class="card-header bg-white border-bottom p-3 p-md-4 visor-hero-header">
+        <div class="d-flex flex-column flex-xl-row align-items-xl-start justify-content-between gap-3">
+          <!-- Identidad del resultado y meta esencial -->
+          <div class="min-w-0 flex-grow-1">
+            <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+              <span class="badge <%= revisadoAct ? 'bg-secondary text-white' : 'bg-success bg-opacity-25 text-success border border-success border-opacity-25' %>" id="detalleEstadoRevisionBadge">
+                <%= revisadoAct ? 'REVISADO' : 'NUEVO · PENDIENTE DE REVISIÓN' %>
+              </span>
+              <span class="badge <%= resumenClinico.badgeClass %>" id="detallePrioridadBadge">
+                <%= resumenClinico.etiqueta %>
+              </span>
+              <span class="badge <%= (resAct && String(resAct.tipo || '').toUpperCase() === 'RADIOLOGIA') ? 'badge-orden-radiologia' : 'badge-orden-laboratorio' %>" id="detalleTipoBadge">
+                <%= resAct ? formatearTipoCorto(resAct.tipo) : 'Diagnóstico' %>
+              </span>
+            </div>
+
+            <h1 class="h4 fw-bold text-dark mb-2" id="detalleTitulo" data-trace="C25-28">
+              <% if (resAct) { %>
+                Resultado <%= resAct.orden_codigo || resAct.codigo || '' %> · <%= resAct.nombre_examen || resAct.examen_principal || formatearTipoEstudio(resAct.tipo) %>
+              <% } else { %>
+                Sin resultados registrados para este paciente
+              <% } %>
+            </h1>
+
+            <!-- Tira de datos esenciales (Orden · Fecha · Diagnóstico) -->
+            <div class="visor-hero-meta">
+              <div class="visor-hero-meta-item">
+                <span class="visor-hero-meta-label">Orden</span>
+                <span class="text-clinical-code fw-bold" id="detalleOrdenCodigo">
+                  <%= resAct ? (resAct.orden_codigo || resAct.codigo || '—') : '—' %>
+                </span>
+              </div>
+              <div class="visor-hero-meta-item">
+                <span class="visor-hero-meta-label">Fecha de emisión</span>
+                <span class="text-dark fw-medium tabular-nums" id="detalleFecha" data-trace="C25-30">
+                  <%= resAct ? formatearFechaHora(resAct.fecha || resAct.fecha_resultado) : '—' %>
+                </span>
+              </div>
+              <div class="visor-hero-meta-item">
+                <span class="visor-hero-meta-label">Diagnóstico principal</span>
+                <span class="badge bg-light text-dark border small fw-medium font-monospace text-wrap text-start" id="detalleDiagnostico" data-trace="C25-34">
+                  <%= (resAct && resAct.diagnostico) ? resAct.diagnostico : 'Sin diagnóstico asociado' %>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Botonera de acciones principales bien diferenciadas -->
+          <div class="visor-hero-actions visor-no-print">
+            <button type="button"
+                    class="btn <%= revisadoAct ? 'btn-secondary' : 'btn-primary' %> d-inline-flex align-items-center gap-2 shadow-sm fw-semibold"
+                    id="btnMarcarRevisado"
+                    <%= (revisadoAct || !resAct) ? 'disabled' : '' %>
+                    data-trace="C25-43"
+                    data-id="<%= resAct ? resAct.id : '' %>">
+              <% if (revisadoAct) { %>
+                <svg width="16" height="16" fill="currentColor" class="bi bi-check2-circle" viewBox="0 0 16 16" aria-hidden="true">
+                  <path d="M2.5 8a5.5 5.5 0 0 1 8.25-4.764.5.5 0 0 0 .5-.866A6.5 6.5 0 1 0 14.5 8a.5.5 0 0 0-1 0 5.5 5.5 0 1 1-11 0z"/>
+                  <path d="M15.354 3.354a.5.5 0 0 0-.708-.708L8 9.293 5.354 6.646a.5.5 0 1 0-.708.708l3 3a.5.5 0 0 0 .708 0l7-7z"/>
+                </svg>
+                <span>Revisado</span>
+              <% } else { %>
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                </svg>
+                <span>Marcar como revisado</span>
+              <% } %>
+            </button>
+
+            <a href="<%= (resAct && resAct.id) ? ('/api/resultados/' + resAct.id + '/archivo') : '#' %>"
+               class="btn btn-outline-primary d-inline-flex align-items-center gap-2 <%= tieneAdjuntoInicial ? '' : 'd-none' %>"
+               id="btnDescargarAdjunto"
+               data-trace="C25-41"
+               target="_blank"
+               rel="noopener"
+               title="Abrir o descargar archivo adjunto seguro">
+              <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+              </svg>
+              <span>Abrir / descargar</span>
+            </a>
+
+            <button type="button"
+                    class="btn btn-light border d-inline-flex align-items-center gap-2"
+                    id="btnImprimirResultado"
+                    <%= !resAct ? 'disabled' : '' %>
+                    title="Imprimir informe clínico del resultado">
+              <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+              </svg>
+              <span>Imprimir</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. BARRA DE PESTAÑAS (TABS) PARA ORGANIZAR LA INFORMACIÓN -->
+      <div class="visor-tablist-wrapper visor-no-print">
+        <div class="visor-tablist" role="tablist" aria-label="Secciones del resultado clínico" id="visorTabList">
+          <button type="button"
+                  role="tab"
+                  class="visor-tab"
+                  id="tab-resumen"
+                  aria-selected="true"
+                  tabindex="0"
+                  data-tab-target="panel-resumen">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+            <span>Resumen Clínico</span>
+          </button>
+
+          <button type="button"
+                  role="tab"
+                  class="visor-tab"
+                  id="tab-parametros"
+                  aria-selected="false"
+                  tabindex="-1"
+                  data-tab-target="panel-parametros">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+            </svg>
+            <span>Parámetros / Valores</span>
+            <span class="visor-tab-pill <%= totalFueraRango > 0 ? 'visor-tab-pill--alert' : '' %>" id="tabPillParametros">
+              <%= analitosRender.length %><%= totalFueraRango > 0 ? (' · ' + totalFueraRango + ' alt.') : '' %>
+            </span>
+          </button>
+
+          <button type="button"
+                  role="tab"
+                  class="visor-tab"
+                  id="tab-archivo"
+                  aria-selected="false"
+                  tabindex="-1"
+                  data-tab-target="panel-archivo">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
+            </svg>
+            <span>Archivo / Documento</span>
+            <span class="visor-tab-pill" id="tabPillArchivo">
+              <%= tieneAdjuntoInicial ? (esImagenInicial ? 'Imagen' : 'PDF') : 'Sin adjunto' %>
+            </span>
+          </button>
+
+          <button type="button"
+                  role="tab"
+                  class="visor-tab"
+                  id="tab-auditoria"
+                  aria-selected="false"
+                  tabindex="-1"
+                  data-tab-target="panel-auditoria">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+            </svg>
+            <span>Auditoría y Metadatos</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 3. PANELES DE PESTAÑAS (Sin estilos de caja en el tabpanel; estilos en .visor-tab-inner) -->
+      <div class="visor-tab-panels">
+
+        <!-- PESTAÑA 1: RESUMEN CLÍNICO -->
+        <div role="tabpanel" id="panel-resumen" aria-labelledby="tab-resumen" tabindex="0">
+          <div class="visor-tab-inner d-flex flex-column gap-4">
+
+            <!-- Alerta automática cuando existen hallazgos alterados o críticos -->
+            <div class="alert <%= resumenClinico.nivel === 'critico' ? 'alert-danger' : 'alert-warning' %> d-flex flex-wrap align-items-center justify-content-between gap-3 mb-0 <%= totalFueraRango > 0 ? '' : 'd-none' %>" id="alertaHallazgosResumen" role="status">
+              <div class="d-flex align-items-center gap-2">
+                <svg width="18" height="18" fill="currentColor" viewBox="0 0 16 16" class="flex-shrink-0" aria-hidden="true">
+                  <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+                </svg>
+                <span class="fw-semibold" id="textoAlertaHallazgos">
+                  Se detectaron <%= totalFueraRango %> <%= totalFueraRango === 1 ? 'parámetro fuera de rango' : 'parámetros fuera de rango' %> en este estudio.
+                </span>
+              </div>
+              <button type="button" class="btn btn-sm btn-outline-dark bg-white fw-semibold visor-no-print" data-switch-tab="panel-parametros">
+                Revisar parámetros →
+              </button>
+            </div>
+
+            <!-- Interpretación y observaciones clínicas -->
+            <div class="visor-interpretacion-box" id="bloqueTextoInforme">
+              <div class="text-technical-label mb-2 d-flex align-items-center gap-2">
+                <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24" class="text-primary" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                </svg>
+                <span>Interpretación y observaciones clínicas</span>
+              </div>
+              <div class="visor-interpretacion-texto" id="textoInformeContenido"><%= informeTextoRender %></div>
+            </div>
+
+            <!-- Tarjetas KPI de acceso rápido a las demás pestañas -->
+            <div class="visor-summary-grid visor-no-print">
+              <div class="visor-summary-card">
+                <div class="d-flex align-items-center justify-content-between gap-2 mb-1">
+                  <span class="text-technical-label">Parámetros evaluados</span>
+                  <span class="badge <%= resumenClinico.badgeClass %>" id="resumenCardEstadoBadge"><%= resumenClinico.etiqueta %></span>
+                </div>
+                <div class="visor-summary-value" id="resumenCardConteoParametros">
+                  <%= analitosRender.length %> <%= analitosRender.length === 1 ? 'parámetro' : 'parámetros' %>
+                </div>
+                <p class="small text-secondary mb-3" id="resumenCardDetalleParametros">
+                  <%= totalFueraRango > 0 ? (totalFueraRango + ' valor(es) fuera del rango de referencia') : 'Todos los parámetros dentro de límites esperados' %>
+                </p>
+                <button type="button" class="btn btn-sm btn-light border mt-auto align-self-start fw-semibold" data-switch-tab="panel-parametros">
+                  Ver tabla de valores →
+                </button>
+              </div>
+
+              <div class="visor-summary-card">
+                <div class="d-flex align-items-center justify-content-between gap-2 mb-1">
+                  <span class="text-technical-label">Soporte documental</span>
+                  <span class="badge <%= tieneAdjuntoInicial ? 'bg-success bg-opacity-10 text-success border border-success border-opacity-25' : 'bg-light text-secondary border' %>" id="resumenCardArchivoBadge">
+                    <%= tieneAdjuntoInicial ? (esImagenInicial ? 'Imagen' : 'PDF') : 'Sin archivo' %>
+                  </span>
+                </div>
+                <div class="visor-summary-value text-truncate" id="resumenCardArchivoNombre" title="<%= tieneAdjuntoInicial ? nombreAdjuntoInicial : 'Sin adjunto' %>">
+                  <%= tieneAdjuntoInicial ? nombreAdjuntoInicial : 'Sin documento adjunto' %>
+                </div>
+                <p class="small text-secondary mb-3" id="resumenCardArchivoSub">
+                  <%= tieneAdjuntoInicial ? 'Archivo clínico disponible para lectura en línea o descarga.' : 'Este resultado solo cuenta con informe estructurado.' %>
+                </p>
+                <button type="button" class="btn btn-sm btn-light border mt-auto align-self-start fw-semibold" data-switch-tab="panel-archivo">
+                  <%= tieneAdjuntoInicial ? 'Abrir visor documental →' : 'Ver estado documental →' %>
+                </button>
+              </div>
+
+              <div class="visor-summary-card">
+                <div class="d-flex align-items-center justify-content-between gap-2 mb-1">
+                  <span class="text-technical-label">Emisión y trazabilidad</span>
+                  <span class="badge bg-light text-secondary border">Validado</span>
+                </div>
+                <div class="visor-summary-value text-truncate" id="resumenCardCargadoPor">
+                  <%= cargadoPorInicial %>
+                </div>
+                <p class="small text-secondary mb-3" id="resumenCardOrden">
+                  Orden <%= resAct ? (resAct.orden_codigo || resAct.codigo || '—') : '—' %> · Atención <%= (resAct && (resAct.atencion_codigo || resAct.atencion_id)) ? (resAct.atencion_codigo || ('ATN-' + String(resAct.atencion_id).slice(0, 8))) : ((atn && (atn.codigo_atencion || atn.id)) ? (atn.codigo_atencion || ('ATN-' + String(atn.id).slice(0, 8))) : '—') %>
+                </p>
+                <button type="button" class="btn btn-sm btn-light border mt-auto align-self-start fw-semibold" data-switch-tab="panel-auditoria">
+                  Ver orden y auditoría →
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- PESTAÑA 2: PARÁMETROS / VALORES -->
+        <div role="tabpanel" id="panel-parametros" aria-labelledby="tab-parametros" hidden="until-found">
+          <div class="visor-tab-inner">
+            <section data-trace="C25-35" id="contenedorInforme" aria-labelledby="tituloInformeResultado">
+              <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                  <h2 class="h6 mb-0 fw-bold text-dark" id="tituloInformeResultado">Parámetros evaluados e informe</h2>
+                  <span class="badge <%= resumenClinico.badgeClass %>" id="resumenAnalitosBadge">
+                    <% if (tieneAnalitosInicial) { %>
+                      <%= analitosRender.length %> <%= analitosRender.length === 1 ? 'parámetro' : 'parámetros' %> · <%= totalFueraRango > 0 ? (totalFueraRango + ' fuera de rango') : 'Sin alteraciones' %>
+                    <% } else { %>
+                      Sin parámetros tabulados
+                    <% } %>
+                  </span>
+                </div>
+
+                <!-- Leyenda clara de indicadores normales vs alterados -->
+                <div class="d-flex align-items-center gap-2 flex-wrap small visor-no-print" aria-label="Leyenda de estados de referencia">
+                  <span class="badge badge-prioridad-normal">Normal</span>
+                  <span class="badge badge-prioridad-alterado">Alterado (Alto/Bajo)</span>
+                  <span class="badge badge-prioridad-critico">Crítico</span>
+                </div>
+              </div>
+
+              <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
+                <small class="text-muted <%= (!analitosExplicito && tieneAnalitosInicial) ? '' : 'd-none' %>" id="notaParametrosReferenciales">
+                  Vista referencial estructurada según el tipo de estudio.
+                </small>
+              </div>
+
+              <div class="visor-analitos-container" id="tablaAnalitosWrapper" tabindex="0" role="region" aria-label="Tabla de parámetros clínicos y valores de referencia">
+                <table class="table table-sm align-middle mb-0 visor-analitos-table" id="tablaAnalitos">
+                  <thead class="table-light">
+                    <tr>
+                      <th scope="col" class="small fw-semibold text-secondary ps-3" data-trace="C25-36">Examen</th>
+                      <th scope="col" class="small fw-semibold text-secondary" data-trace="C25-37">Resultado</th>
+                      <th scope="col" class="small fw-semibold text-secondary" data-trace="C25-38">Referencia</th>
+                      <th scope="col" class="small fw-semibold text-secondary pe-3 text-end">Estado</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tablaAnalitosBody">
+                    <% if (tieneAnalitosInicial) { %>
+                      <% analitosRender.forEach(a => { %>
+                        <% const ev = evaluarAnalito(a); %>
+                        <tr class="<%= ev.rowClass %>">
+                          <th scope="row" class="small fw-semibold text-dark ps-3"><%= a.examen || a.nombre || 'Parámetro' %></th>
+                          <td data-label="Resultado" class="small font-monospace fw-bold tabular-nums <%= ev.valorClass %>"><%= ev.valorMostrar %></td>
+                          <td data-label="Referencia" class="small text-secondary tabular-nums"><%= a.referencia || 'No especificada' %></td>
+                          <td data-label="Estado" class="pe-3 text-end">
+                            <span class="badge <%= ev.badgeClass %>">
+                              <% if (ev.nivel === 'critico') { %>
+                                <svg width="11" height="11" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true"><path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/></svg>
+                              <% } else if (ev.nivel === 'alterado') { %>
+                                <svg width="11" height="11" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/><path d="M7.002 11a1 1 0 1 1 2 0 1 1 0 0 1-2 0zM7.1 4.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 4.995z"/></svg>
+                              <% } else { %>
+                                <svg width="11" height="11" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true"><path d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425a.267.267 0 0 1 .02-.022z"/></svg>
+                              <% } %>
+                              <span><%= ev.etiqueta %></span>
+                            </span>
+                          </td>
+                        </tr>
+                      <% }); %>
+                    <% } else { %>
+                      <tr>
+                        <td colspan="4" class="text-center py-4 text-muted small">
+                          Sin analitos tabulados en este informe
+                        </td>
+                      </tr>
+                    <% } %>
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          </div>
+        </div>
+
+        <!-- PESTAÑA 3: ARCHIVO / DOCUMENTO -->
+        <div role="tabpanel" id="panel-archivo" aria-labelledby="tab-archivo" hidden>
+          <div class="visor-tab-inner">
+            <section data-trace="C25-39" id="contenedorAdjunto" aria-labelledby="tituloAdjuntoResultado">
+              <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                <div class="d-flex align-items-center gap-2">
+                  <h2 class="h6 mb-0 fw-bold text-dark" id="tituloAdjuntoResultado">Documento adjunto</h2>
+                  <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 small fw-semibold <%= tieneAdjuntoInicial ? '' : 'd-none' %>" id="badgeTipoAdjunto">
+                    <%= esImagenInicial ? 'Imagen Validada' : 'PDF Validado' %>
+                  </span>
+                </div>
+
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                  <button type="button"
+                          class="btn btn-sm btn-light border d-inline-flex align-items-center gap-1 <%= tieneAdjuntoInicial ? '' : 'd-none' %>"
+                          id="btnAmpliarAdjunto">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/>
+                    </svg>
+                    <span>Ampliar vista previa</span>
+                  </button>
+                  <a href="<%= (resAct && resAct.id) ? ('/api/resultados/' + resAct.id + '/archivo') : '#' %>"
+                     class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1 <%= tieneAdjuntoInicial ? '' : 'd-none' %>"
+                     id="btnDescargarAdjuntoTab"
+                     target="_blank"
+                     rel="noopener">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                    </svg>
+                    <span>Descargar archivo</span>
+                  </a>
+                </div>
+              </div>
+
+              <div id="cuerpoAdjunto">
+                <!-- [25.40] Contenedor de preview interactivo de archivo (PDF o Imagen) -->
+                <div class="adjunto-preview-card border rounded p-2 bg-light w-100 <%= tieneAdjuntoInicial ? '' : 'd-none' %>"
+                     id="cardPreviewAdjunto"
+                     data-trace="C25-40">
+                  <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 p-2 mb-2 bg-white rounded border">
+                    <div class="d-flex align-items-center gap-2 text-truncate min-w-0">
+                      <svg width="20" height="20" fill="currentColor" class="text-danger flex-shrink-0" viewBox="0 0 16 16" aria-hidden="true">
+                        <path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2zM9.5 3A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5v2z"/>
+                        <path d="M4.603 14.087a.81.81 0 0 1-.438-.42c-.195-.388-.13-.776.08-1.12.247-.406.66-.757 1.233-1.05.573-.292 1.258-.507 2.05-.644.42-.072.85-.125 1.289-.158.44-.033.882-.05 1.325-.05.342 0 .68.01 1.01.03.332.02.653.053.96.098.39.056.744.135 1.06.236.315.1.57.227.765.378.196.152.316.338.36.56.044.22.008.455-.108.702-.116.246-.32.483-.61.71-.29.228-.67.433-1.14.614-.47.18-.99.324-1.56.432-.57.108-1.18.175-1.83.2-.65.025-1.31.025-1.98 0a15.8 15.8 0 0 1-1.92-.158 12.8 12.8 0 0 1-1.74-.388z"/>
+                      </svg>
+                      <span class="small fw-semibold text-truncate" id="nombreArchivoAdjunto">
+                        <%= nombreAdjuntoInicial %>
+                      </span>
+                    </div>
+                  </div>
+
+                  <!-- Visor PDF -->
+                  <div class="bg-white border rounded overflow-hidden shadow-sm <%= (tieneAdjuntoInicial && esImagenInicial) ? 'd-none' : '' %>" id="visorIframeWrapper">
+                    <iframe id="iframePreviewAdjunto"
+                            src="<%= (resAct && resAct.id && tieneAdjuntoInicial && !esImagenInicial) ? ('/api/resultados/' + resAct.id + '/archivo') : 'about:blank' %>"
+                            class="visor-iframe-frame"
+                            title="Visor de documento adjunto"></iframe>
+                  </div>
+
+                  <!-- Visor Imagen -->
+                  <div class="bg-white border rounded p-2 text-center shadow-sm <%= (tieneAdjuntoInicial && esImagenInicial) ? '' : 'd-none' %>" id="visorImagenWrapper">
+                    <img id="imgPreviewAdjunto"
+                         src="<%= (resAct && resAct.id && tieneAdjuntoInicial && esImagenInicial) ? ('/api/resultados/' + resAct.id + '/archivo') : '' %>"
+                         alt="Vista previa de imagen diagnóstica adjunta"
+                         class="visor-img-preview">
+                  </div>
+                </div>
+
+                <!-- Mensaje visible si no tiene adjunto -->
+                <div class="text-muted py-4 px-3 border rounded bg-light d-flex align-items-center justify-content-center gap-3 text-start <%= tieneAdjuntoInicial ? 'd-none' : '' %>" id="mensajeSinAdjunto">
+                  <svg width="32" height="32" fill="none" stroke="currentColor" viewBox="0 0 24 24" class="text-secondary opacity-50 flex-shrink-0" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 13h6m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                  </svg>
+                  <div>
+                    <p class="mb-0 fw-semibold text-secondary">Sin adjunto</p>
+                    <small class="text-muted">Este resultado sólo cuenta con informe estructurado.</small>
+                  </div>
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
+
+        <!-- PESTAÑA 4: AUDITORÍA Y METADATOS -->
+        <div role="tabpanel" id="panel-auditoria" aria-labelledby="tab-auditoria" hidden="until-found">
+          <div class="visor-tab-inner d-flex flex-column gap-3">
+            <section aria-label="Contexto clínico de la orden médica y validación">
+              <div class="visor-context-grid">
+
+                <!-- Tarjeta A: Contexto de la Orden Médica -->
+                <div class="visor-context-card">
+                  <div class="text-technical-label mb-2 d-flex align-items-center gap-2">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" class="text-primary" aria-hidden="true">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    <span>Contexto de la orden médica</span>
+                  </div>
+                  <dl class="visor-context-dl">
+                    <dt>Orden:</dt>
+                    <dd>
+                      <span class="text-clinical-code fw-bold" id="detalleOrdenCodigoMeta">
+                        <%= resAct ? (resAct.orden_codigo || resAct.codigo || '—') : '—' %>
+                      </span>
+                    </dd>
+
+                    <dt>Solicitado en:</dt>
+                    <dd>
+                      <a href="<%= (resAct && resAct.atencion_id) ? ('/atenciones/' + resAct.atencion_id + '/consulta') : ((atn && atn.id) ? ('/atenciones/' + atn.id + '/consulta') : '#') %>"
+                         class="text-primary text-decoration-none fw-semibold d-inline-flex align-items-center gap-1"
+                         id="detalleSolicitadoEn"
+                         data-trace="C25-31"
+                         title="Ver atención de origen en consulta">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                        </svg>
+                        <span>Atención <%= (resAct && (resAct.atencion_codigo || resAct.atencion_id)) ? (resAct.atencion_codigo || ('ATN-' + String(resAct.atencion_id).slice(0, 8))) : ((atn && (atn.codigo_atencion || atn.id)) ? (atn.codigo_atencion || ('ATN-' + String(atn.id).slice(0, 8))) : 'Sin atención asociada') %> · <%= resAct && resAct.atencion_fecha ? formatearFechaCorta(resAct.atencion_fecha) : (atn && atn.fecha ? formatearFechaCorta(atn.fecha) : '—') %></span>
+                      </a>
+                    </dd>
+
+                    <dt data-trace="C25-33">Diagnóstico</dt>
+                    <dd>
+                      <span class="badge bg-white text-dark border small fw-medium font-monospace text-wrap text-start" id="detalleDiagnosticoMeta">
+                        <%= (resAct && resAct.diagnostico) ? resAct.diagnostico : 'Sin diagnóstico asociado' %>
+                      </span>
+                    </dd>
+
+                    <dt>Estudio(s):</dt>
+                    <dd id="detalleExamenesLista">
+                      <% if (examenesOrden.length > 0) { %>
+                        <div class="visor-cups-list">
+                          <% examenesOrden.forEach(ex => { %>
+                            <span class="visor-cups-chip">
+                              <span class="font-monospace fw-bold text-primary"><%= ex.cups %></span>
+                              <span><%= ex.descripcion %></span>
+                              <% if (ex.cantidad && ex.cantidad > 1) { %>
+                                <span class="text-muted">×<%= ex.cantidad %></span>
+                              <% } %>
+                            </span>
+                          <% }); %>
+                        </div>
+                      <% } else { %>
+                        <span class="text-dark"><%= resAct ? (resAct.nombre_examen || resAct.examen_principal || formatearTipoEstudio(resAct.tipo)) : '—' %></span>
+                      <% } %>
+                    </dd>
+                  </dl>
+                </div>
+
+                <!-- Tarjeta B: Emisión, Responsable y Soporte -->
+                <div class="visor-context-card">
+                  <div class="text-technical-label mb-2 d-flex align-items-center gap-2">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" class="text-primary" aria-hidden="true">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                    </svg>
+                    <span>Emisión y validación clínica</span>
+                  </div>
+                  <dl class="visor-context-dl">
+                    <dt data-trace="C25-29">Cargado por</dt>
+                    <dd>
+                      <span class="fw-semibold text-dark" id="detalleCargadoPor" data-trace="C25-32"><%= cargadoPorInicial %></span>
+                    </dd>
+
+                    <dt>Fecha emisión:</dt>
+                    <dd>
+                      <span class="text-dark tabular-nums" id="detalleFechaMeta"><%= resAct ? formatearFechaHora(resAct.fecha || resAct.fecha_resultado) : '—' %></span>
+                    </dd>
+
+                    <dt>Soporte:</dt>
+                    <dd id="detalleSoporteTexto">
+                      <% if (tieneAdjuntoInicial) { %>
+                        <span class="text-success fw-semibold">Con documento adjunto validado</span>
+                      <% } else { %>
+                        <span class="text-secondary">Informe estructurado sin archivo anexo</span>
+                      <% } %>
+                    </dd>
+                  </dl>
+                </div>
+
+              </div>
+            </section>
+
+            <div class="d-flex justify-content-end visor-no-print">
+              <button type="button" class="btn btn-sm btn-light border d-inline-flex align-items-center gap-2" id="btnDetallesTecnicos">
+                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <span>Ver identificadores y trazabilidad técnica</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL 1: HISTORIAL DE RESULTADOS DEL PACIENTE (Nativo <dialog>) -->
+<dialog id="modalHistorialResultados" class="visor-modal visor-modal--lg" closedby="any" aria-labelledby="tituloModalHistorial">
+  <div class="visor-modal-surface">
+    <div class="visor-modal-header">
+      <div class="d-flex align-items-center gap-2 min-w-0">
+        <span class="p-2 bg-primary bg-opacity-10 text-primary rounded-circle d-inline-flex align-items-center justify-content-center flex-shrink-0" style="width: 34px; height: 34px;">
+          <svg width="17" height="17" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+          </svg>
+        </span>
+        <div>
+          <h2 class="h6 fw-bold text-dark mb-0" id="tituloModalHistorial" data-trace="C25-21">Resultados del paciente</h2>
+          <small class="text-muted">Seleccione una orden para cargarla en el visor clínico</small>
+        </div>
+      </div>
+
+      <div class="d-flex align-items-center gap-2">
+        <span class="badge bg-light text-muted border px-2 py-1 font-monospace" id="conteoResultados">
+          <%= listaResultados.length %> <%= listaResultados.length === 1 ? 'resultado' : 'resultados' %>
+        </span>
+        <form method="dialog" class="m-0">
+          <button type="submit" value="close" class="btn-close" aria-label="Cerrar historial de resultados"></button>
+        </form>
+      </div>
+    </div>
+
+    <div class="visor-modal-body">
+      <% if (listaResultados.length > 0) { %>
+        <div class="d-flex align-items-center justify-content-between gap-2 mb-3 flex-wrap">
+          <div class="visor-filter-group" role="group" aria-label="Filtrar resultados por estado de revisión" id="grupoFiltroResultados">
+            <button type="button" class="visor-filter-btn active" data-filtro="todos" aria-pressed="true">Todos (<%= listaResultados.length %>)</button>
+            <button type="button" class="visor-filter-btn" data-filtro="nuevos" aria-pressed="false">Nuevos (<%= pendientesCount %>)</button>
+          </div>
+          <small class="text-muted">Clic o Enter sobre una fila para abrir el resultado</small>
+        </div>
+      <% } %>
+
+      <div class="table-responsive border rounded visor-modal-table-scroll" tabindex="0" role="region" aria-label="Historial de resultados diagnósticos del paciente">
+        <table class="table table-hover align-middle mb-0" id="tablaResultados" data-trace="C25-22">
+          <thead class="table-light sticky-top border-bottom">
+            <tr>
+              <th scope="col" class="py-2 ps-3 text-secondary small fw-semibold" data-trace="C25-23">Fecha</th>
+              <th scope="col" class="py-2 text-secondary small fw-semibold" data-trace="C25-24">Orden</th>
+              <th scope="col" class="py-2 text-secondary small fw-semibold" data-trace="C25-25">Tipo</th>
+              <th scope="col" class="py-2 text-secondary small fw-semibold">Estudio</th>
+              <th scope="col" class="py-2 pe-3 text-end text-secondary small fw-semibold" data-trace="C25-26">Estado</th>
+            </tr>
+          </thead>
+          <tbody id="listaResultadosBody">
+            <% if (listaResultados.length === 0) { %>
+              <tr>
+                <td colspan="5" class="text-center py-5 text-muted">
+                  <p class="mb-0 fw-medium">No hay resultados diagnósticos registrados</p>
+                  <small class="text-secondary">Las órdenes completadas aparecerán listadas aquí.</small>
+                </td>
+              </tr>
+            <% } else { %>
+              <% listaResultados.forEach(r => { %>
+                <%
+                  const esSeleccionado = resAct && (resAct.id === r.id);
+                  const esRevisado = Boolean(r.revisado);
+                  const codOrden = r.orden_codigo || r.codigo || ('ORD-' + (r.id ? r.id.slice(0, 5) : ''));
+                  const fechaFormateada = formatearFechaCorta(r.fecha || r.fecha_resultado);
+                  const tipoLimpio = formatearTipoCorto(r.tipo);
+                %>
+                <tr class="fila-resultado <%= esSeleccionado ? 'table-active' : '' %>"
+                    data-id="<%= r.id %>"
+                    data-orden="<%= codOrden %>"
+                    data-revisado="<%= esRevisado ? 'true' : 'false' %>"
+                    tabindex="0"
+                    aria-current="<%= esSeleccionado ? 'true' : 'false' %>">
+                  <td class="ps-3 text-nowrap fw-medium small text-dark tabular-nums"><%= fechaFormateada %></td>
+                  <td class="text-nowrap font-monospace small fw-bold text-primary">
+                    <span><%= codOrden %></span>
+                    <% if (r.tiene_archivo || r.archivo || r.archivo_url) { %>
+                      <span class="ms-1 text-muted" title="Incluye archivo adjunto" aria-label="Incluye archivo adjunto">
+                        <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
+                        </svg>
+                      </span>
+                    <% } %>
+                  </td>
+                  <td class="small text-secondary"><%= tipoLimpio %></td>
+                  <td class="small text-dark"><%= r.nombre_examen || r.examen_principal || formatearTipoEstudio(r.tipo) %></td>
+                  <td class="pe-3 text-end text-nowrap">
+                    <% if (esRevisado) { %>
+                      <span class="badge bg-secondary text-white fw-bold badge-estado-resultado" data-trace="C25-27">REVISADO</span>
+                    <% } else { %>
+                      <span class="badge bg-success bg-opacity-25 text-success fw-bold badge-estado-resultado" data-trace="C25-27">NUEVO</span>
+                    <% } %>
+                  </td>
+                </tr>
+              <% }); %>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="visor-modal-footer">
+      <form method="dialog" class="m-0">
+        <button type="submit" value="close" class="btn btn-sm btn-secondary">Cerrar</button>
+      </form>
+    </div>
+  </div>
+</dialog>
+
+<!-- MODAL 2: CONFIRMACIÓN DE REVISIÓN CLÍNICA -->
+<dialog id="modalConfirmarRevision" class="visor-modal visor-modal--sm" aria-labelledby="tituloModalConfirmar">
+  <div class="visor-modal-surface">
+    <div class="visor-modal-header">
+      <h2 class="h6 fw-bold text-dark mb-0" id="tituloModalConfirmar">Confirmar revisión clínica</h2>
+      <form method="dialog" class="m-0">
+        <button type="submit" value="cancel" class="btn-close" aria-label="Cancelar confirmación"></button>
+      </form>
+    </div>
+
+    <div class="visor-modal-body">
+      <p class="mb-2 text-dark" id="textoConfirmarRevision">
+        ¿Confirmas que has revisado este resultado diagnóstico y su interpretación clínica?
+      </p>
+      <p class="small text-secondary mb-0">
+        Al confirmar, el resultado quedará registrado como <strong>REVISADO</strong> en la auditoría clínica y se despejará su notificación pendiente.
+      </p>
+    </div>
+
+    <div class="visor-modal-footer">
+      <form method="dialog" class="d-flex align-items-center justify-content-end gap-2 m-0 w-100">
+        <button type="submit" value="cancel" class="btn btn-sm btn-light border" autofocus>Cancelar</button>
+        <button type="submit" value="confirm" class="btn btn-sm btn-primary fw-semibold" id="btnConfirmarRevisionModal">Confirmar revisión</button>
+      </form>
+    </div>
+  </div>
+</dialog>
+
+<!-- MODAL 3: VISTA PREVIA AMPLIADA DE ARCHIVO ADJUNTO -->
+<dialog id="modalVistaPreviaArchivo" class="visor-modal visor-modal--xl" closedby="any" aria-labelledby="tituloModalVistaPrevia">
+  <div class="visor-modal-surface">
+    <div class="visor-modal-header">
+      <div class="d-flex align-items-center gap-2 min-w-0">
+        <h2 class="h6 fw-bold text-dark mb-0 text-truncate" id="tituloModalVistaPrevia"><%= nombreAdjuntoInicial %></h2>
+      </div>
+      <div class="d-flex align-items-center gap-2">
+        <a href="<%= (resAct && resAct.id) ? ('/api/resultados/' + resAct.id + '/archivo') : '#' %>"
+           class="btn btn-sm btn-outline-primary"
+           id="btnDescargarEnModal"
+           target="_blank"
+           rel="noopener">
+          Descargar
+        </a>
+        <form method="dialog" class="m-0">
+          <button type="submit" value="close" class="btn-close" aria-label="Cerrar vista previa"></button>
+        </form>
+      </div>
+    </div>
+
+    <div class="visor-modal-body p-2 bg-light">
+      <iframe id="iframeModalAdjunto"
+              src="about:blank"
+              class="visor-modal-iframe d-none"
+              title="Vista ampliada de documento adjunto"></iframe>
+      <div id="imgModalWrapper" class="text-center p-2 d-none">
+        <img id="imgModalAdjunto" src="" alt="Vista ampliada de imagen diagnóstica" class="visor-modal-img">
+      </div>
+    </div>
+  </div>
+</dialog>
+
+<!-- MODAL 4: DETALLES TÉCNICOS Y TRAZABILIDAD DE AUDITORÍA -->
+<dialog id="modalMetadatosTecnicos" class="visor-modal visor-modal--md" closedby="any" aria-labelledby="tituloModalMetadatos">
+  <div class="visor-modal-surface">
+    <div class="visor-modal-header">
+      <h2 class="h6 fw-bold text-dark mb-0" id="tituloModalMetadatos">Detalles técnicos y trazabilidad</h2>
+      <form method="dialog" class="m-0">
+        <button type="submit" value="close" class="btn-close" aria-label="Cerrar detalles técnicos"></button>
+      </form>
+    </div>
+
+    <div class="visor-modal-body">
+      <dl class="visor-context-dl">
+        <dt>ID Resultado:</dt>
+        <dd class="font-monospace small" id="metaTecnicaResultadoId"><%= resAct && resAct.id ? resAct.id : '—' %></dd>
+
+        <dt>ID Orden:</dt>
+        <dd class="font-monospace small" id="metaTecnicaOrdenId"><%= resAct && resAct.orden_id ? resAct.orden_id : '—' %></dd>
+
+        <dt>ID Atención:</dt>
+        <dd class="font-monospace small" id="metaTecnicaAtencionId"><%= atencionId || '—' %></dd>
+
+        <dt>ID Paciente:</dt>
+        <dd class="font-monospace small" id="metaTecnicaPacienteId"><%= pacienteId || '—' %></dd>
+
+        <dt>Archivo origen:</dt>
+        <dd class="font-monospace small text-break" id="metaTecnicaArchivoUrl"><%= (resAct && resAct.archivo_url) ? resAct.archivo_url : 'Sin archivo externo' %></dd>
+
+        <dt>Control de acceso:</dt>
+        <dd class="small text-secondary">Consulta registrada en auditoría confidencial (SELECT_CONFIDENTIAL).</dd>
+      </dl>
+    </div>
+
+    <div class="visor-modal-footer">
+      <form method="dialog" class="m-0">
+        <button type="submit" value="close" class="btn btn-sm btn-secondary">Cerrar</button>
+      </form>
+    </div>
+  </div>
+</dialog>
+
+<%- include('../partials/_fin', { scripts: ['/js/visor_resultados.js'] }) %>

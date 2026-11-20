@@ -1,0 +1,321 @@
+<%- include('../partials/_inicio', { titulo: 'Registro de paciente nuevo' }) %>
+<!-- Registro de paciente nuevo con afiliación y contactos -->
+
+<div class="container-fluid px-0">
+  <!-- Cabecera de la pantalla [3.15] -->
+  <div class="d-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 fw-bold text-dark mb-0" data-trace="C3-15">Registro de paciente nuevo</h1>
+  </div>
+
+  <form id="formPacienteNuevo" novalidate autocomplete="off">
+    <div class="row g-4">
+      <!-- =================================================================== -->
+      <!-- COLUMNA IZQUIERDA: Datos de identificación y contacto [3.16 - 3.33] -->
+      <!-- =================================================================== -->
+      <div class="col-12 col-lg-6">
+        <div class="card border-0 shadow-sm rounded-3 h-100" data-trace="C3-16">
+          <div class="card-body p-4 d-flex flex-column">
+            <h2 class="h6 fw-bold text-dark mb-3">Datos de identificación y contacto</h2>
+
+            <div class="row g-3">
+              <!-- [3.17] Label y [3.18] Select Tipo de documento -->
+              <div class="col-12 col-md-6">
+                <label for="tipo_documento" class="form-label small fw-semibold text-secondary" data-trace="C3-17">Tipo de documento</label>
+                <select id="tipo_documento" name="tipo_documento" class="form-select" data-trace="C3-18" data-borrador="tipo_documento" required>
+                  <option value="CC" selected>Cédula de ciudadanía (CC)</option>
+                  <option value="TI">Tarjeta de identidad (TI)</option>
+                  <option value="CE">Cédula de extranjería (CE)</option>
+                  <option value="RC">Registro civil (RC)</option>
+                  <option value="PA">Pasaporte (PA)</option>
+                  <option value="PT">Permiso por protección temporal (PT)</option>
+                  <option value="PE">Permiso especial de permanencia (PE)</option>
+                  <option value="CN">Certificado de nacido vivo (CN)</option>
+                  <option value="AS">Adulto sin identificación (AS)</option>
+                  <option value="MS">Menor sin identificación (MS)</option>
+                  <option value="CD">Carné diplomático (CD)</option>
+                </select>
+                <div class="invalid-feedback">Seleccione el tipo de documento.</div>
+              </div>
+
+              <!-- [3.19] Label y [3.20] Input Número de documento -->
+              <div class="col-12 col-md-6">
+                <label for="numero_documento" class="form-label small fw-semibold text-secondary" data-trace="C3-19">Número de documento</label>
+                <input type="text"
+                       id="numero_documento"
+                       name="numero_documento"
+                       class="form-control"
+                       placeholder="1234567890"
+                       value="<%= typeof documento !== 'undefined' && documento ? documento : '' %>"
+                       data-trace="C3-20"
+                       data-borrador="numero_documento"
+                       required>
+                <div class="invalid-feedback" id="feedbackNumeroDocumento">Ingrese un número de documento válido (5 a 20 caracteres).</div>
+              </div>
+
+              <!-- [3.21] Label y [3.22] Input Nombres -->
+              <div class="col-12 col-md-6">
+                <label for="nombres" class="form-label small fw-semibold text-secondary" data-trace="C3-21">Nombres</label>
+                <input type="text"
+                       id="nombres"
+                       name="nombres"
+                       class="form-control"
+                       placeholder="Juan Diego"
+                       data-trace="C3-22"
+                       data-borrador="nombres"
+                       required>
+                <div class="invalid-feedback">Ingrese los nombres del paciente.</div>
+              </div>
+
+              <!-- [3.23] Label y [3.24] Input Apellidos -->
+              <div class="col-12 col-md-6">
+                <label for="apellidos" class="form-label small fw-semibold text-secondary" data-trace="C3-23">Apellidos</label>
+                <input type="text"
+                       id="apellidos"
+                       name="apellidos"
+                       class="form-control"
+                       placeholder="Pérez García"
+                       data-trace="C3-24"
+                       data-borrador="apellidos"
+                       required>
+                <div class="invalid-feedback">Ingrese los apellidos del paciente.</div>
+              </div>
+
+              <!-- [3.25] Label Fecha de nacimiento con cálculo de edad y [3.26] Input Fecha nacimiento -->
+              <div class="col-12 col-md-6">
+                <label for="fecha_nacimiento" class="form-label small fw-semibold text-secondary" data-trace="C3-25">
+                  Fecha de nacimiento <span id="spanEdad" class="text-primary fw-medium ms-1"></span>
+                </label>
+                <input type="date"
+                       id="fecha_nacimiento"
+                       name="fecha_nacimiento"
+                       class="form-control"
+                       max="<%= new Date().toISOString().slice(0, 10) %>"
+                       data-trace="C3-26"
+                       data-borrador="fecha_nacimiento"
+                       required>
+                <div class="invalid-feedback" id="feedbackFechaNacimiento">Seleccione una fecha de nacimiento válida (no puede ser futura).</div>
+              </div>
+
+              <!-- [3.27] Label y [3.28] Select Sexo -->
+              <div class="col-12 col-md-6">
+                <label for="sexo" class="form-label small fw-semibold text-secondary" data-trace="C3-27">Sexo</label>
+                <select id="sexo" name="sexo" class="form-select" data-trace="C3-28" data-borrador="sexo" required>
+                  <option value="">Seleccione…</option>
+                  <option value="M">M</option>
+                  <option value="F">F</option>
+                  <option value="Indeterminado">Indeterminado</option>
+                </select>
+                <div class="invalid-feedback">Seleccione el sexo del paciente.</div>
+              </div>
+
+              <!-- [3.29] Label y [3.30] Input Teléfono -->
+              <div class="col-12 col-md-6">
+                <label for="telefono" class="form-label small fw-semibold text-secondary" data-trace="C3-29">Teléfono</label>
+                <input type="tel"
+                       id="telefono"
+                       name="telefono"
+                       class="form-control"
+                       placeholder="+57 300 123 4567"
+                       data-trace="C3-30"
+                       data-borrador="telefono">
+                <div class="invalid-feedback">Ingrese un teléfono válido (+57 o celular de 10 dígitos).</div>
+              </div>
+
+              <!-- [3.31] Label y [3.32] Input Dirección -->
+              <div class="col-12 col-md-6">
+                <label for="direccion" class="form-label small fw-semibold text-secondary" data-trace="C3-31">Dirección</label>
+                <input type="text"
+                       id="direccion"
+                       name="direccion"
+                       class="form-control"
+                       placeholder="Cra 15 # 85-20, Bogotá"
+                       data-trace="C3-32"
+                       data-borrador="direccion">
+                <div class="invalid-feedback">Ingrese una dirección válida.</div>
+              </div>
+
+              <!-- [3.33] Contenedor de Alerta de verificación de documento -->
+              <div class="col-12 mt-auto pt-3">
+                <div id="contenedorAlertaDoc" class="d-none" data-trace="C3-33">
+                  <div id="alertaVerificacionDoc" class="alert alert-success d-flex align-items-center justify-content-between py-2 px-3 mb-0 rounded-3 shadow-none border" role="status">
+                    <div class="d-flex align-items-center gap-2">
+                      <span id="iconoDocVerif" class="fw-bold">✓</span>
+                      <span id="mensajeDocVerif" class="small fw-semibold">Documento disponible: no existe otro paciente con este número</span>
+                    </div>
+                    <a href="#" id="btnAbrirFichaExistente" class="btn btn-sm btn-outline-dark fw-semibold ms-2 d-none">Abrir ficha existente</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========================================================================================= -->
+      <!-- COLUMNA DERECHA: Afiliación en salud [3.34 - 3.42] + Contactos de emergencia [3.43 - 3.50] -->
+      <!-- ========================================================================================= -->
+      <div class="col-12 col-lg-6 d-flex flex-column gap-4">
+        <!-- Tarjeta [3.34] Afiliación en salud -->
+        <div class="card border-0 shadow-sm rounded-3" data-trace="C3-34">
+          <div class="card-body p-4">
+            <h2 class="h6 fw-bold text-dark mb-3">Afiliación en salud</h2>
+
+            <div class="row g-3">
+              <!-- [3.35] Label y [3.36] Select EPS / aseguradora -->
+              <div class="col-12 col-md-6">
+                <label for="aseguradora_id" class="form-label small fw-semibold text-secondary" data-trace="C3-35">EPS / aseguradora</label>
+                <select id="aseguradora_id" name="aseguradora_id" class="form-select" data-trace="C3-36" data-borrador="aseguradora_id" required>
+                  <option value="">Seleccione…</option>
+                  <% (typeof aseguradoras !== 'undefined' && Array.isArray(aseguradoras) ? aseguradoras : []).forEach(a => { %>
+                    <option value="<%= a.id %>"><%= a.nombre %><%= a.tipo_plan ? ' (' + a.tipo_plan + ')' : '' %></option>
+                  <% }) %>
+                </select>
+                <div class="invalid-feedback">Seleccione una EPS / aseguradora.</div>
+              </div>
+
+              <!-- [3.37] Label y [3.38] Select Tipo de usuario -->
+              <div class="col-12 col-md-6">
+                <label for="tipo_usuario" class="form-label small fw-semibold text-secondary" data-trace="C3-37">Tipo de usuario</label>
+                <select id="tipo_usuario" name="tipo_usuario" class="form-select" data-trace="C3-38" data-borrador="tipo_usuario" required>
+                  <option value="">Seleccione…</option>
+                  <option value="Cotizante">Cotizante</option>
+                  <option value="Beneficiario">Beneficiario</option>
+                  <option value="Particular">Particular</option>
+                </select>
+                <div class="invalid-feedback">Seleccione el tipo de usuario.</div>
+              </div>
+
+              <!-- [3.39] Label y [3.40] Input N.º de contrato -->
+              <div class="col-12 col-md-6">
+                <label for="numero_contrato" class="form-label small fw-semibold text-secondary" data-trace="C3-39">N.º de contrato</label>
+                <input type="text"
+                       id="numero_contrato"
+                       name="numero_contrato"
+                       class="form-control"
+                       placeholder="SAN-2026-004512"
+                       data-trace="C3-40"
+                       data-borrador="numero_contrato">
+                <div class="invalid-feedback">Ingrese el número de contrato.</div>
+              </div>
+
+              <!-- [3.41] Label y [3.42] Inputs vigencia (fecha_inicio y fecha_fin) -->
+              <div class="col-12 col-md-6">
+                <label class="form-label small fw-semibold text-secondary" data-trace="C3-41">Vigencia</label>
+                <div class="row g-2" data-trace="C3-42">
+                  <div class="col-12 col-sm-6">
+                    <input type="date"
+                           id="fecha_inicio"
+                           name="fecha_inicio"
+                           class="form-control px-2"
+                           aria-label="Fecha inicio vigencia"
+                           data-borrador="fecha_inicio">
+                  </div>
+                  <div class="col-12 col-sm-6">
+                    <input type="date"
+                           id="fecha_fin"
+                           name="fecha_fin"
+                           class="form-control px-2"
+                           aria-label="Fecha fin vigencia"
+                           data-borrador="fecha_fin">
+                  </div>
+                </div>
+                <div class="invalid-feedback" id="feedbackVigencia">La fecha fin debe ser mayor o igual a la fecha de inicio.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tarjeta [3.43] Contacto de emergencia -->
+        <div class="card border-0 shadow-sm rounded-3" data-trace="C3-43">
+          <div class="card-body p-4">
+            <h2 class="h6 fw-bold text-dark mb-3">Contacto de emergencia</h2>
+
+            <!-- Contenedor repetible de contactos de emergencia -->
+            <div id="contenedorContactos">
+              <div class="contacto-fila mb-3 pb-3 border-bottom border-light-subtle" data-contacto-idx="0">
+                <div class="row g-3">
+                  <!-- [3.44] Label y [3.45] Input Nombre completo -->
+                  <div class="col-12 col-md-6">
+                    <label class="form-label small fw-semibold text-secondary" data-trace="C3-44">Nombre completo</label>
+                    <input type="text"
+                           name="contacto_nombre[]"
+                           class="form-control contacto-nombre"
+                           placeholder="Marta Rodríguez"
+                           data-trace="C3-45"
+                           required>
+                    <div class="invalid-feedback">Ingrese el nombre completo del contacto.</div>
+                  </div>
+
+                  <!-- [3.46] Label y [3.47] Input Parentesco -->
+                  <div class="col-12 col-md-6">
+                    <label class="form-label small fw-semibold text-secondary" data-trace="C3-46">Parentesco</label>
+                    <input type="text"
+                           list="listaParentescos"
+                           name="contacto_parentesco[]"
+                           class="form-control contacto-parentesco"
+                           placeholder="Esposa, Madre, Hijo..."
+                           data-trace="C3-47">
+                  </div>
+
+                  <!-- [3.48] Label y [3.49] Input Teléfono -->
+                  <div class="col-12 col-md-6">
+                    <label class="form-label small fw-semibold text-secondary" data-trace="C3-48">Teléfono</label>
+                    <input type="tel"
+                           name="contacto_telefono[]"
+                           class="form-control contacto-telefono"
+                           placeholder="+57 310 987 6543"
+                           data-trace="C3-49"
+                           required>
+                    <div class="invalid-feedback">Ingrese el teléfono del contacto.</div>
+                  </div>
+
+                  <!-- Acción para quitar fila de contacto -->
+                  <div class="col-12 col-md-6 d-flex align-items-end justify-content-between">
+                    <button type="button" class="btn btn-outline-danger btn-sm btn-eliminar-contacto d-none" aria-label="Quitar contacto">
+                      <svg width="14" height="14" fill="currentColor" class="bi bi-trash me-1" viewBox="0 0 16 16">
+                        <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
+                        <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
+                      </svg>
+                      Quitar
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- [3.50] Botón Agregar otro contacto -->
+            <div class="d-flex justify-content-end mt-2">
+              <button type="button" id="btnAgregarContacto" class="btn btn-outline-secondary btn-sm" data-trace="C3-50">
+                + Agregar otro
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Barra de acciones: [3.51] Cancelar y [3.52] Guardar paciente -->
+        <div class="d-flex justify-content-end align-items-center gap-3 mt-auto pt-2">
+          <a href="javascript:history.back()" id="btnCancelar" class="btn btn-outline-secondary px-4 py-2" data-trace="C3-51">Cancelar</a>
+          <button type="submit" id="btnGuardar" class="btn btn-primary px-4 py-2 d-inline-flex align-items-center justify-content-center" data-trace="C3-52">
+            <span class="spinner-border spinner-border-sm me-2 d-none" id="spinnerGuardar" role="status" aria-hidden="true"></span>
+            <span id="textoBtnGuardar">Guardar paciente</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
+
+<!-- Datalist para sugerencias de parentescos comunes -->
+<datalist id="listaParentescos">
+  <option value="Esposa"></option>
+  <option value="Esposo"></option>
+  <option value="Cónyuge"></option>
+  <option value="Madre"></option>
+  <option value="Padre"></option>
+  <option value="Hijo/a"></option>
+  <option value="Hermano/a"></option>
+  <option value="Familiar"></option>
+  <option value="Amigo/a"></option>
+</datalist>
+
+<%- include('../partials/_fin', { scripts: ['/js/paciente_nuevo.js'] }) %>

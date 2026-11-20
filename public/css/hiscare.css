@@ -1,0 +1,2810 @@
+@import url('./hiscare-tokens.css');
+@import url('./hiscare-components.css');
+@import url('./hiscare-clinical.css');
+@import url('./hiscare-animations.css');
+
+/* ==========================================================================
+   HISCARE — Sistema de Diseño Clínico, Tokens, Layout y Componentes UI
+   Cumple WCAG 2.1 AA (Contraste >= 4.5:1), Estándar de Triage Res. 5596/2015 MinSalud
+   Responsive para Estaciones de Enfermería, Tablets (>=768px) y Desktop (>=1024px)
+   ========================================================================== */
+
+/* --- Sistema de Tokens de Diseño Clínico HISCARE ---
+   Fuente única de verdad consolidada y centralizada en hiscare-tokens.css */
+
+/* --- Base y Tipografía --- */
+html, body {
+  font-size: 16px;
+  line-height: var(--hiscare-line-height-base);
+}
+
+body {
+  background-color: var(--hiscare-body-bg);
+  color: var(--hiscare-text-main);
+  font-family: var(--hiscare-font-sans);
+  min-width: 320px;                        /* Responsivo para estaciones móviles y tablets */
+  overflow-x: hidden;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* --- Accesibilidad: Indicador de Foco Visible Universal (:focus-visible) --- */
+:focus-visible {
+  outline: 3px solid var(--hiscare-focus-ring) !important;
+  outline-offset: var(--hiscare-focus-offset) !important;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline: 3px solid var(--hiscare-focus-ring) !important;
+  outline-offset: var(--hiscare-focus-offset) !important;
+}
+
+/* --- Layout Principal Adaptativo --- */
+.main-wrapper {
+  background-color: var(--hiscare-body-bg);
+  min-height: 100vh;
+  min-width: 0;
+  width: 100%;
+}
+
+#contenidoPrincipal {
+  width: 100%;
+  min-width: 0;
+}
+
+/* --- Menú Lateral (Sidebar) --- */
+.sidebar {
+  width: 250px;
+  background-color: var(--hiscare-sidebar-bg);
+  color: #fff;
+  transition: width 0.2s ease-in-out;
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.sidebar-brand-wrapper {
+  padding: 0.25rem 0.5rem;
+}
+
+.brand-logo-icon svg {
+  color: #38bdf8;
+}
+
+.brand-logo-text {
+  letter-spacing: -0.5px;
+}
+
+.sidebar-menu,
+.sidebar .nav-pills.sidebar-menu {
+  background: transparent !important;
+  border: none !important;
+  padding: 0.5rem 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  width: 100% !important;
+  box-shadow: none !important;
+  list-style: none;
+  margin: 0;
+}
+
+.sidebar .sidebar-link,
+.sidebar-menu .nav-link.sidebar-link {
+  color: #cbd5e1 !important;
+  background-color: transparent;
+  border: 1px solid transparent;
+  font-weight: 500;
+  font-size: 0.925rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: var(--hiscare-radius-md);
+  text-decoration: none;
+  transition: background-color var(--hiscare-transition-fast),
+              border-color var(--hiscare-transition-fast),
+              color var(--hiscare-transition-fast),
+              box-shadow var(--hiscare-transition-fast),
+              transform var(--hiscare-transition-fast);
+}
+
+.sidebar-link .nav-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.85;
+}
+
+.sidebar .sidebar-link:hover,
+.sidebar-menu .nav-link.sidebar-link:hover {
+  color: #ffffff !important;
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+.sidebar-link:hover .nav-icon {
+  opacity: 1;
+}
+
+.sidebar .sidebar-link.active,
+.sidebar-menu .nav-link.sidebar-link.active {
+  color: #ffffff !important;
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4) !important;
+}
+
+.sidebar-link.active .nav-icon {
+  color: #ffffff;
+  opacity: 1;
+}
+
+/* --- Barra Superior (Topbar) --- */
+.topbar {
+  height: 64px;
+  background-color: #ffffff;
+  border-bottom: 1px solid var(--hiscare-border-color);
+  z-index: var(--z-topbar, 1020);
+}
+
+/* Buscador global con input y dropdown */
+.search-global-wrapper .input-group {
+  border: 1px solid var(--hiscare-border-color);
+  border-radius: var(--hiscare-radius-md);
+  overflow: hidden;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.search-global-wrapper .input-group:focus-within {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+.search-global-wrapper input[type="search"] {
+  font-size: 0.9rem;
+}
+
+#buscarDropdown {
+  border: 1px solid var(--hiscare-border-color);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+}
+
+.search-result-item {
+  transition: background-color 0.15s ease;
+  border-radius: 0.375rem;
+  margin: 0.1rem 0.25rem;
+}
+
+.search-result-item:hover, .search-result-item:focus {
+  background-color: #f1f5f9;
+}
+
+/* Campana de avisos */
+#btnCampana {
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--hiscare-border-color);
+  background-color: #ffffff;
+  transition: background-color var(--hiscare-transition-fast),
+              border-color var(--hiscare-transition-fast),
+              color var(--hiscare-transition-fast),
+              box-shadow var(--hiscare-transition-fast),
+              transform var(--hiscare-transition-fast);
+}
+
+#btnCampana:hover {
+  background-color: #f8fafc;
+  color: #0f172a;
+}
+
+#notifCount {
+  font-size: 0.675rem;
+  padding: 0.25em 0.5em;
+}
+
+/* Avatar de usuario */
+.user-avatar {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  font-size: 0.875rem;
+  letter-spacing: 0.5px;
+  user-select: none;
+}
+
+/* --- Dashboard y Tarjetas KPI --- */
+.dashboard-container {
+  width: 100%;
+  max-width: 1400px;
+}
+
+.kpi-card {
+  background: var(--hiscare-card-bg);
+  border: 1px solid var(--hiscare-border-color);
+  border-radius: var(--hiscare-radius-lg);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px -2px rgba(0, 0, 0, 0.05);
+}
+
+.kpi-label {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.kpi-value {
+  font-size: 2.25rem;
+  line-height: 1.1;
+}
+
+/* --- Tabla de Citas del Día --- */
+.citas-card {
+  background: var(--hiscare-card-bg);
+  border: 1px solid var(--hiscare-border-color);
+  border-radius: var(--hiscare-radius-lg);
+  overflow: hidden;
+}
+
+#tablaCitasDashboard thead th {
+  background-color: #f8fafc;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid var(--hiscare-border-color);
+}
+
+.clickable-row {
+  cursor: pointer;
+  transition: background-color 0.15s ease-in-out;
+}
+
+.clickable-row:hover {
+  background-color: #f1f5f9 !important;
+}
+
+/* --- Badges de Estado tipo Pill --- */
+.badge.rounded-pill {
+  padding: 0.35rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.025em;
+  text-transform: uppercase;
+}
+
+/* Reglas de colores de estado clínico */
+.badge-estado-programada, .estado-PROGRAMADA {
+  background-color: #64748b !important;    /* Gris */
+  color: #ffffff !important;
+}
+
+.badge-estado-confirmada, .estado-CONFIRMADA {
+  background-color: #2563eb !important;    /* Azul */
+  color: #ffffff !important;
+}
+
+.badge-estado-en-sala, .estado-EN_SALA {
+  background-color: var(--hiscare-estado-ensala-bg, #c2410c) !important;    /* Naranja Clínico */
+  color: #ffffff !important;
+}
+
+.badge-estado-atendida, .estado-ATENDIDA {
+  background-color: var(--hiscare-estado-atendida-bg, var(--hiscare-success-solid, #15803d)) !important;    /* Surgical Green */
+  color: var(--hiscare-success-on-solid, #ffffff) !important;
+}
+
+.badge-estado-cancelada, .estado-CANCELADA {
+  background-color: var(--hiscare-danger-solid, #dc2626) !important;    /* Rojo */
+  color: var(--hiscare-danger-on-solid, #ffffff) !important;
+}
+
+.badge-estado-no-asistio, .estado-NO_ASISTIO {
+  background-color: var(--hiscare-estado-noasistio-bg, #9a3412) !important;    /* Naranja Ámbar Oscuro */
+  color: #ffffff !important;
+}
+
+/* --- Estilos de Autenticación y Formularios Previos --- */
+.auth-card {
+  width: 100%;
+  max-width: 400px;
+  border-radius: var(--hiscare-radius-lg);
+  transition: box-shadow 0.2s ease-in-out;
+}
+
+.form-control:focus, .btn:focus {
+  box-shadow: var(--hiscare-focus-shadow);
+}
+
+.brand-link {
+  color: var(--hiscare-primary-text, #1d4ed8);
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+/* --- Alergias y Seguridad Asistencial --- */
+#bannerAlergias {
+  max-width: 480px;
+  vertical-align: middle;
+  transition: background-color 0.25s ease-in-out, border-color 0.25s ease-in-out, box-shadow 0.25s ease-in-out;
+  cursor: help;
+}
+
+@keyframes alertPulseKeyframes {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.55);
+  }
+  50% {
+    transform: scale(1.04);
+    box-shadow: 0 0 0 6px rgba(220, 38, 38, 0);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0);
+  }
+}
+
+.alert-pulse {
+  animation: alertPulseKeyframes 1.2s ease-in-out;
+}
+
+/* --- Chips de Sugerencias Clínicas Rápidas en Antecedentes --- */
+.chip-sugerencia {
+  font-size: 0.75rem;
+  font-weight: 500;
+  transition: background-color var(--hiscare-transition-fast),
+              border-color var(--hiscare-transition-fast),
+              color var(--hiscare-transition-fast),
+              box-shadow var(--hiscare-transition-fast),
+              transform var(--hiscare-transition-fast);
+}
+
+.chip-sugerencia:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+/* Antecedentes con alto máximo y barra de desplazamiento vertical */
+.lista-antecedentes {
+  max-height: 230px !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  padding-right: 0.4rem !important;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+.lista-antecedentes::-webkit-scrollbar {
+  width: 6px;
+}
+
+.lista-antecedentes::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.lista-antecedentes::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1;
+  border-radius: 9999px;
+}
+
+.lista-antecedentes::-webkit-scrollbar-thumb:hover {
+  background-color: #94a3b8;
+}
+
+#antecedentesContainer .card-body {
+  padding: 1.15rem;
+}
+
+/* --- Historia Clínica Longitudinal (Línea de Tiempo) --- */
+.timeline-stream-wrapper {
+  min-height: 250px;
+}
+
+.timeline-row-item {
+  position: relative;
+  transition: transform 0.15s ease-in-out;
+}
+
+.timeline-axis {
+  width: 38px;
+}
+
+.timeline-node {
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
+}
+
+.timeline-row-item:hover .timeline-node {
+  transform: scale(1.12);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12) !important;
+}
+
+.timeline-card {
+  border: 1px solid var(--hiscare-border-color);
+  background-color: #ffffff;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.timeline-card:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06) !important;
+  transform: translateX(2px);
+}
+
+.timeline-item-selected {
+  border: 2px solid var(--bs-warning, #ea580c) !important;
+  background-color: var(--hiscare-triage-2-subtle-bg, #fff7ed) !important;
+  box-shadow: 0 6px 18px rgba(234, 88, 12, 0.18) !important;
+}
+
+.panel-detalle-sticky {
+  position: sticky;
+  top: 20px;
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+}
+
+.btn-xs {
+  font-size: 0.72rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: var(--hiscare-radius-sm);
+}
+
+.bg-purple {
+  background-color: var(--hiscare-violet-solid, #6d28d9) !important;
+  color: var(--hiscare-violet-on-solid, #ffffff) !important;
+}
+
+.border-purple-subtle {
+  border-color: var(--hiscare-violet-subtle-border, #ddd6fe) !important;
+}
+
+/* ==========================================================================
+   Centro de notificaciones y alertas clínicas
+   ========================================================================== */
+.dropdown-toggle.no-caret::after {
+  display: none !important;
+}
+
+.notif-item {
+  transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out;
+  border-left: 3px solid transparent;
+}
+
+.notif-item:hover {
+  background-color: var(--hiscare-surface-3, #f1f5f9);
+}
+
+.notif-item.no-leida {
+  background-color: var(--hiscare-surface-2, #f8fafc);
+  border-left-color: var(--hiscare-primary-solid, #2563eb);
+}
+
+.notif-item.prioridad-critica {
+  border-left-color: var(--hiscare-danger-solid, #dc2626);
+}
+
+.notif-item.prioridad-critica.no-leida {
+  background-color: var(--hiscare-danger-subtle-bg, #fef2f2);
+}
+
+.notif-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--hiscare-primary-solid, #2563eb);
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.badge-estado-notif {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.25rem 0.6rem;
+}
+
+/* ==========================================================================
+   Bitácora de auditoría forense y reportes de control
+   ========================================================================== */
+.badge-accion-insert {
+  background-color: #2563eb !important; /* Azul */
+  color: #ffffff !important;
+}
+
+.badge-accion-update {
+  background-color: #1e293b !important; /* Oscuro / negro */
+  color: #ffffff !important;
+}
+
+.badge-accion-delete {
+  background-color: #dc2626 !important; /* Rojo / danger */
+  color: #ffffff !important;
+}
+
+.badge-accion-confidential {
+  background-color: var(--hiscare-triage-2-bg, #c2410c) !important; /* Naranja Clínico */
+  color: #ffffff !important;
+}
+
+.badge-accion-login {
+  background-color: #16a34a !important; /* Verde */
+  color: #ffffff !important;
+}
+
+.badge-accion-logout {
+  background-color: #64748b !important; /* Gris */
+  color: #ffffff !important;
+}
+
+.badge-accion-login-fallido {
+  background-color: #b91c1c !important; /* Rojo intenso */
+  color: #ffffff !important;
+}
+
+.badge-accion-denegado {
+  background-color: #7f1d1d !important; /* Rojo muy oscuro */
+  color: #ffffff !important;
+}
+
+/* Resaltado forense antes / después */
+.diff-cell-cambio-antes {
+  background-color: #fee2e2 !important;
+  color: #991b1b !important;
+  border-left: 3px solid #ef4444;
+}
+
+.diff-cell-cambio-despues {
+  background-color: #dcfce7 !important;
+  color: #166534 !important;
+  border-left: 3px solid #22c55e;
+}
+
+.diff-cell-agregado {
+  background-color: #ecfdf5 !important;
+  color: #065f46 !important;
+  border-left: 3px solid #10b981;
+}
+
+.diff-cell-eliminado {
+  background-color: #fef2f2 !important;
+  color: #991b1b !important;
+  border-left: 3px solid #dc2626;
+}
+
+/* ==========================================================================
+   Estándar Visual de Triage (Resolución 5596 de 2015 MinSalud Colombia)
+   Contraste WCAG 2.1 AA mínimo 4.5:1 garantizado para todos los niveles
+   ========================================================================== */
+.badge-triage {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--hiscare-radius-full);
+  font-size: 0.75rem;
+  line-height: 1.1;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.badge-triage svg {
+  flex-shrink: 0;
+}
+
+/* Triage I · Reanimación: Rojo (#b91c1c / #ffffff) -> Ratio 5.9:1 */
+.badge-triage-1, .badge-triage-I {
+  background-color: var(--hiscare-triage-1-bg, #b91c1c) !important;
+  color: var(--hiscare-triage-1-text, #ffffff) !important;
+}
+
+/* Triage II · Emergencia: Naranja Clínico (#c2410c / #ffffff) */
+.badge-triage-2, .badge-triage-II {
+  background-color: var(--hiscare-triage-2-bg, #c2410c) !important;
+  color: var(--hiscare-triage-2-text, #ffffff) !important;
+}
+
+/* Triage III · Urgencia: Amarillo (#fef08a / #713f12) -> Ratio 7.5:1 AAA */
+.badge-triage-3, .badge-triage-III {
+  background-color: var(--hiscare-triage-3-bg, #fef08a) !important;
+  color: var(--hiscare-triage-3-text, #713f12) !important;
+  border: 1px solid var(--hiscare-triage-3-border, #eab308) !important;
+}
+
+/* Triage IV · Prioritario: Verde (#15803d / #ffffff) -> Ratio 5.1:1 */
+.badge-triage-4, .badge-triage-IV {
+  background-color: var(--hiscare-triage-4-bg, #15803d) !important;
+  color: var(--hiscare-triage-4-text, #ffffff) !important;
+}
+
+/* Triage V · No Urgente / Consulta Externa: Azul (#1d4ed8 / #ffffff) -> Ratio 5.9:1 */
+.badge-triage-5, .badge-triage-V {
+  background-color: var(--hiscare-triage-5-bg, #1d4ed8) !important;
+  color: var(--hiscare-triage-5-text, #ffffff) !important;
+}
+
+/* Triage Pendiente: Gris Neutro Accesible (#475569 / #ffffff) -> Ratio 5.6:1 */
+.badge-triage-pendiente {
+  background-color: var(--hiscare-triage-pendiente-bg, #475569) !important;
+  color: var(--hiscare-triage-pendiente-text, #ffffff) !important;
+}
+
+/* ==========================================================================
+   Responsividad Clínica: Tablets, Estaciones de Enfermería y Escritorio
+   ========================================================================== */
+@media (max-width: 1024px) {
+  .dashboard-container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .topbar {
+    height: auto !important;
+    flex-wrap: wrap;
+    padding: 0.75rem 1rem !important;
+    gap: 0.5rem;
+  }
+  .search-global-wrapper {
+    max-width: 100% !important;
+    width: 100% !important;
+    order: 3;
+    margin-right: 0 !important;
+    margin-top: 0.25rem;
+  }
+  .user-profile .user-name {
+    max-width: 120px !important;
+  }
+}
+
+/* ==========================================================================
+   HISCARE UI — Sistema de Tablas Clínicas y Espaciado Dinámico
+   Cumplimiento estricto WCAG 2.1 AA, cadencia vertical balanceada y diseño adaptativo
+   ========================================================================== */
+
+/* 1. Base Global de Tablas: Inyección de variables dinámicas y anulación de padding estático */
+.table {
+  --bs-table-padding-y: var(--hiscare-table-pad-y);
+  --bs-table-padding-x: var(--hiscare-table-pad-x);
+  --bs-table-color: var(--hiscare-text-main);
+  --bs-table-bg: transparent;
+  --bs-table-border-color: var(--hiscare-table-border);
+  vertical-align: middle;
+  font-size: var(--hiscare-font-size-sm);
+  margin-bottom: 0;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+/* Anulación de selector específico de Bootstrap (> :not(caption) > * > *) */
+.table > :not(caption) > * > * {
+  padding: var(--hiscare-table-pad-y) var(--hiscare-table-pad-x);
+  vertical-align: middle;
+  border-bottom: 1px solid var(--hiscare-table-border);
+}
+
+/* Tablas compactas clínicas (.table-sm) */
+.table-sm {
+  --bs-table-padding-y: var(--hiscare-table-sm-pad-y);
+  --bs-table-padding-x: var(--hiscare-table-sm-pad-x);
+  font-size: 0.8125rem;
+}
+
+.table-sm > :not(caption) > * > * {
+  padding: var(--hiscare-table-sm-pad-y) var(--hiscare-table-sm-pad-x);
+}
+
+/* 2. Cabeceras Clínicas Profesionales (thead th) */
+.table thead th,
+.table > thead > tr > th,
+.table-light th {
+  padding-top: var(--hiscare-table-th-pad-y) !important;
+  padding-bottom: var(--hiscare-table-th-pad-y) !important;
+  padding-left: var(--hiscare-table-th-pad-x) !important;
+  padding-right: var(--hiscare-table-th-pad-x) !important;
+  background-color: var(--hiscare-table-th-bg) !important;
+  color: var(--hiscare-table-th-color) !important;
+  font-size: 0.75rem !important;
+  font-weight: 700 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 2px solid var(--hiscare-table-th-border) !important;
+  border-top: none !important;
+  white-space: nowrap;
+  vertical-align: middle;
+  line-height: 1.25;
+}
+
+/* 3. Celdas del Cuerpo Clínicas (tbody td) */
+.table tbody td,
+.table > tbody > tr > td {
+  padding-top: var(--hiscare-table-pad-y);
+  padding-bottom: var(--hiscare-table-pad-y);
+  padding-left: var(--hiscare-table-pad-x);
+  padding-right: var(--hiscare-table-pad-x);
+  border-bottom: 1px solid var(--hiscare-table-border);
+  color: var(--hiscare-text-main);
+  vertical-align: middle;
+  line-height: var(--hiscare-line-height-base);
+}
+
+.table-sm tbody td,
+.table-sm > tbody > tr > td {
+  padding-top: var(--hiscare-table-sm-pad-y);
+  padding-bottom: var(--hiscare-table-sm-pad-y);
+  padding-left: var(--hiscare-table-sm-pad-x);
+  padding-right: var(--hiscare-table-sm-pad-x);
+}
+
+/* 4. Hover Refinado y Transiciones */
+.table-hover > tbody > tr {
+  transition: background-color 0.15s ease-in-out;
+}
+
+.table-hover > tbody > tr:hover > * {
+  background-color: var(--hiscare-table-hover-bg) !important;
+}
+
+/* 5. Contenedor de Tabla con Elevación y Borde Perimetral Sutil */
+.table-responsive {
+  width: 100% !important;
+  border-radius: var(--hiscare-radius-md);
+  border: 1px solid var(--hiscare-table-border);
+  background-color: #ffffff;
+  -webkit-overflow-scrolling: touch;
+}
+
+.dt-container {
+  width: 100% !important;
+}
+
+.table {
+  width: 100% !important;
+}
+
+table.dataTable thead > tr > th.dt-orderable-asc,
+table.dataTable thead > tr > th.dt-orderable-desc,
+table.dataTable thead > tr > th.dt-ordering-asc,
+table.dataTable thead > tr > th.dt-ordering-desc {
+  padding-right: 2.15rem !important;
+}
+
+table.dataTable thead > tr > th[data-orderable="false"] {
+  padding-right: var(--hiscare-table-th-pad-x, 1rem) !important;
+}
+
+/* En tablas contenidas dentro de tarjetas sin marco interno */
+.card .table-responsive.border-0 {
+  border: none !important;
+  border-radius: 0;
+}
+
+/* 6. Utilidades Semánticas de Celdas y Columnas Clave */
+.cell-time,
+.col-hora,
+th[data-trace*="Hora"],
+td.cell-time {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+.cell-actions,
+.col-accion,
+.col-acciones,
+th[data-trace*="Accion"],
+th[data-trace*="Acción"],
+td[data-trace*="Accion"],
+td[data-trace*="Acción"] {
+  white-space: nowrap;
+  text-align: right;
+}
+
+.col-estado,
+th[data-trace*="Estado"],
+td:has(> .badge) {
+  white-space: nowrap;
+}
+
+.table-nowrap th,
+.table-nowrap td {
+  white-space: nowrap;
+}
+
+/* ==========================================================================
+   HISCARE UI — Componentes Especializados para Agenda Médica (/agenda)
+   Diferenciación visual entre Grilla Principal y Monitor de Sala de Espera
+   ========================================================================== */
+
+/* Tarjeta Principal de Citas: Acento Clínico Institucional (Azul) */
+.card-agenda-citas {
+  border: 1px solid var(--hiscare-border-color) !important;
+  border-top: 4px solid var(--hiscare-primary-solid, #2563eb) !important;
+  border-radius: var(--hiscare-radius-lg) !important;
+  box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.05), 0 2px 4px -2px rgba(15, 23, 42, 0.04);
+  background-color: #ffffff;
+  overflow: hidden;
+  transition: box-shadow 0.2s ease;
+}
+
+.card-agenda-citas:hover {
+  box-shadow: 0 10px 15px -3px rgba(15, 23, 42, 0.08), 0 4px 6px -2px rgba(15, 23, 42, 0.04);
+}
+
+.card-agenda-citas .card-header {
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  border-bottom: 1px solid var(--hiscare-border-color);
+  padding: 1rem 1.25rem;
+}
+
+.card-agenda-citas .agenda-badge-count {
+  font-size: 0.75rem;
+  padding: 0.35rem 0.75rem;
+  font-weight: 600;
+  border-radius: 9999px;
+  background-color: var(--hiscare-primary-subtle);
+  color: var(--hiscare-primary-dark);
+  border: 1px solid var(--hiscare-primary-border);
+}
+
+/* Monitor de Sala de Espera: Acento de Recepción / Alerta en Vivo (Naranja Clínico) */
+.card-agenda-sala {
+  border: 1px solid var(--hiscare-estado-ensala-subtle-border, #fdba74) !important;
+  border-top: 4px solid var(--hiscare-estado-ensala-bg, #c2410c) !important;
+  border-radius: var(--hiscare-radius-lg) !important;
+  box-shadow: 0 4px 12px -2px rgba(194, 65, 12, 0.12), 0 2px 4px -1px rgba(15, 23, 42, 0.04);
+  background-color: #ffffff;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.card-agenda-sala .card-header {
+  background: linear-gradient(180deg, #fff7ed 0%, #ffedd5 100%);
+  border-bottom: 1px solid #fed7aa;
+  padding: 1rem 1.25rem;
+}
+
+/* Badge con Pulso Activo de Monitor en Tiempo Real */
+.badge-live-pulse {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background-color: var(--hiscare-estado-ensala-bg, #c2410c) !important;
+  color: #ffffff !important;
+  font-weight: 700;
+  font-size: 0.75rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 9999px;
+  box-shadow: 0 1px 3px rgba(194, 65, 12, 0.3);
+  letter-spacing: 0.02em;
+}
+
+.badge-live-pulse::before {
+  content: "";
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: #ffffff;
+  animation: pulse-dot 1.8s infinite;
+}
+
+@keyframes pulse-dot {
+  0% { transform: scale(0.9); opacity: 0.7; }
+  50% { transform: scale(1.3); opacity: 1; }
+  100% { transform: scale(0.9); opacity: 0.7; }
+}
+
+/* Footer Desacoplado de Sala de Espera para Eliminar Sobrecarga */
+.card-agenda-sala .card-footer {
+  background-color: #f8fafc;
+  border-top: 1px solid var(--hiscare-border-color);
+  padding: 1rem 1.25rem;
+  margin-top: auto;
+}
+
+/* Píldoras Semafóricas de Tiempos de Espera */
+.badge-espera-normal {
+  background-color: #ecfdf5 !important;
+  color: #065f46 !important;
+  border: 1px solid #a7f3d0 !important;
+  font-weight: 600;
+  font-size: 0.75rem;
+}
+
+.badge-espera-moderada {
+  background-color: #fff7ed !important;
+  color: #9a3412 !important;
+  border: 1px solid #fdba74 !important;
+  font-weight: 600;
+  font-size: 0.75rem;
+}
+
+.badge-espera-urgente {
+  background-color: #fef2f2 !important;
+  color: #991b1b !important;
+  border: 1px solid #fecaca !important;
+  font-weight: 700;
+  font-size: 0.75rem;
+  animation: pulse-subtle 2s infinite;
+}
+
+@keyframes pulse-subtle {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.85; }
+}
+
+/* Resalte de hora en agenda */
+.agenda-hora-pill {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: #1e293b;
+  background-color: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  padding: 0.2rem 0.55rem;
+  border-radius: 0.375rem;
+  display: inline-block;
+}
+
+/* ==========================================================================
+   12. SISTEMA DE RESPONSIVIDAD MÓVIL Y ADAPTABILIDAD TOUCH (WCAG 2.1 AA)
+   Soporte Completo para Smartphones y Tablets (320px hasta 991px)
+   ========================================================================== */
+
+/* --- Layout Shell Mobile & Cajón Lateral (Drawer / Offcanvas) --- */
+@media (max-width: 991.98px) {
+  /* Transformación del Sidebar fijo a Cajón Lateral Deslizante */
+  .sidebar {
+    position: fixed !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    width: var(--hiscare-drawer-width) !important;
+    max-width: var(--hiscare-drawer-max-w) !important;
+    height: 100vh !important;
+    z-index: var(--hiscare-drawer-zindex) !important;
+    transform: translateX(-100%) !important;
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease !important;
+    box-shadow: none !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  /* Estado Abierto del Drawer */
+  .sidebar.show,
+  .sidebar.is-open,
+  .sidebar.active,
+  .sidebar.sidebar-open {
+    transform: translateX(0) !important;
+    box-shadow: 0 0 32px rgba(0, 0, 0, 0.6) !important;
+  }
+
+  /* Bloquear scroll del fondo cuando el drawer móvil está desplegado */
+  body.sidebar-active {
+    overflow: hidden !important;
+  }
+
+  /* Backdrop Oscuro con Desenfoque (Blur) */
+  .sidebar-backdrop {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(15, 23, 42, 0.65);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: var(--hiscare-backdrop-zindex);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease-in-out;
+  }
+
+  .sidebar-backdrop.active,
+  .sidebar-backdrop.show {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* Botón Hamburguesa en Topbar: Touch Target >= 44px */
+  .btn-sidebar-toggler,
+  #btnMenuMobile,
+  #btnToggleSidebar {
+    min-width: var(--hiscare-touch-target-min) !important;
+    min-height: var(--hiscare-touch-target-min) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    color: var(--hiscare-text-secondary);
+    background-color: transparent;
+    border: 1px solid var(--hiscare-border-color);
+    border-radius: var(--hiscare-radius-md);
+    padding: 0.5rem;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+  }
+
+  .btn-sidebar-toggler:hover,
+  .btn-sidebar-toggler:focus-visible,
+  #btnMenuMobile:hover,
+  #btnMenuMobile:focus-visible,
+  #btnToggleSidebar:hover,
+  #btnToggleSidebar:focus-visible {
+    background-color: var(--hiscare-surface-subtle);
+    color: var(--hiscare-text-main);
+  }
+
+  /* Botón de Cierre 'X' en Encabezado de Drawer */
+  .btn-sidebar-close,
+  #btnCerrarSidebar {
+    min-width: var(--hiscare-touch-target-min) !important;
+    min-height: var(--hiscare-touch-target-min) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  /* Enlaces de Menú Móvil con Altura Táctil Ergonómica */
+  .sidebar-link {
+    min-height: var(--hiscare-touch-target-min);
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1rem !important;
+  }
+}
+
+/* En Desktop (>= 992px), configuración del Sidebar estático y colapsable */
+@media (min-width: 992px) {
+  .sidebar-backdrop {
+    display: none !important;
+  }
+  .btn-sidebar-toggler,
+  #btnMenuMobile {
+    display: none !important;
+  }
+  #btnToggleSidebar {
+    display: inline-flex !important;
+  }
+  #btnCerrarSidebar {
+    display: inline-flex !important;
+  }
+
+  .sidebar,
+  #sidebarMenu {
+    position: sticky !important;
+    top: 0 !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    overflow-y: auto !important;
+    flex-shrink: 0 !important;
+    width: 260px;
+    transition: width 0.28s cubic-bezier(0.16, 1, 0.3, 1), margin-left 0.28s cubic-bezier(0.16, 1, 0.3, 1), transform 0.28s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  }
+
+  .main-wrapper {
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: var(--z-topbar, 1020);
+  }
+
+  body.sidebar-collapsed .sidebar,
+  body.sidebar-collapsed #sidebarMenu {
+    margin-left: -260px !important;
+    width: 260px !important;
+    pointer-events: none;
+  }
+}
+
+/* --- Topbar Móvil y Reorganización de Elementos (< 768px y < 576px) --- */
+@media (max-width: 767.98px) {
+  .topbar {
+    height: auto !important;
+    min-height: var(--hiscare-mobile-topbar-h) !important;
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+  }
+
+  .search-global-wrapper {
+    max-width: 100% !important;
+    margin-right: 0.5rem !important;
+  }
+
+  /* Input con font-size: 16px para evitar auto-zoom molesto en iOS Safari */
+  .search-global-wrapper input[type="search"] {
+    font-size: 16px !important;
+  }
+
+  /* Dropdown de búsqueda adaptado al ancho completo de la pantalla móvil */
+  #buscarDropdown {
+    position: fixed !important;
+    top: 56px !important;
+    left: 8px !important;
+    right: 8px !important;
+    width: auto !important;
+    max-width: calc(100vw - 16px) !important;
+    max-height: 70vh !important;
+    z-index: var(--z-popover, 1060) !important;
+  }
+
+  /* Dropdown de Notificaciones fijado en viewport móvil */
+  #contenedorNotificaciones .dropdown-menu,
+  #menuNotificaciones {
+    position: fixed !important;
+    top: 58px !important;
+    left: 10px !important;
+    right: 10px !important;
+    width: auto !important;
+    max-width: calc(100vw - 20px) !important;
+    max-height: 75vh !important;
+    overflow-y: auto !important;
+    z-index: var(--z-popover, 1060) !important;
+  }
+}
+
+@media (max-width: 575.98px) {
+  .topbar {
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+  }
+
+  /* Ocultar nombre y rol en pantallas angostas para evitar colisión */
+  .topbar .user-info {
+    display: none !important;
+  }
+
+  /* Separadores visuales innecesarios en móvil estrecho */
+  .topbar .vr {
+    display: none !important;
+  }
+
+  /* Botón Salir en versión compacta táctil (solo ícono) */
+  .topbar form button[data-trace*="-14"],
+  .topbar form button[data-trace*="-15"] {
+    padding: 0.5rem !important;
+    min-width: var(--hiscare-touch-target-min) !important;
+    min-height: var(--hiscare-touch-target-min) !important;
+    border-radius: 50% !important;
+  }
+
+  .topbar form button[data-trace*="-14"] span,
+  .topbar form button[data-trace*="-15"] span {
+    display: none !important;
+  }
+}
+
+/* --- Banner del Paciente Responsivo (_banner_paciente.ejs) --- */
+@media (max-width: 767.98px) {
+  #bannerPaciente .card-body {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 0.65rem !important;
+    padding: 0.75rem !important;
+  }
+
+  /* Nombre y demográficos en flujo flexible armónico */
+  #bannerPaciente .d-flex.flex-wrap.align-items-center.gap-3:first-child {
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    gap: 0.4rem 0.6rem !important;
+    width: 100% !important;
+  }
+
+  /* Nombre del paciente fluido y multilínea si es largo */
+  #bannerPaciente .fs-5.fw-bold,
+  #bannerPaciente [data-trace*="-15"],
+  #bannerPaciente [data-trace*="-16"] {
+    width: 100% !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+    font-size: clamp(1.05rem, 4vw, 1.25rem) !important;
+    line-height: 1.3 !important;
+  }
+
+  /* Chips demográficos (doc, edad, sexo) */
+  #bannerPaciente .text-secondary.small,
+  #bannerPaciente [data-trace*="-16"],
+  #bannerPaciente [data-trace*="-17"] {
+    white-space: normal !important;
+  }
+
+  #bannerPaciente .badge-triage {
+    max-width: 100% !important;
+    white-space: normal !important;
+  }
+
+  /* Alerta Crítica de Alergias: Ancho 100% sin truncar texto vital */
+  .banner-alergias-badge,
+  #bannerAlergias {
+    width: 100% !important;
+    max-width: 100% !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+    text-overflow: unset !important;
+    display: flex !important;
+    padding: 0.45rem 0.7rem !important;
+  }
+
+  .banner-alergias-badge .text-truncate,
+  #bannerAlergias .text-truncate {
+    white-space: normal !important;
+    text-overflow: unset !important;
+    overflow: visible !important;
+  }
+
+  /* Bloque de Código de Atención y Estado al pie del banner */
+  #bannerPaciente .ms-auto {
+    margin-left: 0 !important;
+    width: 100% !important;
+    border-top: 1px solid var(--hiscare-border-color) !important;
+    padding-top: 0.5rem !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+  }
+}
+
+/* --- Pestañas de Atención Clínica (_tabs_atencion.ejs) con Scroll Suave --- */
+#tabsAtencion {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  -webkit-overflow-scrolling: touch !important;
+  scroll-behavior: smooth !important;
+  scroll-snap-type: x proximity !important;
+  scrollbar-width: thin !important;
+  padding-bottom: 4px !important;
+}
+
+#tabsAtencion::-webkit-scrollbar {
+  height: 4px;
+}
+
+#tabsAtencion::-webkit-scrollbar-thumb {
+  background-color: var(--hiscare-border-strong, #cbd5e1);
+  border-radius: 4px;
+}
+
+#tabsAtencion .nav-item {
+  scroll-snap-align: start !important;
+  flex-shrink: 0 !important;
+}
+
+#tabsAtencion .nav-link {
+  min-height: var(--hiscare-touch-target-min, 44px) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0.6rem 1rem !important;
+  font-size: 0.875rem !important;
+  white-space: nowrap !important;
+  transition: background-color var(--hiscare-transition-fast),
+              color var(--hiscare-transition-fast),
+              border-color var(--hiscare-transition-fast),
+              box-shadow var(--hiscare-transition-fast);
+}
+
+/* --- Contenedor Principal, Grillas y Tarjetas en Móvil --- */
+@media (max-width: 575.98px) {
+  #contenidoPrincipal {
+    padding: 0.75rem !important;
+  }
+
+  .dashboard-container {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  /* KPIs del Dashboard en 2 columnas en móvil */
+  .dashboard-container .row > [class*="col-"] {
+    flex: 0 0 auto;
+    width: 50% !important;
+  }
+
+  .kpi-card {
+    padding: 0.85rem !important;
+  }
+
+  .kpi-label {
+    font-size: 0.72rem !important;
+  }
+
+  .kpi-value {
+    font-size: clamp(1.4rem, 4.5vw, 1.85rem) !important;
+  }
+
+  /* Controles y campos de formulario táctiles */
+  .form-control,
+  .form-select,
+  .btn {
+    min-height: var(--hiscare-touch-target-min);
+  }
+
+  /* Modales y Diálogos en Pantalla Completa Móvil */
+  .modal-dialog {
+    margin: 0.5rem !important;
+    max-width: calc(100% - 1rem) !important;
+  }
+}
+
+/* --- Tablas Clínicas Móviles con Scroll Suave --- */
+.table-responsive {
+  -webkit-overflow-scrolling: touch !important;
+  position: relative !important;
+  border-radius: var(--hiscare-radius-md) !important;
+  scrollbar-width: thin !important;
+}
+
+@media (max-width: 767.98px) {
+  .table-responsive .table {
+    min-width: 580px; /* Asegura que la tabla no se colapse ilegiblemente */
+  }
+
+  .table-responsive .table th,
+  .table-responsive .table td {
+    padding: 0.5rem 0.65rem !important;
+    font-size: 0.85rem !important;
+    white-space: nowrap;
+  }
+
+  .table-responsive .table td.text-wrap-mobile {
+    white-space: normal !important;
+  }
+}
+
+/* --- Touch Targets Ergonómicos (WCAG 2.1 Criterio 2.5.5 / 2.5.8 >= 44x44px) --- */
+@media (max-width: 991.98px) {
+  .sidebar-link {
+    min-height: 44px !important;
+  }
+
+  #btnToggleSidebar,
+  #btnCerrarSidebar,
+  #btnCampana {
+    min-width: 44px !important;
+    min-height: 44px !important;
+  }
+
+  .pagination .page-link {
+    min-width: 44px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .btn-sm.btn-accion-estado,
+  .btn-sm.btn-iniciar-atencion {
+    min-height: 38px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Tarjetas clínicas con radio armónico adaptativo */
+  .card {
+    border-radius: var(--hiscare-radius-md, 0.5rem);
+  }
+}
+
+/* ==========================================================================
+   13. BOTÓN DE CAMBIO DE TEMA EN TOPBAR (#btnToggleTheme)
+   ========================================================================== */
+#btnToggleTheme,
+.topbar-theme-btn {
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  border: 1px solid var(--hiscare-border-color, #cbd5e1);
+  background: #ffffff;
+  color: #475569;
+  border-radius: 50%;
+  transition: background-color var(--hiscare-transition-fast),
+              border-color var(--hiscare-transition-fast),
+              color var(--hiscare-transition-fast),
+              box-shadow var(--hiscare-transition-fast),
+              transform var(--hiscare-transition-fast);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+#btnToggleTheme:hover,
+.topbar-theme-btn:hover {
+  background: #f8fafc;
+  border-color: #94a3b8;
+  color: #0f172a;
+  transform: translate3d(0, -1px, 0);
+}
+
+#btnToggleTheme:focus-visible,
+.topbar-theme-btn:focus-visible {
+  outline: 3px solid var(--hiscare-focus-ring) !important;
+  outline-offset: var(--hiscare-focus-offset, 2px) !important;
+  border-color: var(--hiscare-focus-ring);
+}
+
+@media (max-width: 991.98px) {
+  #btnToggleTheme,
+  .topbar-theme-btn {
+    min-width: 44px !important;
+    min-height: 44px !important;
+  }
+}
+
+/* ==========================================================================
+   14. MODO OSCURO CLÍNICO COMPLETO ([data-bs-theme="dark"])
+   Estética nocturna hospitalaria alineada al portal de autenticación (#070d19 -> #1e293b)
+   ========================================================================== */
+[data-bs-theme="dark"] body,
+[data-bs-theme="dark"] body.bg-light {
+  background-color: #070d19 !important;
+  background-image: var(--hiscare-canvas-pattern) !important;
+  background-attachment: fixed;
+  color: var(--hiscare-text-main, #f1f5f9) !important;
+}
+
+[data-bs-theme="dark"] .main-wrapper {
+  background: transparent !important;
+  color: var(--hiscare-text-main, #f1f5f9);
+}
+
+/* Scrollbars oscuros */
+[data-bs-theme="dark"] ::-webkit-scrollbar-thumb,
+[data-bs-theme="dark"] .lista-antecedentes::-webkit-scrollbar-thumb,
+[data-bs-theme="dark"] #tabsAtencion::-webkit-scrollbar-thumb,
+[data-bs-theme="dark"] #cardMovimientos .table-responsive::-webkit-scrollbar-thumb,
+[data-bs-theme="dark"] .table-responsive:has(#tablaAuditoria)::-webkit-scrollbar-thumb {
+  background-color: #334155;
+}
+
+[data-bs-theme="dark"] ::-webkit-scrollbar-thumb:hover,
+[data-bs-theme="dark"] .lista-antecedentes::-webkit-scrollbar-thumb:hover,
+[data-bs-theme="dark"] #cardMovimientos .table-responsive::-webkit-scrollbar-thumb:hover {
+  background-color: #475569;
+}
+
+[data-bs-theme="dark"] .lista-antecedentes,
+[data-bs-theme="dark"] #cardMovimientos .table-responsive,
+[data-bs-theme="dark"] .table-responsive:has(#tablaAuditoria) {
+  scrollbar-color: #334155 transparent;
+}
+
+/* Foco accesible en modo oscuro */
+[data-bs-theme="dark"] :focus-visible,
+[data-bs-theme="dark"] button:focus-visible,
+[data-bs-theme="dark"] a:focus-visible,
+[data-bs-theme="dark"] input:focus-visible,
+[data-bs-theme="dark"] select:focus-visible,
+[data-bs-theme="dark"] textarea:focus-visible,
+[data-bs-theme="dark"] [tabindex]:focus-visible {
+  outline: 3px solid var(--hiscare-focus-ring, #38bdf8) !important;
+  outline-offset: var(--hiscare-focus-offset, 2px) !important;
+}
+
+/* Utilidades Bootstrap adaptadas en modo oscuro */
+[data-theme="dark"] .bg-white,
+[data-bs-theme="dark"] .bg-white {
+  background-color: var(--hiscare-surface-1, #0d182d) !important;
+  color: var(--hiscare-text-main, #f1f5f9);
+}
+
+[data-theme="dark"] .bg-light,
+[data-bs-theme="dark"] .bg-light {
+  background-color: var(--hiscare-surface-2, #13213b) !important;
+  color: var(--hiscare-text-main, #f1f5f9);
+}
+
+[data-theme="dark"] .text-dark,
+[data-bs-theme="dark"] .text-dark {
+  color: var(--hiscare-text-main, #f1f5f9) !important;
+}
+
+[data-theme="dark"] .text-secondary,
+[data-bs-theme="dark"] .text-secondary {
+  color: var(--hiscare-text-secondary, #cbd5e1) !important;
+}
+
+[data-theme="dark"] .text-muted,
+[data-bs-theme="dark"] .text-muted,
+[data-theme="dark"] .text-body-secondary,
+[data-bs-theme="dark"] .text-body-secondary {
+  color: var(--hiscare-text-muted, #94a3b8) !important;
+}
+
+[data-theme="dark"] .bg-purple,
+[data-bs-theme="dark"] .bg-purple {
+  background-color: var(--hiscare-violet-solid, #7c3aed) !important;
+  color: var(--hiscare-violet-on-solid, #ffffff) !important;
+}
+
+[data-bs-theme="dark"] .border,
+[data-bs-theme="dark"] .border-top,
+[data-bs-theme="dark"] .border-bottom,
+[data-bs-theme="dark"] .border-start,
+[data-bs-theme="dark"] .border-end {
+  border-color: var(--hiscare-border-color, rgba(148, 163, 184, 0.18)) !important;
+}
+
+[data-bs-theme="dark"] .vr {
+  color: rgba(148, 163, 184, 0.3) !important;
+}
+
+[data-bs-theme="dark"] .btn-light {
+  background: linear-gradient(180deg, #162033 0%, #0f172a 100%) !important;
+  border-color: rgba(148, 163, 184, 0.24) !important;
+  color: #f1f5f9 !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 1px 3px rgba(2, 6, 23, 0.45) !important;
+}
+
+[data-bs-theme="dark"] .btn-light:hover:not(:disabled),
+[data-bs-theme="dark"] .btn-light:focus-visible:not(:disabled) {
+  background: #1e293b !important;
+  border-color: rgba(148, 163, 184, 0.4) !important;
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .btn-outline-secondary,
+[data-bs-theme="dark"] .btn-outline-secondary {
+  color: #cbd5e1 !important;
+  border-color: rgba(148, 163, 184, 0.35) !important;
+}
+
+[data-theme="dark"] .btn-outline-secondary:hover:not(:disabled),
+[data-bs-theme="dark"] .btn-outline-secondary:hover:not(:disabled) {
+  background-color: var(--hiscare-surface-3, #1b2b48) !important;
+  border-color: #94a3b8 !important;
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .btn-outline-dark,
+[data-bs-theme="dark"] .btn-outline-dark {
+  color: #e2e8f0 !important;
+  border-color: rgba(148, 163, 184, 0.42) !important;
+}
+
+[data-theme="dark"] .btn-outline-dark:hover:not(:disabled),
+[data-bs-theme="dark"] .btn-outline-dark:hover:not(:disabled) {
+  background-color: var(--hiscare-surface-3, #1b2b48) !important;
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .btn-outline-light,
+[data-bs-theme="dark"] .btn-outline-light {
+  color: #e2e8f0 !important;
+  border-color: rgba(226, 232, 240, 0.35) !important;
+}
+
+[data-theme="dark"] .btn-outline-light:hover:not(:disabled),
+[data-bs-theme="dark"] .btn-outline-light:hover:not(:disabled) {
+  background-color: var(--hiscare-surface-3, #1b2b48) !important;
+  border-color: #e2e8f0 !important;
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .btn-outline-danger,
+[data-bs-theme="dark"] .btn-outline-danger {
+  color: var(--hiscare-danger-text, #fca5a5) !important;
+  border-color: rgba(248, 113, 113, 0.5) !important;
+}
+
+[data-theme="dark"] .btn-outline-danger:hover:not(:disabled),
+[data-bs-theme="dark"] .btn-outline-danger:hover:not(:disabled) {
+  background-color: var(--hiscare-danger-solid, #dc2626) !important;
+  border-color: var(--hiscare-danger-solid, #dc2626) !important;
+  color: var(--hiscare-danger-on-solid, #ffffff) !important;
+}
+
+[data-theme="dark"] .btn-outline-success,
+[data-bs-theme="dark"] .btn-outline-success {
+  color: var(--hiscare-success-text, #86efac) !important;
+  border-color: rgba(74, 222, 128, 0.45) !important;
+}
+
+[data-theme="dark"] .btn-outline-success:hover:not(:disabled),
+[data-bs-theme="dark"] .btn-outline-success:hover:not(:disabled) {
+  background-color: var(--hiscare-success-solid, #15803d) !important;
+  border-color: var(--hiscare-success-solid, #15803d) !important;
+  color: var(--hiscare-success-on-solid, #ffffff) !important;
+}
+
+[data-theme="dark"] .btn-outline-warning,
+[data-bs-theme="dark"] .btn-outline-warning {
+  color: var(--hiscare-warning-text, #fcd34d) !important;
+  border-color: rgba(251, 191, 36, 0.5) !important;
+}
+
+[data-theme="dark"] .btn-outline-warning:hover:not(:disabled),
+[data-bs-theme="dark"] .btn-outline-warning:hover:not(:disabled) {
+  background-color: var(--hiscare-warning-solid, #f59e0b) !important;
+  border-color: var(--hiscare-warning-solid, #f59e0b) !important;
+  color: var(--hiscare-warning-on-solid, #1c1003) !important;
+}
+
+[data-theme="dark"] .btn-outline-info,
+[data-bs-theme="dark"] .btn-outline-info {
+  color: var(--hiscare-info-text, #7dd3fc) !important;
+  border-color: rgba(56, 189, 248, 0.48) !important;
+}
+
+[data-theme="dark"] .btn-outline-info:hover:not(:disabled),
+[data-bs-theme="dark"] .btn-outline-info:hover:not(:disabled) {
+  background-color: var(--hiscare-info-solid, #0284c7) !important;
+  border-color: var(--hiscare-info-solid, #0284c7) !important;
+  color: var(--hiscare-info-on-solid, #ffffff) !important;
+}
+
+[data-bs-theme="dark"] .btn-primary {
+  background: #2563eb !important;
+  background-color: #2563eb !important;
+  border-color: #3b82f6 !important;
+  color: #ffffff !important;
+}
+
+[data-bs-theme="dark"] .btn-primary:hover:not(:disabled),
+[data-bs-theme="dark"] .btn-primary:focus-visible:not(:disabled) {
+  background: #1d4ed8 !important;
+  background-color: #1d4ed8 !important;
+  border-color: #60a5fa !important;
+  color: #ffffff !important;
+}
+
+[data-bs-theme="dark"] .btn-primary:active:not(:disabled) {
+  background: #1e40af !important;
+  background-color: #1e40af !important;
+  color: #ffffff !important;
+}
+
+[data-bs-theme="dark"] .btn-outline-primary {
+  background-color: transparent !important;
+  color: #93c5fd !important;
+  border-color: #3b82f6 !important;
+}
+
+[data-bs-theme="dark"] .btn-outline-primary:hover:not(:disabled),
+[data-bs-theme="dark"] .btn-outline-primary:focus-visible:not(:disabled) {
+  background-color: rgba(37, 99, 235, 0.22) !important;
+  border-color: #60a5fa !important;
+  color: #ffffff !important;
+}
+
+/* Topbar, Buscador y Notificaciones */
+[data-bs-theme="dark"] .topbar,
+[data-bs-theme="dark"] .topbar.bg-white {
+  background: var(--hiscare-topbar-bg, rgba(11, 21, 40, 0.86)) !important;
+  background-color: var(--hiscare-topbar-bg, rgba(11, 21, 40, 0.86)) !important;
+  border-bottom: 1px solid var(--hiscare-topbar-border, rgba(148, 163, 184, 0.16)) !important;
+  box-shadow: var(--hiscare-topbar-shadow) !important;
+}
+
+[data-bs-theme="dark"] #btnToggleSidebar,
+[data-bs-theme="dark"] #btnCampana,
+[data-bs-theme="dark"] #btnToggleTheme,
+[data-bs-theme="dark"] .topbar-theme-btn {
+  background: #162033 !important;
+  background-color: #162033 !important;
+  border-color: rgba(148, 163, 184, 0.24) !important;
+  color: #cbd5e1 !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+}
+
+[data-bs-theme="dark"] #btnToggleSidebar:hover,
+[data-bs-theme="dark"] #btnCampana:hover,
+[data-bs-theme="dark"] #btnToggleTheme:hover,
+[data-bs-theme="dark"] .topbar-theme-btn:hover {
+  background: #1e293b !important;
+  background-color: #1e293b !important;
+  border-color: rgba(56, 189, 248, 0.45) !important;
+  color: #f8fafc !important;
+}
+
+[data-bs-theme="dark"] #btnToggleTheme,
+[data-bs-theme="dark"] .topbar-theme-btn {
+  color: #fbbf24 !important;
+}
+
+[data-bs-theme="dark"] #btnToggleTheme [data-theme-icon="moon"] { display: none !important; }
+[data-bs-theme="dark"] #btnToggleTheme [data-theme-icon="sun"]  { display: inline-block !important; }
+
+[data-bs-theme="dark"] #notifCount {
+  border-color: #0b1528 !important;
+}
+
+[data-bs-theme="dark"] .search-global-wrapper .input-group {
+  background: #0f172a !important;
+  border-color: rgba(148, 163, 184, 0.24) !important;
+  box-shadow: inset 0 1px 2px rgba(2, 6, 23, 0.45);
+}
+
+[data-bs-theme="dark"] .search-global-wrapper .input-group:focus-within {
+  background: #0f172a !important;
+  border-color: #38bdf8 !important;
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.22), 0 4px 12px rgba(2, 6, 23, 0.45) !important;
+}
+
+[data-bs-theme="dark"] #search-addon,
+[data-bs-theme="dark"] .search-global-wrapper .input-group-text {
+  background: transparent !important;
+  background-color: transparent !important;
+  color: #94a3b8 !important;
+  border-color: transparent !important;
+}
+
+[data-bs-theme="dark"] #buscarGlobal,
+[data-bs-theme="dark"] .search-global-wrapper input[type="search"] {
+  background: transparent !important;
+  background-color: transparent !important;
+  color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] #buscarGlobal::placeholder,
+[data-theme="dark"] .search-global-wrapper input[type="search"]::placeholder,
+[data-bs-theme="dark"] #buscarGlobal::placeholder,
+[data-bs-theme="dark"] .search-global-wrapper input[type="search"]::placeholder {
+  color: var(--hiscare-text-placeholder, #94a3b8) !important;
+  opacity: 1;
+}
+
+[data-bs-theme="dark"] #buscarDropdown {
+  background-color: #0f172a !important;
+  border: 1px solid rgba(148, 163, 184, 0.22) !important;
+  box-shadow: var(--hiscare-elevation-4) !important;
+}
+
+[data-bs-theme="dark"] .search-result-item {
+  color: #f1f5f9 !important;
+}
+
+[data-bs-theme="dark"] .search-result-item:hover,
+[data-bs-theme="dark"] .search-result-item:focus {
+  background-color: #1e293b !important;
+  color: #ffffff !important;
+}
+
+[data-bs-theme="dark"] .search-result-item.active {
+  background-color: rgba(37, 99, 235, 0.22) !important;
+  border-left-color: #38bdf8 !important;
+}
+
+[data-bs-theme="dark"] .user-avatar {
+  border-color: rgba(148, 163, 184, 0.3) !important;
+  box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.25), 0 2px 8px rgba(2, 6, 23, 0.5) !important;
+}
+
+[data-bs-theme="dark"] .user-info .user-name,
+[data-bs-theme="dark"] .user-name {
+  color: #f1f5f9 !important;
+}
+
+[data-bs-theme="dark"] .user-info .user-role {
+  color: #94a3b8 !important;
+}
+
+[data-bs-theme="dark"] #dropdownNotificaciones {
+  background-color: #0b1528 !important;
+  border: 1px solid rgba(148, 163, 184, 0.22) !important;
+  box-shadow: var(--hiscare-elevation-4) !important;
+}
+
+[data-bs-theme="dark"] #dropdownNotificaciones .bg-light,
+[data-bs-theme="dark"] #dropdownNotificaciones .bg-white {
+  background-color: #0f172a !important;
+}
+
+[data-bs-theme="dark"] .notif-item {
+  background-color: #0b1528 !important;
+  color: #f1f5f9 !important;
+  border-color: rgba(148, 163, 184, 0.14) !important;
+}
+
+[data-bs-theme="dark"] .notif-item:hover {
+  background-color: #162033 !important;
+}
+
+[data-bs-theme="dark"] .notif-item.no-leida {
+  background-color: #0f172a !important;
+  border-left-color: #38bdf8 !important;
+}
+
+[data-bs-theme="dark"] .notif-item.prioridad-critica.no-leida {
+  background-color: rgba(185, 28, 28, 0.18) !important;
+  border-left-color: #f87171 !important;
+}
+
+/* Tarjetas, List Groups, KPIs, Agenda y Accesos Rápidos */
+[data-bs-theme="dark"] .card {
+  background-color: var(--hiscare-surface-1, #0b1528) !important;
+  border-color: var(--hiscare-border-color, rgba(148, 163, 184, 0.18)) !important;
+  box-shadow: var(--hiscare-elevation-1);
+}
+
+[data-bs-theme="dark"] .card::before {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.01) 100%);
+}
+
+[data-bs-theme="dark"] .card-header {
+  background: linear-gradient(180deg, #0f172a 0%, #0b1528 100%) !important;
+  border-bottom-color: var(--hiscare-border-color, rgba(148, 163, 184, 0.18)) !important;
+  color: var(--hiscare-text-main, #f1f5f9) !important;
+}
+
+[data-bs-theme="dark"] .card-header .card-title,
+[data-bs-theme="dark"] .card-header h5,
+[data-bs-theme="dark"] .card-header h6 {
+  color: var(--hiscare-text-main, #f1f5f9) !important;
+}
+
+[data-bs-theme="dark"] .card-header .card-title svg,
+[data-bs-theme="dark"] .card-header h5 svg,
+[data-bs-theme="dark"] .card-header h6 svg {
+  color: #60a5fa;
+}
+
+[data-bs-theme="dark"] .card-body {
+  color: var(--hiscare-text-main, #f1f5f9);
+}
+
+[data-bs-theme="dark"] .card-footer {
+  background-color: var(--hiscare-surface-2, #0f172a) !important;
+  border-top-color: var(--hiscare-border-color, rgba(148, 163, 184, 0.18)) !important;
+  color: var(--hiscare-text-secondary, #cbd5e1);
+}
+
+[data-bs-theme="dark"] .list-group-item {
+  background-color: var(--hiscare-surface-1, #0b1528);
+  border-color: var(--hiscare-border-color, rgba(148, 163, 184, 0.16));
+  color: var(--hiscare-text-main, #f1f5f9);
+}
+
+[data-bs-theme="dark"] .list-group-item-action:hover,
+[data-bs-theme="dark"] .list-group-item-action:focus {
+  background-color: var(--hiscare-surface-3, #162033);
+  color: #ffffff;
+}
+
+[data-bs-theme="dark"] #tituloJornada {
+  color: #f8fafc !important;
+}
+
+[data-bs-theme="dark"] #formFiltroFechaDashboard input[type="date"] {
+  background: #0f172a !important;
+  border-color: rgba(148, 163, 184, 0.25) !important;
+  color: #f1f5f9 !important;
+}
+
+[data-bs-theme="dark"] .kpi-card,
+[data-bs-theme="dark"] [data-trace="C2-17"],
+[data-bs-theme="dark"] [data-trace="C2-19"],
+[data-bs-theme="dark"] [data-trace="C2-21"],
+[data-bs-theme="dark"] [data-trace="C2-23"] {
+  background: linear-gradient(180deg, #0f172a 0%, #0b1528 100%) !important;
+  border-color: rgba(148, 163, 184, 0.18) !important;
+  box-shadow: var(--hiscare-elevation-1) !important;
+}
+
+[data-bs-theme="dark"] [data-trace="C2-17"]:hover {
+  border-color: rgba(59, 130, 246, 0.45) !important;
+  box-shadow: 0 12px 26px -4px rgba(37, 99, 235, 0.25), var(--hiscare-elevation-2) !important;
+}
+
+[data-bs-theme="dark"] [data-trace="C2-19"]:hover {
+  border-color: rgba(251, 146, 60, 0.45) !important;
+  box-shadow: 0 12px 26px -4px rgba(234, 88, 12, 0.25), var(--hiscare-elevation-2) !important;
+}
+
+[data-bs-theme="dark"] [data-trace="C2-21"]:hover {
+  border-color: rgba(6, 182, 212, 0.45) !important;
+  box-shadow: 0 12px 26px -4px rgba(6, 182, 212, 0.22), var(--hiscare-elevation-2) !important;
+}
+
+[data-bs-theme="dark"] [data-trace="C2-23"]:hover {
+  border-color: rgba(239, 68, 68, 0.45) !important;
+  box-shadow: 0 12px 26px -4px rgba(239, 68, 68, 0.22), var(--hiscare-elevation-2) !important;
+}
+
+[data-bs-theme="dark"] .kpi-label {
+  color: var(--hiscare-text-muted, #94a3b8);
+}
+
+[data-bs-theme="dark"] .kpi-value {
+  color: #f8fafc;
+}
+
+[data-bs-theme="dark"] #kpiCitasHoy { color: #60a5fa !important; }
+[data-bs-theme="dark"] #kpiEnSala { color: #fb923c !important; }
+[data-bs-theme="dark"] #kpiOrdenesPendientes { color: #22d3ee !important; }
+[data-bs-theme="dark"] #kpiAlertas { color: #f87171 !important; }
+
+[data-bs-theme="dark"] [data-trace="C2-25"] {
+  border-color: rgba(148, 163, 184, 0.18) !important;
+}
+
+[data-bs-theme="dark"] .card-agenda-citas {
+  background-color: var(--hiscare-surface-1, #0b1528) !important;
+  border-color: rgba(148, 163, 184, 0.18) !important;
+  border-top: 4px solid #3b82f6 !important;
+  box-shadow: var(--hiscare-elevation-1);
+}
+
+[data-bs-theme="dark"] .card-agenda-citas .card-header {
+  background: linear-gradient(180deg, #0f172a 0%, #0b1528 100%) !important;
+}
+
+[data-bs-theme="dark"] .card-agenda-citas .agenda-badge-count,
+[data-bs-theme="dark"] .agenda-badge-count {
+  background-color: rgba(37, 99, 235, 0.22) !important;
+  color: #93c5fd !important;
+  border-color: rgba(59, 130, 246, 0.35) !important;
+}
+
+[data-bs-theme="dark"] .card-agenda-sala {
+  background-color: var(--hiscare-surface-1, #0b1528) !important;
+  border-color: rgba(251, 146, 60, 0.35) !important;
+  border-top: 4px solid #f97316 !important;
+  box-shadow: 0 6px 18px -2px rgba(234, 88, 12, 0.16);
+}
+
+[data-bs-theme="dark"] .card-agenda-sala .card-header {
+  background: linear-gradient(180deg, rgba(234, 88, 12, 0.20) 0%, rgba(194, 65, 12, 0.12) 100%) !important;
+  border-bottom-color: rgba(251, 146, 60, 0.28) !important;
+}
+
+[data-bs-theme="dark"] .card-agenda-sala .card-footer {
+  background-color: #0f172a !important;
+  border-top-color: rgba(148, 163, 184, 0.16) !important;
+}
+
+[data-bs-theme="dark"] .agenda-hora-pill {
+  background-color: #162033 !important;
+  color: #e2e8f0 !important;
+  border-color: rgba(148, 163, 184, 0.24) !important;
+}
+
+[data-bs-theme="dark"] .badge-espera-normal {
+  background-color: rgba(21, 128, 61, 0.22) !important;
+  color: #86efac !important;
+  border-color: rgba(74, 222, 128, 0.35) !important;
+}
+
+[data-bs-theme="dark"] .badge-espera-moderada {
+  background-color: rgba(194, 65, 12, 0.22) !important;
+  color: #fdba74 !important;
+  border-color: rgba(251, 146, 60, 0.38) !important;
+}
+
+[data-bs-theme="dark"] .badge-espera-urgente {
+  background-color: rgba(185, 28, 28, 0.24) !important;
+  color: #fca5a5 !important;
+  border-color: rgba(248, 113, 113, 0.42) !important;
+}
+
+[data-bs-theme="dark"] .quick-access-panel {
+  background-color: var(--hiscare-surface-1, #0b1528) !important;
+  border-color: var(--hiscare-border-color, rgba(148, 163, 184, 0.18)) !important;
+}
+
+[data-bs-theme="dark"] .quick-access-card {
+  background-color: var(--hiscare-surface-2, #0f172a) !important;
+  border-color: rgba(148, 163, 184, 0.16) !important;
+  color: #f1f5f9 !important;
+}
+
+[data-bs-theme="dark"] .quick-access-card:hover {
+  background-color: var(--hiscare-surface-3, #162033) !important;
+  border-color: rgba(56, 189, 248, 0.45) !important;
+  color: #ffffff !important;
+}
+
+[data-bs-theme="dark"] .quick-access-title {
+  color: #f1f5f9 !important;
+}
+
+[data-bs-theme="dark"] .quick-access-desc {
+  color: #94a3b8 !important;
+}
+
+[data-bs-theme="dark"] .quick-access-arrow {
+  color: #94a3b8;
+}
+
+[data-bs-theme="dark"] .quick-access-card:hover .quick-access-arrow,
+[data-bs-theme="dark"] .quick-access-card:focus-visible .quick-access-arrow {
+  color: #38bdf8;
+}
+
+[data-bs-theme="dark"] .quick-access-icon--primary {
+  background-color: rgba(37, 99, 235, 0.20);
+  color: #93c5fd;
+  border-color: rgba(59, 130, 246, 0.35);
+}
+
+[data-bs-theme="dark"] .quick-access-icon--success {
+  background-color: rgba(21, 128, 61, 0.20);
+  color: #86efac;
+  border-color: rgba(34, 197, 94, 0.35);
+}
+
+[data-bs-theme="dark"] .quick-access-icon--info {
+  background-color: rgba(6, 182, 212, 0.18);
+  color: #67e8f9;
+  border-color: rgba(34, 211, 238, 0.35);
+}
+
+[data-bs-theme="dark"] .quick-access-icon--warning {
+  background-color: rgba(194, 65, 12, 0.20);
+  color: #fdba74;
+  border-color: rgba(251, 146, 60, 0.35);
+}
+
+[data-bs-theme="dark"] .quick-access-icon--secondary {
+  background-color: rgba(100, 116, 139, 0.22);
+  color: #cbd5e1;
+  border-color: rgba(148, 163, 184, 0.28);
+}
+
+[data-bs-theme="dark"] .quick-access-icon--dark {
+  background-color: #1e293b;
+  color: #f8fafc;
+  border-color: rgba(148, 163, 184, 0.3);
+}
+
+/* Tablas Clínicas y DataTables */
+[data-bs-theme="dark"] .table {
+  --bs-table-color: #f1f5f9;
+  --bs-table-bg: transparent;
+  --bs-table-border-color: var(--hiscare-table-border);
+  --bs-table-striped-bg: rgba(15, 23, 42, 0.55);
+  --bs-table-striped-color: #f1f5f9;
+  --bs-table-hover-bg: var(--hiscare-table-hover-bg);
+  --bs-table-hover-color: #ffffff;
+  color: #f1f5f9;
+}
+
+[data-bs-theme="dark"] .table-responsive {
+  background-color: var(--hiscare-surface-1, #0b1528) !important;
+  border-color: var(--hiscare-table-border) !important;
+}
+
+[data-bs-theme="dark"] .table thead th,
+[data-bs-theme="dark"] .table > thead > tr > th,
+[data-bs-theme="dark"] .table-light th,
+[data-bs-theme="dark"] #tablaCitasDashboard thead th,
+[data-bs-theme="dark"] #tablaMovimientos thead th,
+[data-bs-theme="dark"] #tablaAuditoria thead th {
+  background: var(--hiscare-table-th-bg, #0f172a) !important;
+  background-color: var(--hiscare-table-th-bg, #0f172a) !important;
+  color: var(--hiscare-table-th-color, #cbd5e1) !important;
+  border-bottom-color: var(--hiscare-table-th-border, rgba(148, 163, 184, 0.24)) !important;
+}
+
+[data-bs-theme="dark"] .table tbody td,
+[data-bs-theme="dark"] .table > tbody > tr > td,
+[data-bs-theme="dark"] #tablaCitasDashboard tbody td,
+[data-bs-theme="dark"] #tablaMovimientos tbody td,
+[data-bs-theme="dark"] #tablaAuditoria tbody td {
+  color: var(--hiscare-text-main, #f1f5f9) !important;
+  border-bottom-color: var(--hiscare-table-border) !important;
+}
+
+[data-bs-theme="dark"] .table-hover > tbody > tr:hover > *,
+[data-bs-theme="dark"] .clickable-row:hover,
+[data-bs-theme="dark"] #tablaCitasDashboard .clickable-row:hover,
+[data-bs-theme="dark"] #tablaMovimientos tbody tr:hover td,
+[data-bs-theme="dark"] #tablaAuditoria tbody tr:hover td {
+  background-color: rgba(30, 41, 59, 0.72) !important;
+}
+
+[data-bs-theme="dark"] #tablaCitasDashboard .clickable-row:active {
+  background-color: rgba(37, 99, 235, 0.22) !important;
+}
+
+[data-bs-theme="dark"] .dt-container,
+[data-bs-theme="dark"] .dataTables_wrapper {
+  color: #cbd5e1;
+}
+
+[data-bs-theme="dark"] .dt-container .dt-search input,
+[data-bs-theme="dark"] .dt-container .dt-input,
+[data-bs-theme="dark"] .dataTables_wrapper .dataTables_filter input,
+[data-bs-theme="dark"] .dataTables_wrapper .dataTables_length select {
+  background-color: #0f172a !important;
+  border-color: rgba(148, 163, 184, 0.25) !important;
+  color: #f1f5f9 !important;
+}
+
+[data-bs-theme="dark"] .dt-container .dt-search input:focus,
+[data-bs-theme="dark"] .dt-container .dt-input:focus {
+  border-color: #38bdf8 !important;
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.25) !important;
+}
+
+[data-bs-theme="dark"] .dt-container .dt-info,
+[data-bs-theme="dark"] .dataTables_wrapper .dataTables_info {
+  color: #94a3b8 !important;
+}
+
+[data-bs-theme="dark"] .dt-container .dt-paging .dt-paging-button,
+[data-bs-theme="dark"] .dataTables_wrapper .dataTables_paginate .paginate_button,
+[data-bs-theme="dark"] .page-link {
+  background-color: #0f172a !important;
+  border-color: rgba(148, 163, 184, 0.22) !important;
+  color: #cbd5e1 !important;
+}
+
+[data-bs-theme="dark"] .dt-container .dt-paging .dt-paging-button:hover,
+[data-bs-theme="dark"] .dataTables_wrapper .dataTables_paginate .paginate_button:hover,
+[data-bs-theme="dark"] .page-link:hover {
+  background-color: #1e293b !important;
+  border-color: rgba(56, 189, 248, 0.4) !important;
+  color: #ffffff !important;
+}
+
+[data-bs-theme="dark"] .dt-container .dt-paging .dt-paging-button.disabled,
+[data-bs-theme="dark"] .dataTables_wrapper .dataTables_paginate .paginate_button.disabled {
+  background-color: #0b1528 !important;
+  color: #64748b !important;
+}
+
+[data-bs-theme="dark"] #fichaPacienteContainer #cardMovimientos {
+  background-color: var(--hiscare-surface-1, #0b1528) !important;
+  border-color: rgba(148, 163, 184, 0.18) !important;
+}
+
+/* Formularios, Inputs, Tabs y Select2 */
+[data-bs-theme="dark"] .form-label {
+  color: #cbd5e1;
+}
+
+[data-bs-theme="dark"] .form-control,
+[data-bs-theme="dark"] .form-select {
+  background-color: #0f172a !important;
+  border-color: rgba(148, 163, 184, 0.26) !important;
+  color: #f1f5f9 !important;
+  box-shadow: inset 0 1px 2px rgba(2, 6, 23, 0.45);
+}
+
+[data-theme="dark"] .form-control::placeholder,
+[data-bs-theme="dark"] .form-control::placeholder {
+  color: var(--hiscare-text-placeholder, #94a3b8) !important;
+  opacity: 1;
+}
+
+[data-bs-theme="dark"] .form-control:focus,
+[data-bs-theme="dark"] .form-select:focus {
+  background-color: #0f172a !important;
+  border-color: #38bdf8 !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.25), inset 0 1px 2px rgba(2, 6, 23, 0.35) !important;
+}
+
+[data-bs-theme="dark"] .form-control:disabled,
+[data-bs-theme="dark"] .form-control[readonly],
+[data-bs-theme="dark"] .form-select:disabled {
+  background-color: #162033 !important;
+  color: #94a3b8 !important;
+  border-color: rgba(148, 163, 184, 0.16) !important;
+}
+
+[data-bs-theme="dark"] .input-group-text {
+  background-color: #162033 !important;
+  border-color: rgba(148, 163, 184, 0.26) !important;
+  color: #cbd5e1 !important;
+}
+
+[data-bs-theme="dark"] .invalid-feedback {
+  color: #fca5a5;
+}
+
+[data-bs-theme="dark"] .skeleton-box {
+  background: linear-gradient(90deg, #0f172a 25%, #1e293b 50%, #0f172a 75%);
+  background-size: 200% 100%;
+}
+
+[data-bs-theme="dark"] .form-check-input {
+  background-color: #0f172a;
+  border-color: #64748b;
+}
+
+[data-bs-theme="dark"] .form-check-label {
+  color: #e2e8f0;
+}
+
+[data-bs-theme="dark"] .nav-tabs {
+  border-bottom-color: rgba(148, 163, 184, 0.2);
+}
+
+[data-bs-theme="dark"] .nav-tabs .nav-link {
+  color: #94a3b8;
+}
+
+[data-bs-theme="dark"] .nav-tabs .nav-link:hover {
+  color: #f1f5f9;
+  border-color: rgba(148, 163, 184, 0.22);
+}
+
+[data-bs-theme="dark"] .nav-tabs .nav-link.active {
+  background-color: #162033 !important;
+  border-color: rgba(148, 163, 184, 0.28) rgba(148, 163, 184, 0.28) #162033 !important;
+  color: #f8fafc !important;
+}
+
+[data-bs-theme="dark"] .nav-pills:not(.sidebar-menu) {
+  background-color: #0f172a !important;
+  border-color: rgba(148, 163, 184, 0.2) !important;
+}
+
+[data-bs-theme="dark"] .nav-pills:not(.sidebar-menu) .nav-link {
+  color: #cbd5e1;
+}
+
+[data-bs-theme="dark"] .nav-pills:not(.sidebar-menu) .nav-link:hover {
+  color: #ffffff;
+}
+
+[data-bs-theme="dark"] .select2-container .select2-selection--single,
+[data-bs-theme="dark"] .select2-container--bootstrap-5 .select2-selection {
+  background-color: #0f172a !important;
+  border-color: rgba(148, 163, 184, 0.26) !important;
+  color: #f1f5f9 !important;
+}
+
+[data-bs-theme="dark"] .select2-container--bootstrap-5.select2-container--focus .select2-selection,
+[data-bs-theme="dark"] .select2-container--bootstrap-5.select2-container--open .select2-selection,
+[data-bs-theme="dark"] .select2-container--default.select2-container--focus .select2-selection--single {
+  border-color: #38bdf8 !important;
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.25) !important;
+}
+
+[data-bs-theme="dark"] .select2-container .select2-selection--single .select2-selection__rendered,
+[data-bs-theme="dark"] .select2-container--bootstrap-5 .select2-selection--single .select2-selection__rendered {
+  color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] .select2-container--bootstrap-5 .select2-selection--single .select2-selection__placeholder,
+[data-bs-theme="dark"] .select2-container--bootstrap-5 .select2-selection--single .select2-selection__placeholder {
+  color: var(--hiscare-text-placeholder, #94a3b8) !important;
+}
+
+[data-bs-theme="dark"] .select2-dropdown {
+  background: rgba(15, 23, 42, 0.98) !important;
+  border-color: rgba(148, 163, 184, 0.24) !important;
+  color: #f1f5f9 !important;
+  box-shadow: var(--hiscare-elevation-4) !important;
+}
+
+[data-bs-theme="dark"] .select2-search--dropdown .select2-search__field {
+  background-color: #0b1528 !important;
+  border-color: rgba(148, 163, 184, 0.28) !important;
+  color: #f1f5f9 !important;
+}
+
+[data-bs-theme="dark"] .select2-results__option {
+  color: #e2e8f0 !important;
+}
+
+[data-bs-theme="dark"] .select2-container--bootstrap-5 .select2-dropdown .select2-results__option--highlighted[aria-selected],
+[data-bs-theme="dark"] .select2-container--bootstrap-5 .select2-dropdown .select2-results__option[aria-selected="true"],
+[data-bs-theme="dark"] .select2-results__option--highlighted {
+  background-color: #2563eb !important;
+  color: #ffffff !important;
+}
+
+/* Modales, Dropdowns, Alertas y SweetAlert2 */
+[data-bs-theme="dark"] .modal-content,
+[data-bs-theme="dark"] #modalNuevoConsentimiento .modal-content,
+[data-bs-theme="dark"] #modalFormularioEntidad .modal-content {
+  background-color: var(--hiscare-surface-1, #0b1528) !important;
+  border-color: rgba(148, 163, 184, 0.22) !important;
+  color: #f1f5f9 !important;
+  box-shadow: var(--hiscare-elevation-5) !important;
+}
+
+[data-bs-theme="dark"] .modal-header {
+  background: linear-gradient(135deg, #0f172a 0%, #162033 100%) !important;
+  border-bottom-color: rgba(148, 163, 184, 0.18) !important;
+  color: #f8fafc !important;
+}
+
+[data-bs-theme="dark"] .modal-header .modal-title {
+  color: #f8fafc !important;
+}
+
+[data-bs-theme="dark"] .modal-body,
+[data-bs-theme="dark"] #modalNuevoConsentimiento .modal-body,
+[data-bs-theme="dark"] #modalFormularioEntidad .modal-body {
+  background-color: #0b1528 !important;
+  color: #f1f5f9 !important;
+}
+
+[data-bs-theme="dark"] .modal-footer,
+[data-bs-theme="dark"] #modalNuevoConsentimiento .modal-footer,
+[data-bs-theme="dark"] #modalFormularioEntidad .modal-footer {
+  background-color: #0f172a !important;
+  border-top-color: rgba(148, 163, 184, 0.18) !important;
+}
+
+[data-bs-theme="dark"] .btn-close {
+  filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+[data-bs-theme="dark"] .dropdown-menu {
+  background-color: #0f172a !important;
+  border-color: rgba(148, 163, 184, 0.22) !important;
+  box-shadow: var(--hiscare-elevation-4) !important;
+}
+
+[data-bs-theme="dark"] .dropdown-item {
+  color: #e2e8f0;
+}
+
+[data-bs-theme="dark"] .dropdown-item:hover,
+[data-bs-theme="dark"] .dropdown-item:focus {
+  background-color: #1e293b;
+  color: #ffffff;
+}
+
+[data-bs-theme="dark"] .dropdown-divider {
+  border-top-color: rgba(148, 163, 184, 0.16);
+}
+
+[data-theme="dark"] .alert-info,
+[data-bs-theme="dark"] .alert-info {
+  background-color: var(--hiscare-info-subtle-bg, rgba(2, 132, 199, 0.16)) !important;
+  border-color: var(--hiscare-info-subtle-border, rgba(56, 189, 248, 0.35)) !important;
+  border-left-color: var(--hiscare-info-solid, #0284c7) !important;
+  color: var(--hiscare-info-subtle-text, #bae6fd) !important;
+}
+
+[data-theme="dark"] .alert-danger,
+[data-bs-theme="dark"] .alert-danger {
+  background-color: var(--hiscare-danger-subtle-bg, rgba(220, 38, 38, 0.18)) !important;
+  border-color: var(--hiscare-danger-subtle-border, rgba(248, 113, 113, 0.38)) !important;
+  border-left-color: var(--hiscare-danger-solid, #dc2626) !important;
+  color: var(--hiscare-danger-subtle-text, #fecaca) !important;
+}
+
+[data-theme="dark"] .alert-warning,
+[data-bs-theme="dark"] .alert-warning {
+  background-color: var(--hiscare-warning-subtle-bg, rgba(194, 65, 12, 0.20)) !important;
+  border-color: var(--hiscare-warning-subtle-border, rgba(251, 146, 60, 0.38)) !important;
+  border-left-color: var(--bs-warning, #fb923c) !important;
+  color: var(--hiscare-warning-subtle-text, #fed7aa) !important;
+}
+
+[data-theme="dark"] .alert-success,
+[data-bs-theme="dark"] .alert-success {
+  background-color: var(--hiscare-success-subtle-bg, rgba(21, 128, 61, 0.18)) !important;
+  border-color: var(--hiscare-success-subtle-border, rgba(74, 222, 128, 0.35)) !important;
+  border-left-color: var(--hiscare-success-solid, #15803d) !important;
+  color: var(--hiscare-success-subtle-text, #bbf7d0) !important;
+}
+
+[data-theme="dark"] .alert-secondary,
+[data-bs-theme="dark"] .alert-secondary {
+  background-color: var(--hiscare-secondary-subtle-bg, rgba(148, 163, 184, 0.14)) !important;
+  border-color: var(--hiscare-secondary-subtle-border, rgba(148, 163, 184, 0.28)) !important;
+  border-left-color: var(--hiscare-secondary-solid, #475569) !important;
+  color: var(--hiscare-secondary-subtle-text, #e2e8f0) !important;
+}
+
+[data-theme="dark"] .alert-light,
+[data-bs-theme="dark"] .alert-light {
+  background-color: var(--hiscare-surface-2, #13213b) !important;
+  border-color: var(--hiscare-border-default, rgba(148, 163, 184, 0.24)) !important;
+  border-left-color: var(--hiscare-secondary-solid, #475569) !important;
+  color: var(--hiscare-text-main, #f1f5f9) !important;
+}
+
+[data-bs-theme="dark"] .his-unsaved-badge {
+  background-color: rgba(194, 65, 12, 0.20) !important;
+  color: #fed7aa !important;
+  border-color: rgba(251, 146, 60, 0.35) !important;
+}
+
+[data-bs-theme="dark"] .swal2-popup,
+[data-bs-theme="dark"] .swal2-popup.hiscare-swal-modal,
+[data-bs-theme="dark"] .swal2-popup.hiscare-toast-popup {
+  background-color: #0b1528 !important;
+  border: 1px solid rgba(148, 163, 184, 0.24) !important;
+  color: #f1f5f9 !important;
+  box-shadow: var(--hiscare-elevation-5) !important;
+}
+
+[data-bs-theme="dark"] .swal2-title,
+[data-bs-theme="dark"] .swal2-popup.hiscare-swal-modal .swal2-title {
+  color: #f8fafc !important;
+}
+
+[data-bs-theme="dark"] .swal2-html-container,
+[data-bs-theme="dark"] .swal2-popup.hiscare-swal-modal .swal2-html-container {
+  color: #cbd5e1 !important;
+}
+
+/* Módulos Clínicos Especializados */
+[data-bs-theme="dark"] #bannerPaciente {
+  background: var(--hiscare-surface-1, #0b1528) !important;
+  border-color: rgba(148, 163, 184, 0.2) !important;
+  box-shadow: var(--hiscare-shadow-clinical-sm);
+}
+
+[data-bs-theme="dark"] #bannerAlergias.banner-alergias-badge {
+  background: rgba(185, 28, 28, 0.24) !important;
+  color: #fca5a5 !important;
+  border-color: rgba(248, 113, 113, 0.45) !important;
+}
+
+[data-bs-theme="dark"] #tabsAtencion {
+  background: #0f172a !important;
+  border-color: rgba(148, 163, 184, 0.2) !important;
+}
+
+[data-bs-theme="dark"] #tabsAtencion .nav-link {
+  color: #cbd5e1 !important;
+}
+
+[data-bs-theme="dark"] #tabsAtencion .nav-link:hover {
+  color: #ffffff !important;
+  background: rgba(30, 41, 59, 0.85) !important;
+}
+
+[data-bs-theme="dark"] #tabsAtencion .nav-link.active {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 10px rgba(37, 99, 235, 0.4) !important;
+}
+
+[data-bs-theme="dark"] #motivo,
+[data-bs-theme="dark"] #soapPanes textarea {
+  background: #0f172a !important;
+  border-color: rgba(148, 163, 184, 0.24) !important;
+  color: #f1f5f9 !important;
+}
+
+[data-bs-theme="dark"] #motivo:focus,
+[data-bs-theme="dark"] #soapPanes textarea:focus {
+  border-color: #38bdf8 !important;
+  box-shadow: 0 0 0 3.5px rgba(56, 189, 248, 0.22) !important;
+}
+
+[data-bs-theme="dark"] #indicadorBorrador {
+  background: rgba(21, 128, 61, 0.18) !important;
+  color: #86efac !important;
+  border-color: rgba(74, 222, 128, 0.35) !important;
+}
+
+[data-bs-theme="dark"] #cardSignosVitales {
+  background: var(--hiscare-surface-1, #0b1528) !important;
+  border-color: rgba(148, 163, 184, 0.2) !important;
+}
+
+[data-bs-theme="dark"] #cardSignosVitales .form-control-sm,
+[data-bs-theme="dark"] #cardSignosVitales .input-group-sm input {
+  background: #0f172a !important;
+  border-color: rgba(148, 163, 184, 0.24) !important;
+  color: #f1f5f9 !important;
+}
+
+[data-bs-theme="dark"] #imcPrevio {
+  background: rgba(37, 99, 235, 0.22) !important;
+  color: #93c5fd !important;
+  border-color: rgba(59, 130, 246, 0.4) !important;
+}
+
+[data-bs-theme="dark"] .chip-sugerencia {
+  background-color: #162033;
+  border-color: rgba(148, 163, 184, 0.24);
+  color: #cbd5e1;
+}
+
+[data-bs-theme="dark"] .chip-sugerencia:hover {
+  background-color: rgba(37, 99, 235, 0.22);
+  border-color: #60a5fa;
+  color: #f8fafc;
+}
+
+[data-bs-theme="dark"] #soapTabs .tab-soap {
+  background: #162033;
+  border-color: rgba(148, 163, 184, 0.24);
+  color: #cbd5e1;
+}
+
+[data-bs-theme="dark"] #soapTabs .tab-soap:hover {
+  background: #1e293b;
+  border-color: #64748b;
+  color: #ffffff;
+}
+
+[data-bs-theme="dark"] #soapTabs .tab-soap.active {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+  border-color: #3b82f6 !important;
+  color: #ffffff !important;
+}
+
+[data-bs-theme="dark"] #franjaSignosVitales {
+  background: #0f172a !important;
+  border-color: rgba(148, 163, 184, 0.18) !important;
+}
+
+[data-bs-theme="dark"] #gridSignosVitales .rounded {
+  background: #162033 !important;
+  border-color: rgba(148, 163, 184, 0.18) !important;
+}
+
+[data-bs-theme="dark"] .timeline-date-col {
+  color: #94a3b8;
+}
+
+[data-bs-theme="dark"] .timeline-node {
+  border-color: #0b1528;
+}
+
+[data-bs-theme="dark"] .timeline-line {
+  background-color: #334155 !important;
+}
+
+[data-bs-theme="dark"] .timeline-card {
+  background-color: var(--hiscare-surface-1, #0b1528) !important;
+  border-color: rgba(148, 163, 184, 0.18) !important;
+  color: #f1f5f9;
+}
+
+[data-bs-theme="dark"] .timeline-card:hover {
+  border-color: rgba(56, 189, 248, 0.4) !important;
+}
+
+[data-bs-theme="dark"] .timeline-card.timeline-item-selected,
+[data-bs-theme="dark"] .timeline-item-selected {
+  background-color: rgba(234, 88, 12, 0.18) !important;
+  border-color: #fb923c !important;
+  box-shadow: 0 6px 18px rgba(234, 88, 12, 0.28) !important;
+}
+
+[data-bs-theme="dark"] .visor-workflow-bar {
+  background: var(--hiscare-surface-1, #0b1528) !important;
+  border-color: rgba(148, 163, 184, 0.18) !important;
+}
+
+[data-bs-theme="dark"] .visor-filter-group {
+  background: #0f172a !important;
+  border-color: rgba(148, 163, 184, 0.18) !important;
+}
+
+[data-bs-theme="dark"] .visor-filter-btn {
+  color: #cbd5e1;
+}
+
+[data-bs-theme="dark"] .visor-filter-btn:hover {
+  color: #ffffff;
+  background: rgba(30, 41, 59, 0.75);
+}
+
+[data-bs-theme="dark"] .visor-filter-btn.active {
+  background: #1e293b;
+  color: #38bdf8;
+}
+
+[data-bs-theme="dark"] .fila-resultado.table-active > td {
+  background-color: rgba(37, 99, 235, 0.20) !important;
+}
+
+[data-bs-theme="dark"] .visor-context-card,
+[data-bs-theme="dark"] .visor-interpretacion-box {
+  background: #0f172a !important;
+  border-color: rgba(148, 163, 184, 0.18) !important;
+}
+
+[data-bs-theme="dark"] .visor-context-dl dt {
+  color: #94a3b8;
+}
+
+[data-bs-theme="dark"] .visor-context-dl dd,
+[data-bs-theme="dark"] .visor-interpretacion-texto {
+  color: #f1f5f9;
+}
+
+[data-bs-theme="dark"] .visor-cups-chip {
+  background: #162033;
+  border-color: rgba(148, 163, 184, 0.22);
+  color: #e2e8f0;
+}
+
+[data-bs-theme="dark"] .visor-analitos-container {
+  background: var(--hiscare-surface-1, #0b1528);
+  border-color: rgba(148, 163, 184, 0.18);
+}
+
+[data-bs-theme="dark"] .visor-analitos-table thead th {
+  background: #0f172a !important;
+  color: #cbd5e1 !important;
+  border-bottom-color: rgba(148, 163, 184, 0.24) !important;
+}
+
+[data-bs-theme="dark"] .visor-analitos-table tbody th[scope="row"] {
+  color: #f1f5f9;
+}
+
+[data-bs-theme="dark"] .visor-analitos-table tbody tr.analito-row-alterado > * {
+  background-color: rgba(194, 65, 12, 0.18);
+}
+
+[data-bs-theme="dark"] .visor-analitos-table tbody tr.analito-row-critico > *,
+[data-bs-theme="dark"] .analito-fuera-rango {
+  background-color: rgba(185, 28, 28, 0.22) !important;
+  color: #fca5a5 !important;
+}
+
+[data-bs-theme="dark"] .visor-hero-header,
+[data-bs-theme="dark"] .visor-tab-inner,
+[data-bs-theme="dark"] dialog.visor-modal,
+[data-bs-theme="dark"] .visor-modal-header {
+  background: var(--hiscare-surface-1, #0b1528) !important;
+  color: #f1f5f9 !important;
+  border-color: rgba(148, 163, 184, 0.18) !important;
+}
+
+[data-bs-theme="dark"] .visor-tablist-wrapper,
+[data-bs-theme="dark"] .visor-summary-card,
+[data-bs-theme="dark"] .visor-modal-footer {
+  background: #0f172a !important;
+  border-color: rgba(148, 163, 184, 0.18) !important;
+}
+
+[data-bs-theme="dark"] .visor-tab {
+  color: #94a3b8;
+}
+
+[data-bs-theme="dark"] .visor-tab:hover {
+  color: #f8fafc;
+  background: rgba(30, 41, 59, 0.6);
+}
+
+[data-bs-theme="dark"] .visor-tab[aria-selected="true"] {
+  color: #38bdf8;
+}
+
+[data-bs-theme="dark"] .visor-tab[aria-selected="true"]::after {
+  border-block-end-color: #38bdf8;
+}
+
+[data-bs-theme="dark"] .visor-tab-pill {
+  background: #1e293b;
+  color: #cbd5e1;
+}
+
+[data-bs-theme="dark"] .visor-tab-pill--alert {
+  background: rgba(217, 119, 6, 0.25);
+  color: #fcd34d;
+}
+
+[data-bs-theme="dark"] .visor-summary-value,
+[data-bs-theme="dark"] .visor-hero-meta-item {
+  color: #f1f5f9;
+}
+
+[data-bs-theme="dark"] .visor-hero-meta-label {
+  color: #94a3b8;
+}
+
+[data-bs-theme="dark"] #cardChecklist {
+  background: var(--hiscare-surface-1, #0b1528) !important;
+  border-color: rgba(148, 163, 184, 0.2) !important;
+}
+
+[data-bs-theme="dark"] #listaChecklist .list-group-item:hover {
+  background-color: #162033;
+}
+
+[data-bs-theme="dark"] #barraRetornoSuperior {
+  background: #0b1528 !important;
+  border-color: rgba(148, 163, 184, 0.18) !important;
+  border-left: 4px solid #22c55e !important;
+}
+
+[data-bs-theme="dark"] #panelReporteControl {
+  background: linear-gradient(180deg, #0b1528 0%, #0f172a 100%) !important;
+  border-color: rgba(148, 163, 184, 0.2) !important;
+}
+
+[data-bs-theme="dark"] #panelReporteControl .bg-light.border {
+  background-color: #162033 !important;
+  border-color: rgba(148, 163, 184, 0.18) !important;
+}
+
+[data-bs-theme="dark"] .diff-cell-cambio-antes,
+[data-bs-theme="dark"] .diff-cell-eliminado {
+  background-color: rgba(185, 28, 28, 0.22) !important;
+  color: #fca5a5 !important;
+}
+
+[data-bs-theme="dark"] .diff-cell-cambio-despues,
+[data-bs-theme="dark"] .diff-cell-agregado {
+  background-color: rgba(21, 128, 61, 0.22) !important;
+  color: #86efac !important;
+}
+
+[data-bs-theme="dark"] .text-clinical-code {
+  background-color: #162033;
+  color: #e2e8f0;
+  border-color: rgba(148, 163, 184, 0.24);
+}
+
+[data-bs-theme="dark"] .badge-atencion-abierta,
+[data-bs-theme="dark"] .badge-orden-laboratorio {
+  background-color: rgba(37, 99, 235, 0.22) !important;
+  color: #93c5fd !important;
+  border-color: rgba(59, 130, 246, 0.35) !important;
+}
+
+[data-bs-theme="dark"] .badge-atencion-triaje {
+  background-color: var(--hiscare-estado-ensala-subtle-bg) !important;
+  color: var(--hiscare-estado-ensala-subtle-text) !important;
+  border-color: var(--hiscare-estado-ensala-subtle-border) !important;
+}
+
+[data-bs-theme="dark"] .badge-atencion-consulta,
+[data-bs-theme="dark"] .badge-orden-procedimiento {
+  background-color: rgba(21, 128, 61, 0.22) !important;
+  color: #86efac !important;
+  border-color: rgba(74, 222, 128, 0.35) !important;
+}
+
+[data-bs-theme="dark"] .badge-atencion-cerrada,
+[data-bs-theme="dark"] .badge-atencion-alta {
+  background-color: rgba(100, 116, 139, 0.22) !important;
+  color: #cbd5e1 !important;
+  border-color: rgba(148, 163, 184, 0.28) !important;
+}
+
+[data-bs-theme="dark"] .badge-orden-imagenes,
+[data-bs-theme="dark"] .badge-orden-radiologia {
+  background-color: rgba(124, 58, 237, 0.22) !important;
+  color: #d8b4fe !important;
+  border-color: rgba(167, 139, 250, 0.35) !important;
+}
+
+@media print {
+  [data-theme="dark"] body,
+  [data-theme="dark"] body.bg-light,
+  [data-theme="dark"] .main-wrapper,
+  [data-bs-theme="dark"] body,
+  [data-bs-theme="dark"] body.bg-light,
+  [data-bs-theme="dark"] .main-wrapper {
+    background: #ffffff !important;
+    background-image: none !important;
+    color: #000000 !important;
+  }
+
+  [data-bs-theme="dark"] .card,
+  [data-bs-theme="dark"] .card-header,
+  [data-bs-theme="dark"] .card-body,
+  [data-bs-theme="dark"] .table-responsive,
+  [data-bs-theme="dark"] .visor-context-card,
+  [data-bs-theme="dark"] .visor-interpretacion-box {
+    background: #ffffff !important;
+    color: #000000 !important;
+    border-color: #cbd5e1 !important;
+  }
+
+  [data-bs-theme="dark"] #tituloJornada,
+  [data-bs-theme="dark"] .kpi-value,
+  [data-bs-theme="dark"] .visor-interpretacion-texto {
+    color: #000000 !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #tabsAtencion {
+    scroll-behavior: auto !important;
+  }
+}

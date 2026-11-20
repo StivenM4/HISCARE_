@@ -1,0 +1,357 @@
+/* public/css/print.css — Estilos para impresión y visualización de órdenes diagnósticas e informes (C.8) */
+
+/* Configuración de página de impresión estándar (Anexo A / C.8) */
+@page {
+  size: letter;
+  margin: 15mm;
+}
+
+/* ==========================================================================
+   01. ESTILOS DE PREVISUALIZACIÓN EN PANTALLA (VISOR DE DOCUMENTOS)
+   ========================================================================== */
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  color: #0f172a;
+  background-color: #e2e8f0;
+  background-image: radial-gradient(rgba(148, 163, 184, 0.4) 1px, transparent 1px);
+  background-size: 20px 20px;
+  font-size: 13px;
+  line-height: 1.45;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+}
+
+.no-print {
+  /* Visible en pantalla, se oculta en @media print */
+}
+
+/* Barra superior de herramientas: Medical Navy oscuro institucional */
+.print-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background: linear-gradient(90deg, #0b1528 0%, #1e293b 100%);
+  color: #ffffff;
+  padding: 12px 28px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 4px 16px rgba(11, 21, 40, 0.35);
+}
+
+.print-toolbar .btn-outline-light {
+  border-color: rgba(255, 255, 255, 0.35);
+  color: #f1f5f9;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.print-toolbar .btn-outline-light:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+  border-color: #ffffff;
+  color: #ffffff;
+}
+
+.print-toolbar .btn-success {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  border: 1px solid #059669;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.35);
+  transition: background-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.print-toolbar .btn-success:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.45);
+  transform: translateY(-1px);
+}
+
+/* Hoja física tipo Carta clínica en pantalla */
+.print-sheet {
+  max-width: 820px;
+  margin: 28px auto 40px auto;
+  background: #ffffff;
+  padding: 38px 46px;
+  border-radius: 8px;
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.12), 0 2px 8px rgba(15, 23, 42, 0.06);
+  border-top: 4px solid #2563eb;
+  position: relative;
+  box-sizing: border-box;
+}
+
+/* Marca institucional y encabezado IPS */
+.ips-brand {
+  border-bottom: 2px solid #0f172a;
+  padding-bottom: 14px;
+  margin-bottom: 18px;
+  position: relative;
+}
+
+.ips-badge-circle {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 10px;
+  border-radius: 9999px;
+  border: 1px solid #cbd5e1;
+  background-color: #f8fafc;
+  color: #475569;
+  letter-spacing: 0.02em;
+}
+
+/* Recuadros técnicos de la orden médica */
+.order-box {
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 14px 18px;
+  background-color: #f8fafc;
+  box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.02);
+}
+
+.order-box-diagnostic {
+  background-color: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-left: 4px solid #2563eb;
+}
+
+.order-separator {
+  border: 0;
+  border-top: 1px solid #cbd5e1;
+  margin: 18px 0;
+}
+
+.order-instructions {
+  background-color: #eff6ff;
+  border: 1px dashed #93c5fd;
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 11.5px;
+  line-height: 1.45;
+  color: #1e3a8a;
+}
+
+/* Contenedor y tabla CUPS */
+.table-container {
+  margin-bottom: 18px;
+}
+
+.table-container .table {
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.table-container .table thead {
+  background-color: #f1f5f9;
+  color: #334155;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  border-bottom: 2px solid #cbd5e1;
+}
+
+.table-container .table th {
+  font-weight: 700;
+  padding: 8px 12px;
+}
+
+.table-container .table td {
+  padding: 8px 12px;
+  color: #0f172a;
+}
+
+/* Área de código de barras CODE128 */
+.barcode-container {
+  text-align: center;
+  margin: 22px 0 18px 0;
+  padding: 12px 16px;
+  border: 1px dashed #cbd5e1;
+  border-radius: 8px;
+  background-color: #f8fafc;
+  display: inline-block;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.barcode-svg {
+  max-width: 320px;
+  height: 48px;
+  display: inline-block;
+}
+
+.barcode-text {
+  letter-spacing: 0.15em;
+  font-size: 12px;
+  color: #0f172a;
+}
+
+/* Bloque de firma y sello médico con verificación criptográfica */
+.signature-section {
+  margin-top: 36px;
+  padding-top: 12px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.signature-wrapper {
+  min-width: 260px;
+}
+
+.signature-line {
+  border-top: 1px solid #334155;
+  width: 240px;
+  margin-top: 45px;
+  margin-bottom: 8px;
+}
+
+.signature-header {
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  color: #64748b;
+  font-weight: 700;
+}
+
+/* ==========================================================================
+   02. REGLAS DE IMPRESIÓN FÍSICA (@media print)
+   Impresión de alta precisión médica en tamaño carta sin cortes de página
+   ========================================================================== */
+@media print {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  html, body {
+    background-color: #ffffff !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-size: 10pt !important;
+    line-height: 1.35 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  main#contenidoPrincipal,
+  .print-sheet,
+  .card,
+  .order-box,
+  .table-responsive,
+  .alert {
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+
+  .no-print,
+  .print-toolbar,
+  .sidebar,
+  .topbar,
+  .btn,
+  nav,
+  footer,
+  #buscarGlobal,
+  #btnCampana,
+  #tabsAtencion {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  .print-sheet {
+    max-width: 100% !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+  }
+
+  .ips-brand {
+    border-bottom: 2px solid #000000 !important;
+  }
+
+  .ips-badge-circle {
+    border-color: #000000 !important;
+    color: #000000 !important;
+    background: transparent !important;
+  }
+
+  .order-box {
+    background-color: #ffffff !important;
+    border: 1px solid #64748b !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  .order-box-diagnostic {
+    background-color: #ffffff !important;
+    border: 1px solid #64748b !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  .order-instructions {
+    background-color: #ffffff !important;
+    border: 1px solid #000000 !important;
+    color: #000000 !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  .table-container {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  .table {
+    border-collapse: collapse !important;
+    width: 100% !important;
+    border: 1px solid #000000 !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  .table th,
+  .table td {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    border: 1px solid #000000 !important;
+    padding: 4px 6px !important;
+  }
+
+  .table tr {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  .barcode-container {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    border-color: #64748b !important;
+    background: transparent !important;
+  }
+
+  .signature-section {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    border-top: none !important;
+  }
+
+  .signature-line {
+    border-top: 1px solid #000000 !important;
+  }
+
+  .badge {
+    border: 1px solid #000000 !important;
+    color: #000000 !important;
+    background: transparent !important;
+  }
+
+  a[href]:after {
+    content: none !important;
+  }
+}
